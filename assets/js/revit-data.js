@@ -24,6 +24,14 @@ window.siteData.revits = [
         file: "addin/KuroProSheet.zip",
         meta: "• 1 file ZIP",
         status: "Coming soon"
+    },
+        {
+        type: ".dll",
+        title: "Kuro Acad",
+        description: "An Autocad addin for urban planning",
+        file: "addin/KuroAcad.zip",
+        meta: "• 1 file ZIP",
+        status: "Coming soon"
     }
 
 ];
