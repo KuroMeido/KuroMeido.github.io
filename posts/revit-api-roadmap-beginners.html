@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Revit API Roadmap — For Absolute Beginners | KuroMeido Blog</title>
+    <meta name="description" content="A six-stage path from zero coding background to building your own Revit add-ins." />
+
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/components.css" />
+    <link rel="stylesheet" href="/assets/css/pages.css" />
+    <link rel="stylesheet" href="/assets/css/revit-roadmap.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <header id="site-header" class="site-header"></header>
+
+    <main class="article-page roadmap-page">
+        <div class="roadmap-sheet">
+            <header class="title-block">
+                <div class="frame-corner tl"></div>
+                <div class="frame-corner tr"></div>
+                <div class="doc-meta">
+                    <span>SHEET A-01</span>
+                    <span>SCALE: NOT TO SCALE</span>
+                    <span>REV: BEGINNER</span>
+                </div>
+                <h1>Learning the Revit API<br />with zero coding background</h1>
+                <p class="subhead">
+                    A six-stage path from "I've never written a line of code" to writing your own Revit add-ins — plus the shortcut, if the API isn't actually what you need.
+                </p>
+            </header>
+
+            <div class="note">
+                <strong>Before you start:</strong> the Revit API is built on .NET and is normally written in C#. If none of that sentence made sense yet, that's exactly why stage one exists below — don't skip to stage four.
+            </div>
+
+            <div class="timeline">
+                <div class="spine"></div>
+
+                <div class="step">
+                    <div class="node">01</div>
+                    <div class="step-body">
+                        <span class="step-tag">1–4 WEEKS</span>
+                        <h3>Learn programming logic first</h3>
+                        <p>Variables, loops, if/else statements, functions, and what an "object" actually is. Python is the gentlest language to learn this in, even though you'll likely end up writing C# for Revit later.</p>
+                        <div class="detail">Goal: reading code should feel like reading a language, not decoding a cipher.</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="node">02</div>
+                    <div class="step-body">
+                        <span class="step-tag">2–4 WEEKS</span>
+                        <h3>Learn C# basics</h3>
+                        <p>The Revit API is built on .NET, and C# is its standard language. Focus on classes and objects, inheritance, and collections like <code>List&lt;T&gt;</code>.</p>
+                        <div class="detail">Free resources: Microsoft's own C# tutorials, or freeCodeCamp's C# course.</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="node">03</div>
+                    <div class="step-body">
+                        <span class="step-tag">TRAINING WHEELS</span>
+                        <h3>Try pyRevit before raw API code</h3>
+                        <p>pyRevit is a free toolkit that runs Python scripts inside Revit, with a far gentler curve than a full C# add-in. It gets you real automation working before you understand everything happening underneath.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="node">04</div>
+                    <div class="step-body">
+                        <span class="step-tag">SETUP</span>
+                        <h3>Set up the dev environment</h3>
+                        <p>Install Visual Studio (the free Community edition works fine) and locate the Revit API SDK — it ships with your Revit install or is downloadable from Autodesk.</p>
+                        <div class="detail">Learn what an <code>IExternalCommand</code> is and how Revit loads an external add-in — this is the doorway into everything else.</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="node">05</div>
+                    <div class="step-body">
+                        <span class="step-tag">FIRST WINS</span>
+                        <h3>Start with tiny, working examples</h3>
+                        <p>The classic sequence: a button that shows a message box, then a script that creates a single wall, then one that lists every door in a project. Small, verifiable wins beat ambitious failures.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="node">06</div>
+                    <div class="step-body">
+                        <span class="step-tag">CORE CONCEPTS</span>
+                        <h3>Learn the Revit-specific vocabulary</h3>
+                        <p>Almost everything that modifies a model needs a <code>Transaction</code>. Elements are queried with a <code>FilteredElementCollector</code>. And parameters split into instance, type, and built-in parameters.</p>
+                        <div class="detail">Keep Autodesk's offline Revit API help file (.chm) close — it becomes essential past this point.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="shortcut">
+                <span class="step-tag">STAGE 0, REVISITED</span>
+                <h3>Or skip the code entirely</h3>
+                <p>If your real goal is getting something done in Revit rather than becoming a developer, an AI assistant with Revit tools connected can create elements, run schedules, batch-rename, audit models, and export data directly — no C# required. Worth checking before you commit weeks to learning to code.</p>
+            </div>
+
+            <div class="roadmap-meta-footer">
+                <span>DRAWN FOR: BEGINNERS, NO CODE BACKGROUND</span>
+                <span>PROJECT: REVIT API LITERACY</span>
+            </div>
+
+            <div class="article-cta-wrap">
+                <a class="btn btn-primary" href="../blog.html">← Back to blogs</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <p>© <span data-current-year>2026</span> KuroMeido Blog. Built with GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/header.js"></script>
+</body>
+</html>

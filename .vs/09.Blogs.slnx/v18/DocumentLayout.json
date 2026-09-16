@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\huyenntt\\09.Blogs\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\revit.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:revit.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\posts\\revit-api-roadmap-beginners.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:posts\\revit-api-roadmap-beginners.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\js\\main.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\main.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\css\\stylesheet.css||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\css\\stylesheet.css||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\css\\components.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\css\\components.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\js\\data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,40 +30,42 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "stylesheet.css",
+              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\css\\stylesheet.css",
+              "RelativeDocumentMoniker": "assets\\css\\stylesheet.css",
+              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\css\\stylesheet.css",
+              "RelativeToolTip": "assets\\css\\stylesheet.css",
+              "ViewState": "AgIAAOQAAAAAAAAAAADwvxABAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-09-16T09:12:39.786Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "revit.html",
-              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\revit.html",
-              "RelativeDocumentMoniker": "revit.html",
-              "ToolTip": "C:\\huyenntt\\09.Blogs\\revit.html",
-              "RelativeToolTip": "revit.html",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAkwBUAAAAeAAAAAAAAAA==",
+              "Title": "revit-api-roadmap-beginners.html",
+              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\posts\\revit-api-roadmap-beginners.html",
+              "RelativeDocumentMoniker": "posts\\revit-api-roadmap-beginners.html",
+              "ToolTip": "C:\\huyenntt\\09.Blogs\\posts\\revit-api-roadmap-beginners.html",
+              "RelativeToolTip": "posts\\revit-api-roadmap-beginners.html",
+              "ViewState": "AgIAABEAAAAAAAAAAADwvysAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
-              "WhenOpened": "2026-09-11T10:04:46.606Z",
+              "WhenOpened": "2026-09-16T09:08:31.922Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "components.css",
-              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\css\\components.css",
-              "RelativeDocumentMoniker": "assets\\css\\components.css",
-              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\css\\components.css",
-              "RelativeToolTip": "assets\\css\\components.css",
-              "ViewState": "AgIAAEwAAAAAAAAAAAAkwF4AAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2026-09-11T09:58:29.682Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "main.js",
-              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\main.js",
-              "RelativeDocumentMoniker": "assets\\js\\main.js",
-              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\js\\main.js",
-              "RelativeToolTip": "assets\\js\\main.js",
-              "ViewState": "AgIAADwAAAAAAAAAAAAqwL0AAAAAAAAAAAAAAA==",
+              "Title": "data.js",
+              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\data.js",
+              "RelativeDocumentMoniker": "assets\\js\\data.js",
+              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\js\\data.js",
+              "RelativeToolTip": "assets\\js\\data.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-09-11T09:23:06.661Z"
+              "WhenOpened": "2026-09-16T03:53:55.597Z",
+              "EditorCaption": ""
             }
           ]
         }
