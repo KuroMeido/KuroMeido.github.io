@@ -188,28 +188,38 @@ function setupBlogSearch() {
 }
 
 function setupTypewriter() {
-  const element = document.querySelector(".typewriter");
-  if (!element) return;
+    const element = document.querySelector(".typewriter");
+    if (!element) return;
 
-  const text = (element.textContent || "").trim();
-  if (!text) return;
+    const text = (element.textContent || "").trim();
+    if (!text) return;
 
-  const speed = Number(element.dataset.typeSpeed) || 60;
-  const delay = Number(element.dataset.typeDelay) || 0;
+    const speed = Number(element.dataset.typeSpeed) || 60;
+    const startDelay = Number(element.dataset.typeDelay) || 0;
+    const loopDelay = 3000; // dừng 3 giây rồi chạy lại
 
-  let index = 0;
-  element.textContent = "";
+    let index = 0;
+    element.textContent = "";
 
-  const typeNext = () => {
-    index += 1;
-    element.textContent = text.slice(0, index);
+    const run = () => {
+        index = 0;
+        element.textContent = "";
 
-    if (index < text.length) {
-      setTimeout(typeNext, speed);
-    }
-  };
+        const typeNext = () => {
+            index += 1;
+            element.textContent = text.slice(0, index);
 
-  setTimeout(typeNext, delay);
+            if (index < text.length) {
+                setTimeout(typeNext, speed);
+            } else {
+                setTimeout(run, loopDelay);
+            }
+        };
+
+        typeNext();
+    };
+
+    setTimeout(run, startDelay);
 }
 
 
