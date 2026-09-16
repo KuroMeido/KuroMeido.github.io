@@ -1,4 +1,6 @@
+/* Main page wrapper for the roadmap section */
 .roadmap-page {
+    /* Color system */
     --blue-deep: #12314f;
     --blue-mid: #1c4a73;
     --blue-line: #6fb8d6;
@@ -7,35 +9,43 @@
     --paper-dim: #d7e2e9;
     --copper: #c17a45;
     --copper-bright: #d99257;
+    /* Typography system */
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
+    /* Base appearance */
     background: var(--blue-deep);
     color: var(--paper);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
+    /* Subtle blueprint/grid background */
     background-image: linear-gradient(rgba(111,184,214,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(111,184,214,0.06) 1px, transparent 1px);
     background-size: 28px 28px;
     background-attachment: fixed;
+    /* Bottom spacing for the page */
     padding-bottom: 80px;
 }
 
+    /* Use border-box sizing for all elements inside roadmap page */
     .roadmap-page * {
         box-sizing: border-box;
     }
 
+/* Centered content container */
 .roadmap-sheet {
     max-width: 920px;
     margin: 0 auto;
     padding: 0 24px;
 }
 
+/* Top title/header block */
 .title-block {
     padding: 56px 0 40px;
     border-bottom: 2px solid var(--blue-line-soft);
     position: relative;
 }
 
+/* Decorative corner frame used in the title block */
 .frame-corner {
     position: absolute;
     width: 18px;
@@ -43,6 +53,7 @@
     border: 2px solid var(--copper-bright);
 }
 
+    /* Top-left corner decoration */
     .frame-corner.tl {
         top: 18px;
         left: -8px;
@@ -50,6 +61,7 @@
         border-bottom: none;
     }
 
+    /* Top-right corner decoration */
     .frame-corner.tr {
         top: 18px;
         right: -8px;
@@ -57,6 +69,7 @@
         border-bottom: none;
     }
 
+/* Metadata row under/above title */
 .doc-meta {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -68,6 +81,7 @@
     flex-wrap: wrap;
 }
 
+/* Main page title */
 .title-block h1 {
     font-family: var(--font-display);
     font-weight: 700;
@@ -79,6 +93,7 @@
     white-space: normal;
 }
 
+/* Subtitle / supporting intro text */
 .subhead {
     font-size: 1.08rem;
     line-height: 1.6;
@@ -87,6 +102,7 @@
     margin: 0;
 }
 
+/* Highlighted information note block */
 .note {
     margin: 40px 0 64px;
     padding: 20px 24px;
@@ -98,15 +114,18 @@
     color: var(--paper-dim);
 }
 
+    /* Strong text inside note block */
     .note strong {
         color: #fff;
         font-weight: 600;
     }
 
+/* Timeline container */
 .timeline {
     position: relative;
 }
 
+/* Vertical dashed spine line behind timeline nodes */
 .spine {
     position: absolute;
     left: 27px;
@@ -116,6 +135,7 @@
     background: repeating-linear-gradient( to bottom, var(--blue-line-soft) 0px, var(--blue-line-soft) 8px, transparent 8px, transparent 15px );
 }
 
+/* Each roadmap step row */
 .step {
     position: relative;
     display: grid;
@@ -124,10 +144,12 @@
     padding-bottom: 52px;
 }
 
+    /* Remove bottom spacing from the last step */
     .step:last-of-type {
         padding-bottom: 0;
     }
 
+/* Circular number/icon node on timeline */
 .node {
     width: 56px;
     height: 56px;
@@ -143,10 +165,12 @@
     z-index: 1;
 }
 
+/* Text content area for each step */
 .step-body {
     padding-top: 6px;
 }
 
+/* Small label above each step heading */
 .step-tag {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -156,6 +180,7 @@
     display: block;
 }
 
+/* Step title */
 .step h3 {
     font-family: var(--font-display);
     font-size: 1.35rem;
@@ -164,6 +189,7 @@
     margin: 0 0 10px;
 }
 
+/* Step description text */
 .step p {
     margin: 0;
     line-height: 1.65;
@@ -172,6 +198,7 @@
     max-width: 62ch;
 }
 
+/* Extra detail box inside a step */
 .step .detail {
     margin-top: 12px;
     padding: 12px 16px;
@@ -181,6 +208,7 @@
     color: var(--paper-dim);
 }
 
+/* Inline code styling inside detail blocks and step content */
 .detail code,
 .step code {
     font-family: var(--font-mono);
@@ -191,6 +219,7 @@
     font-size: 0.85rem;
 }
 
+/* Highlighted shortcut / fast-track section */
 .shortcut {
     margin-top: 60px;
     position: relative;
@@ -200,6 +229,7 @@
     color: #241005;
 }
 
+    /* Decorative dashed circle in shortcut card */
     .shortcut::before {
         content: "";
         position: absolute;
@@ -211,11 +241,13 @@
         border-radius: 50%;
     }
 
+    /* Tag styling override inside shortcut block */
     .shortcut .step-tag {
         color: #3a1c05;
         opacity: 0.75;
     }
 
+    /* Shortcut heading */
     .shortcut h3 {
         font-family: var(--font-display);
         font-size: 1.3rem;
@@ -224,6 +256,7 @@
         color: #241005;
     }
 
+    /* Shortcut paragraph text */
     .shortcut p {
         margin: 0;
         line-height: 1.65;
@@ -232,6 +265,7 @@
         max-width: 60ch;
     }
 
+/* Footer metadata section */
 .roadmap-meta-footer {
     margin-top: 70px;
     padding-top: 24px;
@@ -245,27 +279,33 @@
     gap: 8px;
 }
 
+/* Wrapper for article call-to-action area */
 .article-cta-wrap {
     margin-top: 28px;
     padding-top: 8px;
 }
 
+/* Responsive adjustments for small screens */
 @media (max-width: 560px) {
+    /* Make timeline layout more compact */
     .step {
         grid-template-columns: 44px 1fr;
         gap: 16px;
     }
 
+    /* Smaller timeline node */
     .node {
         width: 44px;
         height: 44px;
         font-size: 0.95rem;
     }
 
+    /* Reposition vertical spine to align with smaller nodes */
     .spine {
         left: 21px;
     }
 
+    /* Tighten metadata spacing and font size */
     .doc-meta {
         gap: 14px;
         font-size: 11px;
