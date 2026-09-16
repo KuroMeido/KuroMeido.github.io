@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why Your Icons8 Icons Get Cropped in Revit | KuroMeido Blog</title>
+  <meta name="description" content="Why Icons8 PNG icons get cropped on Revit ribbon buttons and how to fix it by normalizing to 96 DPI in WPF." />
+  <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/layout.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+  <link rel="stylesheet" href="/assets/css/pages.css" />
+  <link rel="stylesheet" href="/assets/css/article.css" />
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="article-page">
+    <section class="article-hero">
+      <div class="container narrow">
+        <span class="badge">Revit API</span>
+        <h1>Why Your Icons8 Icons Get Cropped in Revit (and How to Fix It for Good)</h1>
+        <p class="article-lead">
+          If you build Revit add-ins and pull your ribbon icons from
+          <a href="https://icons8.com" target="_blank" rel="noopener noreferrer">icons8.com</a>,
+          you may see icons render cropped in Revit. This post explains why and provides a reusable <code>ImageHelper</code>.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container narrow article-content">
+        <h2>The symptom</h2>
+        <p>
+          A 32×32 PNG downloaded from Icons8 can appear zoomed and clipped on a ribbon button,
+          even though it looks correct in Windows Explorer.
+        </p>
+
+        <figure>
+          <img src="/assets/images/WhyYourIcons8Cropped/INSERT_IMAGE_1_HERE.png" alt="Ribbon panel showing a cropped icon" />
+          <figcaption><em>Figure 1: A ribbon button icon rendered cropped/zoomed in Revit before the fix.</em></figcaption>
+        </figure>
+
+        <h2>The real cause: DPI metadata, not pixel size</h2>
+        <p>
+          The issue is usually not image dimensions. It is the DPI metadata embedded in the PNG.
+          Icons8 commonly exports at <strong>72 DPI</strong>, while WPF (used by Revit ribbon UI) assumes <strong>96 DPI</strong>.
+        </p>
+        <p>WPF computes displayed size using DPI metadata:</p>
+
+        <figure>
+          <img src="/assets/images/WhyYourIcons8Cropped/INSERT_IMAGE_2_HERE.png" alt="File properties showing 72 DPI metadata on an icon downloaded from Icons8" />
+          <figcaption><em>Figure 2: Windows file properties (Details tab) showing the 72 DPI resolution baked into an icon downloaded from Icons8.</em></figcaption>
+        </figure>
+
+        <pre><code>Displayed size (device-independent units) = PixelWidth / (DpiX / 96)</code></pre>
+
+        <p>
+          A 32px image at 72 DPI is displayed as ~42.7 units. Since ribbon slots are fixed (16×16 or 32×32),
+          the extra size gets clipped.
+        </p>
+
+        <h3>The fix that <em>doesn't</em> fully work</h3>
+        <p>Forcing decode size alone is not enough:</p>
+        <pre><code class="language-csharp">image.DecodePixelWidth = 32;
+image.DecodePixelHeight = 32;</code></pre>
+        <p>
+          This changes decoded pixels but does not rewrite DPI metadata used by WPF layout.
+        </p>
+
+        <h2>The fix that actually works: re-bake the image at 96 DPI</h2>
+        <p>
+          Render the source onto a new <code>RenderTargetBitmap</code> set to 96 DPI:
+        </p>
+        <pre><code class="language-csharp">private static BitmapSource NormalizeTo96Dpi(BitmapSource source)
+{
+    int width = source.PixelWidth;
+    int height = source.PixelHeight;
+
+    var dv = new DrawingVisual();
+    using (DrawingContext dc = dv.RenderOpen())
+    {
+        dc.DrawImage(source, new Rect(0, 0, width, height));
+    }
+
+    var rtb = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+    rtb.Render(dv);
+    rtb.Freeze();
+    return rtb;
+}</code></pre>
+
+        <p>
+          This preserves pixel dimensions and corrects DPI metadata to match WPF expectations.
+        </p>
+
+        <h2>Only normalize when needed</h2>
+        <p>Skip re-encoding if the frame is already near 96 DPI:</p>
+        <pre><code class="language-csharp">private static bool NeedsNormalize(BitmapFrame frame)
+{
+    bool dpiOk = Math.Abs(frame.DpiX - 96) &lt; 0.1 &amp;&amp; Math.Abs(frame.DpiY - 96) &lt; 0.1;
+    return !dpiOk;
+}</code></pre>
+
+        <h2>Putting it together: a drop-in <code>ImageHelper</code></h2>
+        <p>Complete helper class:</p>
+        <pre><code class="language-csharp">using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
+namespace YourAddin
+{
+    public static class ImageHelper
+    {
+        private static readonly Assembly _assembly = Assembly.GetExecutingAssembly();
+
+        public static BitmapImage LoadFromResx(string imageName)
+        {
+            try
+            {
+                string resourceName = _assembly.GetManifestResourceNames()
+                    .FirstOrDefault(r =&gt; r.EndsWith(imageName, StringComparison.OrdinalIgnoreCase));
+
+                if (resourceName != null)
+                {
+                    using (Stream stream = _assembly.GetManifestResourceStream(resourceName))
+                    {
+                        if (stream != null)
+                        {
+                            return LoadFromStream(stream);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ImageHelper] LoadFromResx failed: {ex.Message}");
+            }
+
+            return GetFallback();
+        }
+
+        private static BitmapImage LoadFromStream(Stream stream)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                ms.Position = 0;
+
+                BitmapFrame frame = BitmapFrame.Create(ms, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+
+                BitmapImage image = new BitmapImage();
+
+                if (NeedsNormalize(frame))
+                {
+                    BitmapSource normalized = NormalizeTo96Dpi(frame);
+
+                    using (MemoryStream outMs = new MemoryStream())
+                    {
+                        PngBitmapEncoder encoder = new PngBitmapEncoder();
+                        encoder.Frames.Add(BitmapFrame.Create(normalized));
+                        encoder.Save(outMs);
+                        outMs.Position = 0;
+
+                        image.BeginInit();
+                        image.StreamSource = outMs;
+                        image.CacheOption = BitmapCacheOption.OnLoad;
+                        image.EndInit();
+                    }
+                }
+                else
+                {
+                    ms.Position = 0;
+                    image.BeginInit();
+                    image.StreamSource = ms;
+                    image.CacheOption = BitmapCacheOption.OnLoad;
+                    image.EndInit();
+                }
+
+                image.Freeze();
+                return image;
+            }
+        }
+
+        private static bool NeedsNormalize(BitmapFrame frame)
+        {
+            bool dpiOk = Math.Abs(frame.DpiX - 96) &lt; 0.1 &amp;&amp; Math.Abs(frame.DpiY - 96) &lt; 0.1;
+            return !dpiOk;
+        }
+
+        private static BitmapImage GetFallback()
+        {
+            try
+            {
+                string resourceName = _assembly.GetManifestResourceNames()
+                    .FirstOrDefault(r =&gt; r.EndsWith("dot.png", StringComparison.OrdinalIgnoreCase));
+
+                if (resourceName != null)
+                {
+                    using (Stream stream = _assembly.GetManifestResourceStream(resourceName))
+                    {
+                        return LoadFromStream(stream);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ImageHelper] GetFallback failed: {ex.Message}");
+            }
+
+            return new BitmapImage();
+        }
+
+        private static BitmapSource NormalizeTo96Dpi(BitmapSource source)
+        {
+            int width = source.PixelWidth;
+            int height = source.PixelHeight;
+
+            var dv = new DrawingVisual();
+            using (DrawingContext dc = dv.RenderOpen())
+            {
+                dc.DrawImage(source, new Rect(0, 0, width, height));
+            }
+
+            var rtb = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            rtb.Render(dv);
+            rtb.Freeze();
+            return rtb;
+        }
+    }
+}</code></pre>
+
+        <p>Usage:</p>
+        <pre><code class="language-csharp">pushButtonData.Image = ImageHelper.LoadFromResx("rotate3d-16.png");
+pushButtonData.LargeImage = ImageHelper.LoadFromResx("rotate3d-32.png");</code></pre>
+
+        <figure>
+          <img src="/assets/images/WhyYourIcons8Cropped/INSERT_IMAGE_3_HERE.png" alt="Ribbon panel showing the icon rendered correctly after the fix" />
+          <figcaption><em>Figure 3: The same ribbon button after normalizing the icon to 96 DPI — no more cropping.</em></figcaption>
+        </figure>
+
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>Cropped ribbon icons are usually a DPI metadata mismatch (72 vs 96), not a pixel-size mismatch.</li>
+          <li><code>DecodePixelWidth</code>/<code>DecodePixelHeight</code> do not fix layout DPI metadata.</li>
+          <li>Re-rendering via <code>RenderTargetBitmap</code> at 96 DPI is the reliable fix.</li>
+          <li>Check DPI before normalizing to avoid unnecessary work.</li>
+          <li>If cropping remains, inspect transparent padding and trim alpha bounds.</li>
+        </ul>
+
+        <div class="article-cta">
+          <a class="btn btn-primary" href="../blog.html">← Back to blogs</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <p>© <span data-current-year>2026</span> KuroMeido Blog. Built with GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/header.js"></script>
+</body>
+</html>
