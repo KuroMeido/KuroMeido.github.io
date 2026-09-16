@@ -187,10 +187,36 @@ function setupBlogSearch() {
   });
 }
 
+function setupTypewriter() {
+  const element = document.querySelector(".typewriter");
+  if (!element) return;
+
+  const text = (element.textContent || "").trim();
+  if (!text) return;
+
+  const speed = Number(element.dataset.typeSpeed) || 60;
+  const delay = Number(element.dataset.typeDelay) || 0;
+
+  let index = 0;
+  element.textContent = "";
+
+  const typeNext = () => {
+    index += 1;
+    element.textContent = text.slice(0, index);
+
+    if (index < text.length) {
+      setTimeout(typeNext, speed);
+    }
+  };
+
+  setTimeout(typeNext, delay);
+}
+
 
 renderBlogPosts();
 renderResources();
 RenderRevits();
 setupBlogSearch();
 updateCurrentYear();
+setupTypewriter();
 

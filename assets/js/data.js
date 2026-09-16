@@ -18,7 +18,7 @@ window.siteData = {
 
         {
             category: "Revit API",
-            title: "Why Your Icons8 Icons Get Cropped in Revit \n(and How to Fix It for Good)",
+            title: "Why Your Icons8 Icons Get Cropped in Revit",
             description: "If you build Revit add-ins and pull your ribbon icons from icons8.com, "+
             "you may see icons render cropped in Revit.This post explains why and provides a reusable ImageHelper.",
             image: "assets/images/WhyYourIcons8Cropped/Cover.png",
