@@ -71,11 +71,12 @@
 .title-block h1 {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2.1rem, 5vw, 3.4rem);
-    line-height: 1.05;
+    font-size: clamp(1.7rem, 4.4vw, 3.1rem);
+    line-height: 1.1;
     margin: 0 0 18px;
     color: #fff;
-    max-width: 14ch;
+    max-width: 22ch;
+    white-space: normal;
 }
 
 .subhead {
