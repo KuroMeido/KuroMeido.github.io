@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Export Views/Sheets — Revit Add-in | KuroMeido Blog</title>
+  <meta name="description" content="Revit add-in to export selected sheets/views to PDF or DWG with custom naming tokens, progress, and per-item logging." />
+  <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/layout.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+  <link rel="stylesheet" href="/assets/css/pages.css" />
+  <link rel="stylesheet" href="/assets/css/article.css" />
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="article-page">
+    <section class="article-hero">
+      <div class="container narrow">
+        <span class="badge">Revit API</span>
+        <h1>Export Views/Sheets — Revit Add-in</h1>
+        <p class="article-lead">
+          A Revit add-in that exports a checklist-selected set of sheets and/or views to PDF or DWG,
+          with file names built from Sheet/Project Parameters or Global Parameters, combined or one-file-per-item,
+          to a folder you pick — with a progress bar and a per-item log.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container narrow article-content">
+        <h2>What it does</h2>
+        <ol>
+          <li>
+            <strong>Checklist</strong> — tabs for Sheets and Views, each with checkboxes, a Check All / Uncheck All,
+            and a name filter box.
+          </li>
+          <li>
+            <strong>Custom naming</strong> — build a file-name template out of tokens:
+            Sheet Number, Sheet Name, View Name, static text (e.g. <code>_</code>, <code>Rev A</code>),
+            any <strong>Sheet/Project Parameter</strong> found on the selected items, or any
+            <strong>Global Parameter</strong> in the project.
+            Tokens are added in order and a live preview shows the resulting name for the first checked item.
+          </li>
+          <li>
+            <strong>Format</strong> — PDF or DWG.
+            <ul>
+              <li>
+                PDF: paper size, and <strong>Combine</strong> truly merges all selected sheets/views
+                into one PDF (<code>PDFExportOptions.Combine = true</code>).
+              </li>
+              <li>
+                DWG: pick an existing DWG export setup from the project, or use Revit's default.
+                <strong>Note:</strong> the Revit API has no “merge to one DWG” option — each view always exports
+                as its own DWG file, even with Combine checked. The add-in reports this in the log.
+              </li>
+            </ul>
+          </li>
+          <li><strong>Output path</strong> — folder browser, created automatically if missing.</li>
+          <li>
+            <strong>Progress</strong> — a progress bar, a running status label, and a results log
+            (OK/FAILED per item) shown after the run.
+          </li>
+        </ol>
+
+        <h2>Project layout</h2>
+        <pre><code>RevitExportAddin.addin      Revit add-in manifest
+RevitExportAddin.csproj     Project file (net48, WPF + WinForms)
+Command.cs                  IExternalCommand entry point
+MainWindow.xaml(.cs)        The UI
+Models/ExportItem.cs        Checklist row (wraps a ViewSheet or View)
+Models/NamingToken.cs       One piece of the naming template
+Services/NamingService.cs   Resolves a template into a sanitized file name
+Services/GlobalParameterService.cs   Reads document Global Parameters
+Services/ExportService.cs   PDF/DWG export + progress events</code></pre>
+
+        <h2>Setup</h2>
+        <ol>
+          <li>
+            <strong>Set the Revit API reference path.</strong>
+            Open <code>RevitExportAddin.csproj</code> and change <code>RevitAPIPath</code> to your Revit install folder,
+            e.g. <code>C:\Program Files\Autodesk\Revit 2024</code>.
+            Alternatively, set a machine environment variable named <code>RevitAPIPath</code>.
+          </li>
+          <li>
+            <strong>Match target framework to your Revit version:</strong>
+            <ul>
+              <li>Revit 2021–2024 → <code>net48</code> (already set).</li>
+              <li>Revit 2025+ → change <code>TargetFramework</code> to <code>net8.0-windows</code>.</li>
+            </ul>
+          </li>
+          <li>
+            Open the folder in Visual Studio (or run <code>dotnet build</code>) and build.
+            The build copies <code>RevitExportAddin.addin</code> next to the DLL.
+          </li>
+          <li>
+            Copy the built <code>.addin</code> file and output binaries to:
+            <code>%AppData%\Autodesk\Revit\Addins\&lt;version&gt;\</code>
+            and make sure the <code>&lt;Assembly&gt;</code> path points to your DLL.
+          </li>
+          <li>Start Revit, open a project, run the command from the Add-Ins tab.</li>
+        </ol>
+
+        <h2>Notes / things you may want to extend</h2>
+        <ul>
+          <li>
+            <strong>Reordering naming tokens:</strong> current order follows add sequence; remove and re-add to reorder.
+            Adding up/down buttons on <code>TemplateList</code> is a small extension.
+          </li>
+          <li>
+            <strong>Parameter list source:</strong> “Sheet/Project Parameter” is populated from parameters found on loaded
+            sheets/views (project + shared parameters exposed via <code>Element.Parameters</code>).
+          </li>
+          <li>
+            <strong>PDF export API availability:</strong> <code>PDFExportOptions</code> /
+            <code>Document.Export(..., PDFExportOptions)</code> requires Revit 2022+.
+            Revit 2021 and earlier need a <code>PrintManager</code> fallback path.
+          </li>
+          <li>
+            <strong>DWG combine:</strong> true single-file DWG merging is not exposed by Revit API;
+            only PDF supports native combine.
+          </li>
+        </ul>
+
+        <div class="article-cta">
+          <a class="btn btn-primary" href="../blog.html">← Back to blogs</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <p>© <span data-current-year>2026</span> KuroMeido Blog. Built with GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/header.js"></script>
+</body>
+</html>

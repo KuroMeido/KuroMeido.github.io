@@ -14,6 +14,13 @@ window.siteData = {
                 "you may see icons render cropped in Revit.This post explains why and provides a reusable ImageHelper.",
             image: "assets/images/WhyYourIcons8Cropped/Cover.png",
             url: "posts/WhyYourIcons8Cropped.html"
-        }
+        },
+        {
+            category: "Revit API",
+            title: "Create your Export PDF Add-In",
+            description: "Revit add-in to export selected sheets/views to PDF or DWG with custom naming tokens, progress, and per-item logging.",
+            image: "assets/images/CreateYourExportPDFAddIn/Cover.png",
+            url: "posts/CreateYourExportPDFAddIn.html"
+        },
     ]
 };
