@@ -45,11 +45,9 @@ function renderBlogPosts(postsToRender) {
     const description = document.createElement("p");
     description.textContent = post.description;
 
-    const openLink = document.createElement("a");
-    openLink.href = post.url;
+    const openLink = document.createElement("span");
     openLink.className = "post-open-link";
     openLink.textContent = "Open →";
-    openLink.style.textDecoration = "none";
 
     article.append(image, category, title, description, openLink);
     link.append(article);
@@ -103,7 +101,7 @@ function RenderRevits() {
   const list = document.getElementById("revit-list");
   const revits = window.siteData?.revits;
 
-  if (!list || !Array.isArray(revits)) {
+  if (!list || !Array.isArray(revit)) {
     return;
   }
 
@@ -136,7 +134,7 @@ function RenderRevits() {
     meta.textContent = revit.meta;
 
     const link = document.createElement("a");
-    link.textContent = "Open →";
+      link.textContent = "Open →";
 
     const isComingSoon = (revit.status || "").toLowerCase() === "coming soon";
     if (isComingSoon) {
@@ -145,7 +143,7 @@ function RenderRevits() {
       link.classList.add("is-disabled");
       link.addEventListener("click", (e) => e.preventDefault());
     } else {
-      link.href = revit.file;
+      link.href = revit.url || revit.file;
     }
 
     article.append(type, title, description, meta, link);

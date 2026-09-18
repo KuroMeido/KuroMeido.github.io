@@ -19,11 +19,12 @@ window.siteData.revits = [
     },
     {
         type: ".addin .dll",
-        title: "Kuro ProSheet",
+        title: "Export PDF",
         description: "A add in for print and rename sheets/view by rule the parameters",
         file: "addin/KuroProSheet.zip",
         meta: "• 1 file ZIP",
-        status: "Coming soon"
+        status: "Prereview",
+        url: "tools/ExportPDF.html"
     },
         {
         type: ".dll",

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export views &amp; sheets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/ExportPDF.css">
+</head>
+<body>
+
+    <div class="app">
+        <div class="ticks"><span></span><span></span></div>
+
+        <header>
+            <div>
+                <div class="title">Export views &amp; sheets</div>
+                <div class="subtitle">Revit add-in — mockup for review</div>
+            </div>
+            <button class="btn" id="theme-toggle" style="font-size:12px;">Toggle theme</button>
+        </header>
+
+        <div class="layout">
+
+            <!-- LEFT: checklist -->
+            <div class="panel checklist">
+                <div class="checklist-head">
+                    <div class="step-label">1. Select sheets &amp; views</div>
+                    <input class="search" id="filter" type="text" placeholder="Filter by number or name…">
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" data-tab="sheets">Sheets <span class="count">(12)</span></div>
+                    <div class="tab" data-tab="views">Views <span class="count">(7)</span></div>
+                </div>
+
+                <div class="list" id="list-sheets">
+                    <label class="row"><input type="checkbox" checked><span class="num">A-101</span><span>Ground Floor Plan</span></label>
+                    <label class="row"><input type="checkbox" checked><span class="num">A-102</span><span>Level 2 Floor Plan</span></label>
+                    <label class="row"><input type="checkbox"><span class="num">A-103</span><span>Level 3 Floor Plan</span></label>
+                    <label class="row"><input type="checkbox" checked><span class="num">A-104</span><span>Roof Plan</span></label>
+                    <label class="row"><input type="checkbox" checked><span class="num">A-201</span><span>North &amp; South Elevations</span></label>
+                    <label class="row"><input type="checkbox"><span class="num">A-202</span><span>East &amp; West Elevations</span></label>
+                    <label class="row"><input type="checkbox" checked><span class="num">A-301</span><span>Building Section AA</span></label>
+                    <label class="row"><input type="checkbox"><span class="num">A-302</span><span>Building Section BB</span></label>
+                    <label class="row"><input type="checkbox"><span class="num">A-401</span><span>Wall Sections</span></label>
+                    <label class="row"><input type="checkbox"><span class="num">A-501</span><span>Stair Details</span></label>
+                    <label class="row"><input type="checkbox" checked><span class="num">S-101</span><span>Foundation Plan</span></label>
+                    <label class="row"><input type="checkbox"><span class="num">S-102</span><span>Framing Plan</span></label>
+                </div>
+
+                <div class="list" id="list-views" style="display:none;">
+                    <label class="row"><input type="checkbox"><span></span><span>3D View - Exterior</span></label>
+                    <label class="row"><input type="checkbox"><span></span><span>3D View - Interior Lobby</span></label>
+                    <label class="row"><input type="checkbox"><span></span><span>Rendering - Front Entry</span></label>
+                    <label class="row"><input type="checkbox"><span></span><span>Site Plan - Overview</span></label>
+                    <label class="row"><input type="checkbox"><span></span><span>Structural Isometric</span></label>
+                    <label class="row"><input type="checkbox"><span></span><span>Reflected Ceiling Plan - L1</span></label>
+                    <label class="row"><input type="checkbox"><span></span><span>Reflected Ceiling Plan - L2</span></label>
+                </div>
+
+                <div class="checklist-foot">
+                    <div class="selected-count"><b id="sel-count">7</b> selected</div>
+                    <div class="link-btns">
+                        <button class="link-btn" id="select-all">Select all</button>
+                        <button class="link-btn" id="clear-all">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: config -->
+            <div class="panel config">
+
+                <div class="section">
+                    <div class="step-label">2. File naming</div>
+                    <div class="field-row">
+                        <select class="token-type" id="token-type">
+                            <option>Sheet number</option>
+                            <option>Sheet name</option>
+                            <option>View name</option>
+                            <option>Sheet/project parameter</option>
+                            <option>Global parameter</option>
+                            <option>Static text</option>
+                        </select>
+                        <select class="token-value" id="token-param">
+                            <option>Revision</option>
+                            <option>Drawn By</option>
+                            <option>Checked By</option>
+                            <option>Issue Date</option>
+                        </select>
+                        <input class="textinput token-value" id="token-text" type="text" placeholder="e.g. _ or Rev A" style="display:none;">
+                        <button class="btn" id="add-token">Add</button>
+                    </div>
+
+                    <div class="chips" id="chips">
+                        <div class="chip">[Sheet Number]<button data-remove>×</button></div>
+                        <div class="chip">"_"<button data-remove>×</button></div>
+                        <div class="chip">[Sheet Name]<button data-remove>×</button></div>
+                    </div>
+
+                    <div class="preview-strip">
+                        <span class="tag">Preview</span>
+                        <span class="value" id="preview-text">A-102_Level 2 Floor Plan.pdf</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="step-label">3. Format</div>
+
+                    <div class="segmented" id="format-toggle">
+                        <button class="active" data-format="pdf">PDF</button>
+                        <button data-format="dwg">DWG</button>
+                    </div>
+
+                    <div class="checkline">
+                        <input type="checkbox" id="combine">
+                        <label for="combine">Combine all selected into a single file</label>
+                    </div>
+                    <div class="sub-row disabled" id="combine-name-row">
+                        <label>Combined file name</label>
+                        <input type="text" value="Combined Export">
+                    </div>
+
+                    <div class="format-panel" id="pdf-options">
+
+                        <div class="groupbox-row">
+                            <div class="groupbox">
+                                <span class="gb-label">Size</span>
+                                <div class="sub-row" style="margin-top:0;">
+                                    <label style="width:74px;">Page size</label>
+                                    <select>
+                                        <option>&lt;Use Sheet Size&gt;</option>
+                                        <option>ANSI D</option>
+                                        <option>ANSI B</option>
+                                        <option>A1</option>
+                                        <option>A3</option>
+                                    </select>
+                                </div>
+                                <div class="radio-line" style="margin-top:12px;">
+                                    <input type="radio" name="zoom" id="zoom-fit" checked>
+                                    <label for="zoom-fit">Fit to page</label>
+                                </div>
+                                <div class="radio-line">
+                                    <input type="radio" name="zoom" id="zoom-pct">
+                                    <label for="zoom-pct">Zoom</label>
+                                    <input type="text" class="zoom-input" value="100">
+                                    <span style="font-size:12.5px; color:var(--ink-soft);">% size</span>
+                                </div>
+                            </div>
+
+                            <div class="groupbox">
+                                <span class="gb-label">Paper placement</span>
+                                <div class="radio-line">
+                                    <input type="radio" name="placement" id="place-center" checked>
+                                    <label for="place-center">Center</label>
+                                </div>
+                                <div class="radio-line disabled" id="offset-line">
+                                    <input type="radio" name="placement" id="place-offset">
+                                    <label for="place-offset">Offset from corner</label>
+                                    <select style="width:120px;">
+                                        <option>No margin</option>
+                                        <option>Custom margin</option>
+                                    </select>
+                                </div>
+                                <div class="offset-xy">
+                                    <span><input type="text" value="0.0000" disabled> mm = x</span>
+                                    <span><input type="text" value="0.0000" disabled> mm = y</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="groupbox-row">
+                            <div class="groupbox">
+                                <span class="gb-label">Orientation</span>
+                                <div class="orientation-row">
+                                    <div class="orientation-icon">A</div>
+                                    <div style="flex:1;">
+                                        <div class="radio-line"><input type="radio" name="orient" id="or-auto" checked><label for="or-auto">Automatic</label></div>
+                                        <div class="radio-line"><input type="radio" name="orient" id="or-port"><label for="or-port">Portrait</label></div>
+                                        <div class="radio-line"><input type="radio" name="orient" id="or-land"><label for="or-land">Landscape</label></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="groupbox">
+                                <span class="gb-label">Appearance</span>
+                                <div class="sub-row" style="margin-top:0;">
+                                    <label style="width:90px;">Raster quality</label>
+                                    <select>
+                                        <option>Low</option>
+                                        <option>Medium</option>
+                                        <option selected>High</option>
+                                        <option>Presentation</option>
+                                    </select>
+                                </div>
+                                <div class="sub-row">
+                                    <label style="width:90px;">Colors</label>
+                                    <select>
+                                        <option selected>Color</option>
+                                        <option>Black and white</option>
+                                        <option>Grayscale</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="groupbox">
+                                <span class="gb-label">Create output using</span>
+                                <div class="radio-line"><input type="radio" name="output" id="out-vector" checked><label for="out-vector">Vector processing</label></div>
+                                <div class="radio-line"><input type="radio" name="output" id="out-raster"><label for="out-raster">Raster processing</label></div>
+                            </div>
+                        </div>
+
+                        <div class="groupbox" style="margin-top:14px;">
+                            <span class="gb-label">Options</span>
+                            <div class="checkbox-grid">
+                                <label class="checkbox-line"><input type="checkbox">View links in blue (color prints only)</label>
+                                <label class="checkbox-line"><input type="checkbox" checked>Hide scope boxes</label>
+                                <label class="checkbox-line"><input type="checkbox" checked>Hide ref/work planes</label>
+                                <label class="checkbox-line"><input type="checkbox" checked>Hide crop boundaries</label>
+                                <label class="checkbox-line"><input type="checkbox">Hide unreferenced view tags</label>
+                                <label class="checkbox-line"><input type="checkbox">Replace halftone with thin lines</label>
+                                <label class="checkbox-line"><input type="checkbox">Region edges mask coincident lines</label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="format-panel" id="dwg-options" style="display:none;">
+                        <div class="sub-row">
+                            <label>Export setup</label>
+                            <select>
+                                <option>&lt;Revit default&gt;</option>
+                                <option>Client Standard - IFC layers</option>
+                                <option>Structural Only</option>
+                            </select>
+                        </div>
+                        <div class="note">DWG exports one file per view — Revit's API can't merge multiple views into a single DWG.</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="step-label">4. Destination</div>
+                    <div class="path-row">
+                        <input type="text" id="path" value="C:\Projects\Riverside Tower\Export">
+                        <button class="btn" id="browse">Browse…</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="runbar">
+            <div class="progress-status" id="progress-status">Ready — 7 items selected</div>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            <button class="btn btn-primary" id="export-btn">Export</button>
+        </div>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="/assets/js/ExportPDF.js" defer></script>
+</body>
+</html>
