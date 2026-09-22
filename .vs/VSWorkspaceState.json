@@ -3,11 +3,9 @@
     "",
     "\\assets",
     "\\assets\\css",
-    "\\assets\\images",
     "\\assets\\js",
-    "\\assets\\pdf",
-    "\\posts"
+    "\\tools"
   ],
-  "SelectedNode": "\\posts\\CreateYourExportPDFAddIn.html",
+  "SelectedNode": "\\revit.html",
   "PreviewInSolutionExplorer": false
 }

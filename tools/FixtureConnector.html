@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixture Connector — Tool UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/FixtureConnector.css">
+</head>
+<body>
+
+<div class="stagehead">FIXTURE CONNECTOR — UI SHOWCASE, PRE-WPF</div>
+
+<div class="app">
+  <div class="titlebar">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="name">Fixture → Pipe Connector</div>
+    <div class="tag">OPENSOURCE MEP · v0.3</div>
+  </div>
+
+  <div class="body">
+    <div class="form">
+
+      <div class="field-group">
+        <h2><span class="num">1</span>Select elements</h2>
+
+        <div class="pick-row" id="row-fixture">
+          <button class="pick-btn" id="btn-fixture" type="button">Pick fixture</button>
+          <span class="pick-label" id="label-fixture">Nothing selected</span>
+        </div>
+
+        <div class="pick-row" id="row-pipe">
+          <button class="pick-btn" id="btn-pipe" type="button">Pick main pipe</button>
+          <span class="pick-label" id="label-pipe">Nothing selected</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h2><span class="num">2</span>Connection type</h2>
+        <div class="types" role="group" aria-label="Connection type">
+          <button class="type-card" id="type-1" aria-pressed="true" type="button">
+            <svg width="60" height="34" viewBox="0 0 60 34" fill="none">
+              <path d="M14 4 L14 16 L30 26 L30 30" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M4 26 H56" stroke-width="2.5"/>
+              <circle cx="30" cy="26" r="2.6" fill="currentColor"/>
+            </svg>
+            <div class="t-name">Offset tee</div>
+            <div class="t-desc">45° branch clears the riser before tying into main</div>
+          </button>
+          <button class="type-card" id="type-2" aria-pressed="false" type="button">
+            <svg width="60" height="34" viewBox="0 0 60 34" fill="none">
+              <path d="M22 4 L22 26" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M4 26 H56" stroke-width="2.5"/>
+              <circle cx="22" cy="26" r="2.6" fill="currentColor"/>
+            </svg>
+            <div class="t-name">Direct tee</div>
+            <div class="t-desc">Riser ties straight into main, no offset</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <h2><span class="num">3</span>Drain slope</h2>
+        <div class="slope-readout">
+          <span class="val" id="slope-val">2.00%</span>
+          <span class="ratio" id="slope-ratio">1 : 50</span>
+        </div>
+        <input type="range" id="slope" min="1" max="4" step="0.25" value="2">
+        <div class="slope-marks"><span>1%</span><span>2%</span><span>3%</span><span>4%</span></div>
+      </div>
+
+    </div>
+
+    <div class="preview">
+      <div class="preview-head">
+        <h2>Live preview</h2>
+        <span class="pv-tag" id="pv-tag">OFFSET TEE</span>
+      </div>
+      <svg id="stage" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet">
+        <!-- fixture -->
+        <g class="stage-label">
+          <text x="248" y="26">Fixture</text>
+        </g>
+        <rect class="stage-fixture-body" x="238" y="30" width="46" height="26" rx="3"/>
+        <path class="stage-fixture-body" d="M238 56 q23 14 46 0 v6 h-46 z"/>
+
+        <!-- main pipe -->
+        <path class="stage-pipe" d="M20 210 H380"/>
+        <text class="stage-label" x="20" y="230">Main pipe</text>
+
+        <!-- branch (redrawn by JS) -->
+        <path class="stage-pipe-branch" id="branch-path" d=""/>
+
+        <!-- fittings -->
+        <circle class="stage-fitting" id="fit-riser" r="5"/>
+        <circle class="stage-fitting" id="fit-tee" r="6"/>
+
+        <!-- slope dimension -->
+        <line class="stage-dim" id="dim-line" x1="0" y1="0" x2="0" y2="0"/>
+        <text class="stage-dim-text" id="dim-text" x="0" y="0"></text>
+      </svg>
+      <div class="preview-foot">Schematic elevation — angles exaggerated for legibility.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="toolbtn" type="button">Cancel</button>
+    <button class="toolbtn primary" id="create-btn" type="button" disabled>Create connection</button>
+  </div>
+</div>
+
+<script src="/assets/js/FixtureConnector.js" defer></script>
+</body>
+</html>
