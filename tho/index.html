@@ -126,7 +126,8 @@ h2{font-size:18px}
   </header>
 
   <div class="note err" id="err" role="alert" hidden></div>
-  <div class="note" id="offline" hidden>Trình duyệt này không cho lưu dữ liệu. Hãy tắt chế độ riêng tư rồi mở lại trang.</div>
+  <div class="note" id="setup" hidden>Chưa kết nối Google Sheet. Dán URL ứng dụng web Apps Script vào biến API_URL trong trang.</div>
+  <div class="note" id="loading" hidden>Đang tải dữ liệu từ Google Sheet…</div>
 
   <ul class="chores" id="chores"></ul>
   <p class="hint" style="margin:-8px 0 0">Làm xong thì chạm vào việc đó và chụp ảnh. Tiền chỉ được tính sau khi bố mẹ nghiệm thu.</p>
@@ -153,29 +154,10 @@ h2{font-size:18px}
 </main>
 
 <script>
-if(!window.claude){(function(){
-  var K="tien-cong-tho-v1";
-  function load(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return {}}}
-  function save(s){localStorage.setItem(K,JSON.stringify(s))}
-  var subs=[];
-  function snap(col){var s=load()[col]||{};var docs=Object.keys(s).sort().map(function(id){return {id:id,exists:true,data:function(){return s[id]}}});return {docs:docs,size:docs.length,empty:!docs.length}}
-  function emit(){subs.forEach(function(x){x.next(snap(x.col))})}
-  function write(fn){try{var s=load();fn(s);save(s);emit();return Promise.resolve()}catch(e){return Promise.reject(e)}}
-  var db={
-    collection:function(col){return {
-      onSnapshot:function(next){var x={col:col,next:next};subs.push(x);setTimeout(function(){next(snap(col))},0);return function(){subs=subs.filter(function(y){return y!==x})}},
-      add:function(d){return write(function(s){s[col]=s[col]||{};s[col]["p"+Date.now()+Math.random().toString(36).slice(2,6)]=d})}
-    }},
-    doc:function(path){var p=path.split("/");return {
-      set:function(d){return write(function(s){s[p[0]]=s[p[0]]||{};s[p[0]][p[1]]=d})},
-      delete:function(){return write(function(s){if(s[p[0]])delete s[p[0]][p[1]]})}
-    }}
-  };
-  window.claude={use:function(n){return Promise.resolve(n==="db"?db:null)}};
-})()}
-</script>
-<script>
 (function(){
+  /* Dán URL ứng dụng web Apps Script (kết thúc bằng /exec) vào đây. */
+  var API_URL = "https://script.google.com/macros/s/AKfycbxp9gKgNkaOHj9oyE80cSzPNBRdqJpU75-tl9Tyx8DXtxnzm7kYWiYIeaX_knPNdgsw/exec";
+
   var RATE = 10000;
   var TASKS = [
     {id:"cage",  label:"Dọn chuồng thỏ"},
@@ -183,7 +165,6 @@ if(!window.claude){(function(){
     {id:"water", label:"Lấy nước cho thỏ"},
     {id:"laundry", label:"Phơi đồ"}
   ];
-  var PIN_KEY = "tho-pin-v1";
   var SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
   var ICON = {
     cam:   SVG + '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
@@ -192,10 +173,19 @@ if(!window.claude){(function(){
     redo:  SVG + '<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg>'
   };
   var CHIP = { none:"Chụp ảnh để nộp", pending:"Chờ nghiệm thu", approved:"Đã duyệt", rejected:"Làm lại, chụp ảnh mới" };
+  var ERRORS = {
+    bad_pin:"Sai mã PIN.",
+    locked:"Nhập sai nhiều lần. Thử lại sau 10 phút.",
+    bad_new_pin:"Mã PIN mới gồm đúng 4 chữ số.",
+    already_approved:"Việc này đã được duyệt rồi.",
+    nothing_owed:"Chưa có khoản nào cần trả.",
+    bad_image:"Ảnh quá lớn hoặc không đọc được. Hãy chụp lại."
+  };
+  var NET_ERR = "Không kết nối được Google Sheet. Kiểm tra mạng rồi thử lại.";
 
-  var db = null;
-  var state = { days:{}, photos:{}, payouts:[], today:ymd(new Date()), parent:false, pin:null, pinMsg:"", confirming:false, loaded:false, err:"", gotDays:false, gotPhotos:false, pruned:false };
-  var chain = Promise.resolve();
+  var state = { days:{}, payouts:[], hasPin:false, photos:{}, photoReq:{}, today:ymd(new Date()),
+    parent:false, pinValue:"", pin:null, pinMsg:"", confirming:false, loaded:false, err:"", sig:"" };
+  var busy = 0;
 
   function pad(n){ return n < 10 ? "0"+n : ""+n; }
   function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
@@ -204,19 +194,62 @@ if(!window.claude){(function(){
   function $(id){ return document.getElementById(id); }
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
   function taskLabel(id){ for(var i=0;i<TASKS.length;i++) if(TASKS[i].id === id) return TASKS[i].label; return id; }
+  function errText(code){ return ERRORS[code] || "Có lỗi xảy ra. Thử lại sau."; }
 
-  /* Một ngày lưu: {date, rate, items:{taskId:{status, at, reviewedAt}}}. Dữ liệu cũ dạng {done:[...]} được coi là đã duyệt. */
-  function itemsOf(key){
-    var d = state.days[key]; if(!d) return {};
-    if(d.items) return d.items;
-    var o = {}; (Array.isArray(d.done) ? d.done : []).forEach(function(id){ o[id] = { status:"approved" }; });
-    return o;
+  /* ---------- Mạng ---------- */
+  function post(body){ return fetch(API_URL, { method:"POST", body:JSON.stringify(body) }).then(function(r){ return r.json(); }); }
+  function get(q){ return fetch(API_URL + "?" + q).then(function(r){ return r.json(); }); }
+
+  function applyState(s){
+    if(!s || !s.items) return;
+    var sig = JSON.stringify([s.items, s.payouts, s.hasPin]);
+    if(sig === state.sig && state.loaded) return;
+    state.sig = sig;
+    var days = {};
+    s.items.forEach(function(x){
+      var d = days[x.d] || (days[x.d] = { date:x.d, items:{} });
+      d.items[x.t] = { status:x.s, at:x.at, reviewedAt:x.rt, money:x.m, photo:!!x.p };
+    });
+    state.days = days; state.payouts = s.payouts || []; state.hasPin = !!s.hasPin; state.loaded = true;
+    render();
   }
+
+  function refresh(){
+    if(!API_URL) return;
+    get("a=state").then(function(s){
+      if(s && s.items){ if(state.err === NET_ERR){ state.err = ""; } applyState(s); render(); }
+    }).catch(function(){
+      if(!state.loaded){ state.err = NET_ERR; render(); }
+    });
+  }
+
+  /* Gửi một thay đổi lên Google Sheet và đồng bộ lại theo kết quả máy chủ. */
+  function write(body){
+    busy++;
+    return post(body).then(function(res){
+      busy--;
+      if(res && res.error){
+        state.err = errText(res.error);
+        if(res.error === "bad_pin" || res.error === "locked"){ state.parent = false; state.pinValue = ""; state.confirming = false; }
+      } else { state.err = ""; }
+      if(res && res.items && busy === 0){ state.sig = ""; applyState(res); }
+      else if(!(res && res.items)){ refresh(); }
+      render();
+      return res;
+    }).catch(function(){
+      busy--; state.err = NET_ERR; render(); refresh();
+    });
+  }
+
+  /* ---------- Dữ liệu theo ngày ---------- */
+  function itemsOf(key){ var d = state.days[key]; return d ? d.items : {}; }
   function statusOf(key, id){ var it = itemsOf(key)[id]; return it ? it.status : "none"; }
   function countBy(key, st){ var it = itemsOf(key), n = 0; Object.keys(it).forEach(function(k){ if(it[k].status === st) n++; }); return n; }
-  function rateOf(key){ var d = state.days[key]; return d && typeof d.rate === "number" ? d.rate : RATE; }
-  function earnedOf(key){ return countBy(key, "approved") * rateOf(key); }
-
+  function earnedOf(key){
+    var it = itemsOf(key), t = 0;
+    Object.keys(it).forEach(function(k){ if(it[k].status === "approved") t += it[k].money || RATE; });
+    return t;
+  }
   function pendingList(){
     var out = [];
     Object.keys(state.days).sort().forEach(function(key){
@@ -225,7 +258,6 @@ if(!window.claude){(function(){
     });
     return out;
   }
-
   function weekStartKey(){ var d = parse(state.today); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymd(d); }
   function monthStartKey(){ var d = parse(state.today); d.setDate(1); return ymd(d); }
   function sumFrom(startKey){ var t = 0; Object.keys(state.days).forEach(function(k){ if(k >= startKey && k <= state.today) t += earnedOf(k); }); return t; }
@@ -235,17 +267,20 @@ if(!window.claude){(function(){
   function dayLabel(key){ return parse(key).toLocaleDateString("vi-VN", { weekday:"short", day:"numeric", month:"numeric" }); }
   function timeLabel(ms){ return ms ? new Date(ms).toLocaleString("vi-VN", { weekday:"short", day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit" }) : ""; }
 
-  function enqueue(fn){
-    chain = chain.then(fn).catch(function(){ state.err = "Không lưu được. Bộ nhớ trình duyệt có thể đã đầy, hãy nhờ bố mẹ duyệt các ảnh cũ."; render(); });
-    return chain;
-  }
-
-  function saveItem(key, id, item){
-    var items = Object.assign({}, itemsOf(key));
-    if(item) items[id] = item; else delete items[id];
-    var body = { date:key, rate:rateOf(key), items:items };
-    state.days[key] = body; render();
-    return enqueue(function(){ return db.doc("days/" + key).set(body); });
+  /* ---------- Ảnh ---------- */
+  function pkey(day, id){ var it = itemsOf(day)[id]; return day + "_" + id + "@" + (it ? it.at : 0); }
+  function photoOf(day, id){
+    var it = itemsOf(day)[id];
+    if(!it || !it.photo || !API_URL) return null;
+    var k = pkey(day, id);
+    if(state.photos[k]) return state.photos[k];
+    if(!state.photoReq[k]){
+      state.photoReq[k] = 1;
+      get("a=photo&id=" + encodeURIComponent(day + "_" + id)).then(function(r){
+        if(r && r.img){ state.photos[k] = r.img; render(); } else { delete state.photoReq[k]; }
+      }).catch(function(){ delete state.photoReq[k]; });
+    }
+    return null;
   }
 
   function compress(file){
@@ -264,59 +299,45 @@ if(!window.claude){(function(){
     });
   }
 
+  function canWrite(){ return !!API_URL && state.loaded; }
+
   function submit(id, file){
-    if(!db) return;
-    var key = state.today, pid = key + "_" + id;
+    if(!canWrite()) return;
+    var day = state.today;
     compress(file).then(function(img){
-      state.err = "";
-      state.photos[pid] = { img:img, date:key, task:id };
-      enqueue(function(){ return db.doc("photos/" + pid).set({ img:img, date:key, task:id }); });
-      saveItem(key, id, { status:"pending", at:Date.now() });
-    }).catch(function(){ state.err = "Không đọc được ảnh. Hãy chụp lại."; render(); });
+      var at = Math.floor(Date.now() / 1000) * 1000;
+      var d = state.days[day] || (state.days[day] = { date:day, items:{} });
+      d.items[id] = { status:"pending", at:at, money:RATE, photo:true };
+      state.photos[day + "_" + id + "@" + at] = img;
+      state.err = ""; render();
+      write({ a:"submit", day:day, task:id, img:img, at:at });
+    }).catch(function(){ state.err = errText("bad_image"); render(); });
   }
 
-  function review(key, id, ok){
-    var it = itemsOf(key)[id]; if(!it || it.status !== "pending") return;
-    saveItem(key, id, Object.assign({}, it, { status: ok ? "approved" : "rejected", reviewedAt:Date.now() }));
+  function reviewMany(list, ok){
+    if(!state.pinValue || !list.length) return;
+    list.forEach(function(p){
+      var it = itemsOf(p.key)[p.id];
+      if(it && it.status === "pending"){ it.status = ok ? "approved" : "rejected"; it.reviewedAt = Date.now(); }
+    });
+    render();
+    write({ a:"review", pin:state.pinValue, items:list.map(function(p){ return { d:p.key, t:p.id, ok:ok }; }) });
   }
 
   function pay(){
-    var amount = owed();
     state.confirming = false;
-    if(!db || amount <= 0){ render(); return; }
-    var rec = { date:state.today, amount:amount };
-    state.payouts = state.payouts.concat([rec]); render();
-    enqueue(function(){ return db.collection("payouts").add(rec); });
+    if(!state.pinValue || owed() <= 0){ render(); return; }
+    render();
+    write({ a:"pay", pin:state.pinValue, date:state.today });
   }
 
-  function prune(){
-    if(state.pruned || !state.gotDays || !state.gotPhotos || !db) return;
-    state.pruned = true;
-    var cut = parse(state.today); cut.setDate(cut.getDate() - 14);
-    var ck = ymd(cut);
-    Object.keys(state.photos).forEach(function(pid){
-      var day = pid.slice(0, 10), id = pid.slice(11);
-      if(day < ck && statusOf(day, id) !== "pending"){
-        delete state.photos[pid];
-        enqueue(function(){ return db.doc("photos/" + pid).delete(); });
-      }
-    });
-  }
-
-  /* PIN phụ huynh */
-  function sha(s){
-    if(window.crypto && crypto.subtle && window.TextEncoder){
-      return crypto.subtle.digest("SHA-256", new TextEncoder().encode("tho:" + s)).then(function(b){
-        return Array.prototype.map.call(new Uint8Array(b), function(x){ return ("0" + x.toString(16)).slice(-2); }).join("");
-      });
-    }
-    return Promise.resolve("p:" + btoa(s));
-  }
-  function getPin(){ try{ return localStorage.getItem(PIN_KEY); }catch(e){ return null; } }
-  function putPin(h){ try{ localStorage.setItem(PIN_KEY, h); return true; }catch(e){ return false; } }
-
+  /* ---------- Phần dành cho bố mẹ ---------- */
   function renderParent(){
-    var box = $("parent"); box.innerHTML = "";
+    var box = $("parent");
+    var formKey = state.pin ? state.pin + "|" + state.pinMsg : "";
+    if(formKey && box.dataset.form === formKey) return;
+    box.dataset.form = formKey;
+    box.innerHTML = "";
     var pend = pendingList();
 
     if(!state.parent && !state.pin){
@@ -324,8 +345,8 @@ if(!window.claude){(function(){
       if(pend.length) h.appendChild(el("span", "badge", pend.length + " chờ duyệt"));
       box.appendChild(h);
       box.appendChild(el("p", "hint", "Cuối ngày xem ảnh bé nộp rồi duyệt. Tiền chỉ được tính cho việc đã duyệt."));
-      var go = el("button", "act", "Nghiệm thu"); go.type = "button"; go.id = "parent-open";
-      go.addEventListener("click", function(){ state.pin = getPin() ? "enter" : "set"; state.pinMsg = ""; render(); });
+      var go = el("button", "act", "Nghiệm thu"); go.type = "button"; go.id = "parent-open"; go.disabled = !canWrite();
+      go.addEventListener("click", function(){ state.pin = state.hasPin ? "enter" : "set"; state.pinMsg = ""; render(); });
       box.appendChild(go);
       return;
     }
@@ -334,13 +355,14 @@ if(!window.claude){(function(){
       var mode = state.pin;
       box.appendChild(el("h2", null, mode === "enter" ? "Nhập mã PIN" : mode === "set" ? "Tạo mã PIN cho bố mẹ" : "Đổi mã PIN"));
       var form = document.createElement("form"); form.style.cssText = "display:flex;flex-direction:column;gap:12px";
-      function field(id, label){
+      var field = function(id, label){
         var f = el("div", "field"); var l = el("label", null, label); l.setAttribute("for", id);
-        var i = document.createElement("input"); i.className = "pin"; i.id = id; i.type = "password"; i.inputMode = "numeric"; i.maxLength = 4; i.autocomplete = "off"; i.pattern = "[0-9]{4}";
+        var i = document.createElement("input"); i.className = "pin"; i.id = id; i.type = "password"; i.inputMode = "numeric"; i.maxLength = 4; i.autocomplete = "off";
         f.appendChild(l); f.appendChild(i); return f;
-      }
+      };
+      if(mode === "change") form.appendChild(field("pinCur", "Mã PIN hiện tại"));
       form.appendChild(field("pin1", mode === "enter" ? "Mã PIN 4 số" : "Mã PIN mới, 4 số"));
-      if(mode !== "enter") form.appendChild(field("pin2", "Nhập lại mã PIN"));
+      if(mode !== "enter") form.appendChild(field("pin2", "Nhập lại mã PIN mới"));
       if(state.pinMsg) form.appendChild(el("div", "msg", state.pinMsg));
       var r = el("div", "row");
       var ok = el("button", "act", "Xác nhận"); ok.type = "submit";
@@ -349,20 +371,21 @@ if(!window.claude){(function(){
       r.appendChild(ok); r.appendChild(cancel); form.appendChild(r);
       form.addEventListener("submit", function(e){
         e.preventDefault();
-        var v1 = $("pin1").value, v2 = $("pin2") ? $("pin2").value : v1;
-        if(!/^\d{4}$/.test(v1)){ state.pinMsg = "Mã PIN gồm đúng 4 chữ số."; render(); return; }
-        if(mode === "enter"){
-          sha(v1).then(function(hh){
-            if(hh === getPin()){ state.parent = true; state.pin = null; state.pinMsg = ""; } else { state.pinMsg = "Sai mã PIN."; }
-            render();
-          });
-        } else {
-          if(v1 !== v2){ state.pinMsg = "Hai lần nhập chưa giống nhau."; render(); return; }
-          sha(v1).then(function(hh){
-            if(!putPin(hh)){ state.pinMsg = "Không lưu được mã PIN trên trình duyệt này."; render(); return; }
-            state.parent = true; state.pin = null; state.pinMsg = ""; render();
-          });
-        }
+        var v1 = $("pin1").value, v2 = $("pin2") ? $("pin2").value : v1, cur = $("pinCur") ? $("pinCur").value : "";
+        var fail = function(m){ ok.disabled = false; state.pinMsg = m; render(); };
+        if(!/^\d{4}$/.test(v1)) return fail("Mã PIN gồm đúng 4 chữ số.");
+        if(mode !== "enter" && v1 !== v2) return fail("Hai lần nhập chưa giống nhau.");
+        if(mode === "change" && !/^\d{4}$/.test(cur)) return fail("Mã PIN hiện tại gồm đúng 4 chữ số.");
+        var body = mode === "enter" ? { a:"checkpin", pin:v1 } : mode === "set" ? { a:"setpin", newPin:v1 } : { a:"setpin", pin:cur, newPin:v1 };
+        ok.disabled = true;
+        post(body).then(function(res){
+          if(res && res.ok){
+            state.parent = true; state.pinValue = v1; state.pin = null; state.pinMsg = "";
+            state.sig = ""; applyState(res); render();
+          } else {
+            fail(errText(res && res.error));
+          }
+        }).catch(function(){ fail(NET_ERR); });
       });
       box.appendChild(form);
       return;
@@ -371,28 +394,28 @@ if(!window.claude){(function(){
     /* Chế độ nghiệm thu */
     var head = el("h2", null, "Nghiệm thu");
     var out = el("button", "act ghost", "Thoát"); out.type = "button"; out.id = "parent-exit";
-    out.addEventListener("click", function(){ state.parent = false; state.confirming = false; render(); });
+    out.addEventListener("click", function(){ state.parent = false; state.pinValue = ""; state.confirming = false; render(); });
     head.appendChild(out); box.appendChild(head);
 
     if(!pend.length){
       box.appendChild(el("p", "hint", "Không có việc nào đang chờ duyệt."));
     } else {
       var all = el("button", "act", "Duyệt tất cả (" + pend.length + ")"); all.type = "button"; all.id = "approve-all";
-      all.addEventListener("click", function(){ pend.forEach(function(p){ review(p.key, p.id, true); }); });
+      all.addEventListener("click", function(){ reviewMany(pend, true); });
       box.appendChild(all);
       var q = el("ul", "queue");
       pend.forEach(function(p){
         var li = el("li", "rev");
         var rh = el("div", "rev-h"); rh.appendChild(el("b", null, taskLabel(p.id))); rh.appendChild(el("small", null, timeLabel(p.item.at) || dayLabel(p.key)));
         li.appendChild(rh);
-        var ph = state.photos[p.key + "_" + p.id];
-        if(ph && ph.img){ var im = document.createElement("img"); im.src = ph.img; im.alt = "Ảnh nộp: " + taskLabel(p.id); li.appendChild(im); }
-        else li.appendChild(el("div", "none", "Không có ảnh"));
+        var ph = photoOf(p.key, p.id);
+        if(ph){ var im = document.createElement("img"); im.src = ph; im.alt = "Ảnh nộp: " + taskLabel(p.id); li.appendChild(im); }
+        else li.appendChild(el("div", "none", p.item.photo ? "Đang tải ảnh…" : "Không có ảnh"));
         var ra = el("div", "row");
-        var yes = el("button", "act", "Duyệt +" + money(rateOf(p.key))); yes.type = "button";
-        yes.addEventListener("click", function(){ review(p.key, p.id, true); });
+        var yes = el("button", "act", "Duyệt +" + money(p.item.money || RATE)); yes.type = "button";
+        yes.addEventListener("click", function(){ reviewMany([p], true); });
         var no = el("button", "act warn", "Làm lại"); no.type = "button";
-        no.addEventListener("click", function(){ review(p.key, p.id, false); });
+        no.addEventListener("click", function(){ reviewMany([p], false); });
         ra.appendChild(yes); ra.appendChild(no); li.appendChild(ra);
         q.appendChild(li);
       });
@@ -407,7 +430,7 @@ if(!window.claude){(function(){
       var n = el("button", "act ghost", "Hủy"); n.type = "button"; n.addEventListener("click", function(){ state.confirming = false; render(); });
       pr.appendChild(y); pr.appendChild(n);
     } else {
-      var b = el("button", "act", "Đã trả tiền"); b.type = "button"; b.id = "pay-start"; b.disabled = !db || o <= 0;
+      var b = el("button", "act", "Đã trả tiền"); b.type = "button"; b.id = "pay-start"; b.disabled = o <= 0;
       b.addEventListener("click", function(){ state.confirming = true; render(); });
       pr.appendChild(b);
       pr.appendChild(el("span", "hint", o > 0 ? "Bấm khi đã đưa đủ số tiền chưa trả." : "Chưa có khoản nào cần trả."));
@@ -419,28 +442,31 @@ if(!window.claude){(function(){
     box.appendChild(chg);
   }
 
+  /* ---------- Vẽ trang ---------- */
   function render(){
     $("date").textContent = parse(state.today).toLocaleDateString("vi-VN", { weekday:"long", day:"numeric", month:"long" });
     var A = countBy(state.today, "approved"), P = countBy(state.today, "pending");
     $("todayMoney").textContent = money(earnedOf(state.today));
     $("todayCount").textContent = A + "/" + TASKS.length + " đã duyệt" + (P ? " · " + P + " chờ nghiệm thu" : "");
     Array.prototype.forEach.call($("bar").children, function(e, i){ e.className = i < A ? "ok" : (i < A + P ? "wait" : ""); });
-    $("offline").hidden = !!db || !state.loaded;
+    $("setup").hidden = !!API_URL;
+    $("loading").hidden = !API_URL || state.loaded || !!state.err;
     var er = $("err"); er.hidden = !state.err; er.textContent = state.err;
+    var live = canWrite();
 
     var ul = $("chores"); ul.innerHTML = "";
     TASKS.forEach(function(t){
       var st = statusOf(state.today, t.id);
-      var photo = state.photos[state.today + "_" + t.id];
+      var photo = photoOf(state.today, t.id);
       var li = document.createElement("li");
-      var row = el("label", "chore " + st + (db ? "" : " off")); row.id = "chore-" + t.id;
+      var row = el("label", "chore " + st + (live ? "" : " off")); row.id = "chore-" + t.id;
       var bx = el("span", "box"); bx.innerHTML = st === "approved" ? ICON.check : st === "pending" ? ICON.clock : st === "rejected" ? ICON.redo : ICON.cam;
       var meta = el("span", "meta"); meta.appendChild(el("span", "label", t.label));
-      var sub = el("span", "sub"); sub.appendChild(el("span", "chip " + st, CHIP[st])); sub.appendChild(el("span", "pay", "+" + money(rateOf(state.today))));
+      var sub = el("span", "sub"); sub.appendChild(el("span", "chip " + st, CHIP[st])); sub.appendChild(el("span", "pay", "+" + money(RATE)));
       meta.appendChild(sub);
       row.appendChild(bx); row.appendChild(meta);
-      if(photo && photo.img){ var im = el("img", "thumb"); im.src = photo.img; im.alt = "Ảnh " + t.label; row.appendChild(im); }
-      if(st !== "approved" && db){
+      if(photo){ var im = el("img", "thumb"); im.src = photo; im.alt = "Ảnh " + t.label; row.appendChild(im); }
+      if(st !== "approved" && live){
         var inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.setAttribute("capture", "environment");
         inp.id = "file-" + t.id; inp.setAttribute("aria-label", t.label + ": chụp ảnh để nộp");
         inp.addEventListener("change", function(){ var f = inp.files && inp.files[0]; if(f) submit(t.id, f); });
@@ -467,46 +493,27 @@ if(!window.claude){(function(){
     });
 
     var pl = $("payouts"); pl.innerHTML = "";
-    var ps = state.payouts.slice().sort(function(a,b){ return (b.date||"") < (a.date||"") ? -1 : 1; }).slice(0, 8);
+    var ps = state.payouts.slice().sort(function(a,b){ return (b.d||"") < (a.d||"") ? -1 : 1; }).slice(0, 8);
     if(!ps.length){ var e2 = el("li"); e2.appendChild(el("span", "l hint", "Chưa trả lần nào.")); pl.appendChild(e2); }
     ps.forEach(function(p){
-      var li = el("li"); var l = el("div", "l"); l.appendChild(el("span", null, p.date ? dayLabel(p.date) : ""));
+      var li = el("li"); var l = el("div", "l"); l.appendChild(el("span", null, p.d ? dayLabel(p.d) : ""));
       li.appendChild(l); li.appendChild(el("div", "r paid", money(p.amount || 0))); pl.appendChild(li);
     });
   }
 
-  function fail(){ state.loaded = true; render(); }
-
-  function start(){
-    render();
-    if(!window.claude || !window.claude.use){ fail(); return; }
-    window.claude.use("db").then(function(d){
-      db = d;
-      if(!db){ fail(); return; }
-      db.collection("days").onSnapshot(function(snap){
-        var m = {}; snap.docs.forEach(function(x){ m[x.id] = x.data(); });
-        state.days = m; state.loaded = true; state.gotDays = true; prune(); render();
-      }, fail);
-      db.collection("photos").onSnapshot(function(snap){
-        var m = {}; snap.docs.forEach(function(x){ m[x.id] = x.data(); });
-        state.photos = m; state.gotPhotos = true; prune(); render();
-      }, fail);
-      db.collection("payouts").onSnapshot(function(snap){
-        state.payouts = snap.docs.map(function(x){ return x.data(); }); render();
-      }, fail);
-    }).catch(fail);
-  }
-
   document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState === "hidden"){ state.parent = false; state.pin = null; state.confirming = false; }
-    else {
+    if(document.visibilityState === "hidden"){
+      state.parent = false; state.pinValue = ""; state.pin = null; state.confirming = false;
+    } else {
       var t = ymd(new Date());
       if(t !== state.today){ state.today = t; state.confirming = false; }
-      render();
+      render(); refresh();
     }
   });
+  setInterval(function(){ if(document.visibilityState === "visible" && !busy && !state.pin) refresh(); }, 20000);
 
-  start();
+  render();
+  refresh();
 })();
 </script>
 </body>
