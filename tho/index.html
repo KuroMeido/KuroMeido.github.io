@@ -130,7 +130,7 @@ h2{font-size:18px}
   <div class="note" id="loading" hidden>Đang tải dữ liệu từ Google Sheet…</div>
 
   <ul class="chores" id="chores"></ul>
-  <p class="hint" style="margin:-8px 0 0">Làm xong thì chạm vào việc đó và chụp ảnh. Tiền chỉ được tính sau khi bố mẹ nghiệm thu.</p>
+  <p class="hint" style="margin:-8px 0 0">Làm xong thì chạm vào việc đó và chụp ảnh. Tiền chỉ được tính sau khi mụ phù thủy nghiệm thu.</p>
 
   <section>
     <div class="stats">
@@ -148,7 +148,7 @@ h2{font-size:18px}
   </section>
 
   <section>
-    <h2>Các lần đã trả</h2>
+    <h2>Tiền theo tháng</h2>
     <ul class="list" id="payouts"></ul>
   </section>
 </main>
@@ -324,14 +324,30 @@ h2{font-size:18px}
     write({ a:"review", pin:state.pinValue, items:list.map(function(p){ return { d:p.key, t:p.id, ok:ok }; }) });
   }
 
-  function pay(){
-    state.confirming = false;
-    if(!state.pinValue || owed() <= 0){ render(); return; }
-    render();
-    write({ a:"pay", pin:state.pinValue, date:state.today });
+  function monthLabel(key){ return "Tháng " + parseInt(key.slice(5), 10) + "/" + key.slice(0, 4); }
+
+  /* Gom tiền theo tháng: đã duyệt, đã trả, còn nợ. */
+  function monthRows(){
+    var map = {};
+    function row(k){ return map[k] || (map[k] = { key:k, earned:0, paid:0, count:0 }); }
+    Object.keys(state.days).forEach(function(day){
+      var e = earnedOf(day), c = countBy(day, "approved");
+      if(c > 0){ var r = row(day.slice(0, 7)); r.earned += e; r.count += c; }
+    });
+    state.payouts.forEach(function(p){ if(p.d){ row(String(p.d).slice(0, 7)).paid += p.amount || 0; } });
+    return Object.keys(map).sort().reverse().map(function(k){ var r = map[k]; r.owed = Math.max(0, r.earned - r.paid); return r; });
   }
 
-  /* ---------- Phần dành cho bố mẹ ---------- */
+  function pay(monthKey){
+    state.confirming = false;
+    var m = monthRows().filter(function(x){ return x.key === monthKey; })[0];
+    if(!state.pinValue || !m || m.owed <= 0){ render(); return; }
+    state.payouts = state.payouts.concat([{ d:monthKey, amount:m.owed }]);
+    render();
+    write({ a:"pay", pin:state.pinValue, month:monthKey, date:state.today });
+  }
+
+  /* ---------- Phần dành cho mụ phù thủy ---------- */
   function renderParent(){
     var box = $("parent");
     var formKey = state.pin ? state.pin + "|" + state.pinMsg : "";
@@ -341,7 +357,7 @@ h2{font-size:18px}
     var pend = pendingList();
 
     if(!state.parent && !state.pin){
-      var h = el("h2", null, "Dành cho bố mẹ");
+      var h = el("h2", null, "Dành cho mụ phù thủy");
       if(pend.length) h.appendChild(el("span", "badge", pend.length + " chờ duyệt"));
       box.appendChild(h);
       box.appendChild(el("p", "hint", "Cuối ngày xem ảnh bé nộp rồi duyệt. Tiền chỉ được tính cho việc đã duyệt."));
@@ -353,7 +369,7 @@ h2{font-size:18px}
 
     if(state.pin){
       var mode = state.pin;
-      box.appendChild(el("h2", null, mode === "enter" ? "Nhập mã PIN" : mode === "set" ? "Tạo mã PIN cho bố mẹ" : "Đổi mã PIN"));
+      box.appendChild(el("h2", null, mode === "enter" ? "Nhập mã PIN" : mode === "set" ? "Tạo mã PIN cho mụ phù thủy" : "Đổi mã PIN"));
       var form = document.createElement("form"); form.style.cssText = "display:flex;flex-direction:column;gap:12px";
       var field = function(id, label){
         var f = el("div", "field"); var l = el("label", null, label); l.setAttribute("for", id);
@@ -422,20 +438,31 @@ h2{font-size:18px}
       box.appendChild(q);
     }
 
-    var o = owed();
-    box.appendChild(el("h2", null, "Trả tiền"));
-    var pr = el("div", "row");
-    if(state.confirming){
-      var y = el("button", "act", "Xác nhận đã trả " + money(o)); y.type = "button"; y.id = "pay-yes"; y.addEventListener("click", pay);
-      var n = el("button", "act ghost", "Hủy"); n.type = "button"; n.addEventListener("click", function(){ state.confirming = false; render(); });
-      pr.appendChild(y); pr.appendChild(n);
-    } else {
-      var b = el("button", "act", "Đã trả tiền"); b.type = "button"; b.id = "pay-start"; b.disabled = o <= 0;
-      b.addEventListener("click", function(){ state.confirming = true; render(); });
-      pr.appendChild(b);
-      pr.appendChild(el("span", "hint", o > 0 ? "Bấm khi đã đưa đủ số tiền chưa trả." : "Chưa có khoản nào cần trả."));
-    }
-    box.appendChild(pr);
+    box.appendChild(el("h2", null, "Trả tiền theo tháng"));
+    var months = monthRows();
+    if(!months.some(function(m){ return m.owed > 0; })) box.appendChild(el("p", "hint", "Chưa có tháng nào cần trả."));
+    var pl2 = el("ul", "list"); pl2.style.marginTop = "0";
+    months.forEach(function(m){
+      var li = el("li"); li.style.alignItems = "center";
+      var l = el("div", "l"); l.appendChild(el("span", null, monthLabel(m.key)));
+      l.appendChild(el("small", null, "Đã duyệt " + m.count + " việc · " + money(m.earned) + (m.paid ? " · đã trả " + money(m.paid) : "")));
+      li.appendChild(l);
+      var r = el("div", "row"); r.style.justifyContent = "flex-end";
+      if(m.owed <= 0){
+        r.appendChild(el("span", "chip approved", "Đã trả đủ"));
+      } else if(state.confirming === m.key){
+        var y = el("button", "act", "Xác nhận trả " + money(m.owed)); y.type = "button"; y.id = "pay-yes";
+        y.addEventListener("click", function(){ pay(m.key); });
+        var n = el("button", "act ghost", "Hủy"); n.type = "button"; n.addEventListener("click", function(){ state.confirming = false; render(); });
+        r.appendChild(y); r.appendChild(n);
+      } else {
+        var b = el("button", "act", "Đã trả " + money(m.owed)); b.type = "button"; b.id = "pay-start-" + m.key;
+        b.addEventListener("click", function(){ state.confirming = m.key; render(); });
+        r.appendChild(b);
+      }
+      li.appendChild(r); pl2.appendChild(li);
+    });
+    box.appendChild(pl2);
 
     var chg = el("button", "act ghost", "Đổi mã PIN"); chg.type = "button"; chg.id = "pin-change";
     chg.addEventListener("click", function(){ state.pin = "change"; state.pinMsg = ""; render(); });
@@ -493,11 +520,12 @@ h2{font-size:18px}
     });
 
     var pl = $("payouts"); pl.innerHTML = "";
-    var ps = state.payouts.slice().sort(function(a,b){ return (b.d||"") < (a.d||"") ? -1 : 1; }).slice(0, 8);
-    if(!ps.length){ var e2 = el("li"); e2.appendChild(el("span", "l hint", "Chưa trả lần nào.")); pl.appendChild(e2); }
-    ps.forEach(function(p){
-      var li = el("li"); var l = el("div", "l"); l.appendChild(el("span", null, p.d ? dayLabel(p.d) : ""));
-      li.appendChild(l); li.appendChild(el("div", "r paid", money(p.amount || 0))); pl.appendChild(li);
+    var ms = monthRows().slice(0, 6);
+    if(!ms.length){ var e2 = el("li"); e2.appendChild(el("span", "l hint", "Chưa có tháng nào được tính tiền.")); pl.appendChild(e2); }
+    ms.forEach(function(m){
+      var li = el("li"); var l = el("div", "l"); l.appendChild(el("span", null, monthLabel(m.key)));
+      l.appendChild(el("small", null, m.owed > 0 ? "Còn " + money(m.owed) + " chưa trả" : "Đã trả đủ"));
+      li.appendChild(l); li.appendChild(el("div", m.owed > 0 ? "r" : "r paid", money(m.earned))); pl.appendChild(li);
     });
   }
 
