@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Tiền công chăm thỏ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column, phone first. Today's chores on top as big tap rows, money summary, then history. */
+:root{
+  --bg:#f2f5ef;
+  --surface:#ffffff;
+  --fg:#1d2a21;
+  --muted:#5d6e62;
+  --line:#dbe3d8;
+  --carrot:#d9631c;
+  --carrot-ink:#ffffff;
+  --leaf:#2f7a52;
+  --leaf-soft:#dcefe3;
+  --font-display:"Fredoka","Be Vietnam Pro",system-ui,sans-serif;
+  --font-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a15;--surface:#1b261f;--fg:#e6efe8;--muted:#9bb0a1;--line:#2c3b31;
+    --carrot:#f08a45;--carrot-ink:#1b1209;--leaf:#6fcf97;--leaf-soft:#223b2d;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a15;--surface:#1b261f;--fg:#e6efe8;--muted:#9bb0a1;--line:#2c3b31;
+  --carrot:#f08a45;--carrot-ink:#1b1209;--leaf:#6fcf97;--leaf-soft:#223b2d;color-scheme:dark;
+}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:520px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,.num{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:balance}
+.date{color:var(--muted);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.hero{display:flex;flex-direction:column;gap:6px}
+.hero h1{font-size:30px;line-height:1.15}
+.today-money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.today-money .num{font-size:44px;line-height:1;color:var(--carrot);font-variant-numeric:tabular-nums}
+.today-money span{color:var(--muted)}
+.bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.bar i{height:8px;border-radius:4px;background:var(--line);transition:background .2s}
+.bar i.on{background:var(--leaf)}
+.chores{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.chore{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;width:100%;padding:16px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);cursor:pointer;transition:border-color .15s,background .15s}
+.chore:hover{border-color:var(--leaf)}
+.chore:focus-visible{outline:3px solid var(--carrot);outline-offset:2px}
+.chore .box{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--muted);display:grid;place-items:center;color:transparent}
+.chore .box svg{width:18px;height:18px}
+.chore .label{flex:1;min-width:0;font-weight:500;font-size:16px}
+.chore .pay{font-family:var(--font-display);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chore.done{background:var(--leaf-soft);border-color:var(--leaf)}
+.chore.done .box{background:var(--leaf);border-color:var(--leaf);color:var(--surface)}
+.chore.done .pay{color:var(--leaf)}
+.chore[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat .num{font-size:19px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.owed{background:var(--carrot);border-color:var(--carrot)}
+.owed small,.owed .num{color:var(--carrot-ink)}
+.payrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.act{font:inherit;font-weight:600;border-radius:10px;padding:11px 16px;border:1.5px solid var(--leaf);background:var(--leaf);color:var(--surface);cursor:pointer}
+button.act.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+button.act:disabled{opacity:.45;cursor:not-allowed}
+button.act:focus-visible{outline:3px solid var(--carrot);outline-offset:2px}
+.hint{color:var(--muted);font-size:13px}
+h2{font-size:18px}
+.list{display:flex;flex-direction:column;margin:8px 0 0;padding:0;list-style:none}
+.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.list .l{min-width:0}
+.list .l small{display:block;color:var(--muted)}
+.list .r{font-family:var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.list .r.paid{color:var(--leaf)}
+.note{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted)}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="date" id="date"></div>
+    <h1>Việc của thỏ hôm nay</h1>
+    <div class="today-money"><span class="num" id="todayMoney">0đ</span><span id="todayCount">0/4 việc</span></div>
+    <div class="bar" id="bar"><i></i><i></i><i></i><i></i></div>
+  </header>
+
+  <div class="note" id="offline" hidden>Chưa lưu được dữ liệu. Hãy đăng nhập claude.ai rồi mở lại trang này.</div>
+
+  <ul class="chores" id="chores"></ul>
+
+  <section>
+    <div class="stats">
+      <div class="stat"><small>Tuần này</small><div class="num" id="week">0đ</div></div>
+      <div class="stat"><small>Tháng này</small><div class="num" id="month">0đ</div></div>
+      <div class="stat owed"><small>Chưa trả</small><div class="num" id="owed">0đ</div></div>
+    </div>
+    <div class="payrow" style="margin-top:12px" id="payrow"></div>
+  </section>
+
+  <section>
+    <h2>14 ngày gần đây</h2>
+    <ul class="list" id="history"></ul>
+  </section>
+
+  <section>
+    <h2>Các lần đã trả</h2>
+    <ul class="list" id="payouts"></ul>
+  </section>
+</main>
+
+<script>
+if(!window.claude){(function(){
+  var K="tien-cong-tho-v1";
+  function load(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return {}}}
+  function save(s){try{localStorage.setItem(K,JSON.stringify(s))}catch(e){}}
+  var subs=[];
+  function snap(col){var s=load()[col]||{};var docs=Object.keys(s).sort().map(function(id){return {id:id,exists:true,data:function(){return s[id]}}});return {docs:docs,size:docs.length,empty:!docs.length}}
+  function emit(){subs.forEach(function(x){x.next(snap(x.col))})}
+  var db={
+    collection:function(col){return {
+      onSnapshot:function(next){var x={col:col,next:next};subs.push(x);setTimeout(function(){next(snap(col))},0);return function(){subs=subs.filter(function(y){return y!==x})}},
+      add:function(d){var s=load();s[col]=s[col]||{};s[col]["p"+Date.now()+Math.random().toString(36).slice(2,6)]=d;save(s);emit();return Promise.resolve()}
+    }},
+    doc:function(path){var p=path.split("/");return {set:function(d){var s=load();s[p[0]]=s[p[0]]||{};s[p[0]][p[1]]=d;save(s);emit();return Promise.resolve()}}}
+  };
+  window.claude={use:function(n){return Promise.resolve(n==="db"?db:null)}};
+})()}
+</script>
+<script>
+(function(){
+  var RATE = 10000;
+  var TASKS = [
+    {id:"cage",  label:"Dọn chuồng thỏ"},
+    {id:"feed",  label:"Cho thỏ ăn"},
+    {id:"water", label:"Lấy nước cho thỏ"},
+    {id:"laundry", label:"Phơi đồ"}
+  ];
+  var CHECK = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>';
+
+  var db = null;
+  var state = { days:{}, payouts:[], today:ymd(new Date()), confirming:false, loaded:false };
+  var chain = Promise.resolve();
+
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+  function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function parse(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function money(n){ return n.toLocaleString("vi-VN") + "đ"; }
+  function $(id){ return document.getElementById(id); }
+
+  function doneOf(key){ var d = state.days[key]; return d && Array.isArray(d.done) ? d.done : []; }
+  function earnedOf(key){ var d = state.days[key]; if(!d) return 0; return doneOf(key).length * (typeof d.rate === "number" ? d.rate : RATE); }
+
+  function weekStartKey(){
+    var d = parse(state.today); var off = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - off); return ymd(d);
+  }
+  function monthStartKey(){ var d = parse(state.today); d.setDate(1); return ymd(d); }
+
+  function sumFrom(startKey){
+    var t = 0;
+    Object.keys(state.days).forEach(function(k){ if(k >= startKey && k <= state.today) t += earnedOf(k); });
+    return t;
+  }
+  function totalEarned(){ var t = 0; Object.keys(state.days).forEach(function(k){ t += earnedOf(k); }); return t; }
+  function totalPaid(){ return state.payouts.reduce(function(a,p){ return a + (p.amount||0); }, 0); }
+  function owed(){ return Math.max(0, totalEarned() - totalPaid()); }
+
+  function dayLabel(key){
+    return parse(key).toLocaleDateString("vi-VN", { weekday:"short", day:"numeric", month:"numeric" });
+  }
+
+  function render(){
+    $("date").textContent = parse(state.today).toLocaleDateString("vi-VN", { weekday:"long", day:"numeric", month:"long" });
+    var done = doneOf(state.today);
+    $("todayMoney").textContent = money(earnedOf(state.today));
+    $("todayCount").textContent = done.length + "/" + TASKS.length + " việc";
+    Array.prototype.forEach.call($("bar").children, function(el, i){ el.className = i < done.length ? "on" : ""; });
+    $("offline").hidden = !!db || !state.loaded;
+
+    var ul = $("chores"); ul.innerHTML = "";
+    TASKS.forEach(function(t){
+      var isDone = done.indexOf(t.id) !== -1;
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      b.type = "button"; b.id = "chore-" + t.id;
+      b.className = "chore" + (isDone ? " done" : "");
+      b.setAttribute("aria-pressed", isDone ? "true" : "false");
+      if(!db) b.setAttribute("aria-disabled", "true");
+      b.innerHTML = '<span class="box">' + CHECK + '</span><span class="label"></span><span class="pay">+' + money(RATE) + '</span>';
+      b.querySelector(".label").textContent = t.label;
+      b.addEventListener("click", function(){ toggle(t.id); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+
+    $("week").textContent = money(sumFrom(weekStartKey()));
+    $("month").textContent = money(sumFrom(monthStartKey()));
+    var o = owed();
+    $("owed").textContent = money(o);
+
+    var row = $("payrow"); row.innerHTML = "";
+    if(state.confirming){
+      var yes = document.createElement("button"); yes.type = "button"; yes.className = "act"; yes.id = "pay-yes";
+      yes.textContent = "Xác nhận đã trả " + money(o); yes.addEventListener("click", pay);
+      var no = document.createElement("button"); no.type = "button"; no.className = "act ghost"; no.id = "pay-no";
+      no.textContent = "Hủy"; no.addEventListener("click", function(){ state.confirming = false; render(); });
+      row.appendChild(yes); row.appendChild(no);
+    } else {
+      var btn = document.createElement("button"); btn.type = "button"; btn.className = "act"; btn.id = "pay-start";
+      btn.textContent = "Đã trả tiền"; btn.disabled = !db || o <= 0;
+      btn.addEventListener("click", function(){ state.confirming = true; render(); });
+      row.appendChild(btn);
+      var h = document.createElement("span"); h.className = "hint";
+      h.textContent = o > 0 ? "Bấm khi đã đưa đủ số tiền chưa trả." : "Chưa có khoản nào cần trả.";
+      row.appendChild(h);
+    }
+
+    var hist = $("history"); hist.innerHTML = "";
+    var keys = Object.keys(state.days).filter(function(k){
+      var d = parse(k), t = parse(state.today);
+      return (t - d) / 86400000 < 14 && doneOf(k).length > 0;
+    }).sort().reverse();
+    if(!keys.length){ var e = document.createElement("li"); e.innerHTML = '<span class="l hint">Chưa có ngày nào được ghi.</span>'; hist.appendChild(e); }
+    keys.forEach(function(k){
+      var li = document.createElement("li");
+      li.innerHTML = '<div class="l"><span class="d"></span><small class="s"></small></div><div class="r"></div>';
+      li.querySelector(".d").textContent = dayLabel(k);
+      li.querySelector(".s").textContent = doneOf(k).length + "/" + TASKS.length + " việc";
+      li.querySelector(".r").textContent = money(earnedOf(k));
+      hist.appendChild(li);
+    });
+
+    var pl = $("payouts"); pl.innerHTML = "";
+    var ps = state.payouts.slice().sort(function(a,b){ return (b.date||"") < (a.date||"") ? -1 : 1; }).slice(0, 8);
+    if(!ps.length){ var e2 = document.createElement("li"); e2.innerHTML = '<span class="l hint">Chưa trả lần nào.</span>'; pl.appendChild(e2); }
+    ps.forEach(function(p){
+      var li = document.createElement("li");
+      li.innerHTML = '<div class="l"><span class="d"></span></div><div class="r paid"></div>';
+      li.querySelector(".d").textContent = p.date ? dayLabel(p.date) : "";
+      li.querySelector(".r").textContent = money(p.amount || 0);
+      pl.appendChild(li);
+    });
+  }
+
+  function fail(){ state.loaded = true; render(); }
+
+  function toggle(id){
+    if(!db) return;
+    var key = state.today;
+    var cur = doneOf(key);
+    var next = cur.indexOf(id) !== -1 ? cur.filter(function(x){ return x !== id; }) : cur.concat([id]);
+    var rate = state.days[key] && typeof state.days[key].rate === "number" ? state.days[key].rate : RATE;
+    var body = { date:key, done:next, rate:rate };
+    state.days[key] = body; render();
+    chain = chain.then(function(){ return db.doc("days/" + key).set(body); }).catch(function(){});
+  }
+
+  function pay(){
+    var amount = owed();
+    state.confirming = false;
+    if(!db || amount <= 0){ render(); return; }
+    var rec = { date:state.today, amount:amount };
+    state.payouts = state.payouts.concat([rec]); render();
+    chain = chain.then(function(){ return db.collection("payouts").add(rec); }).catch(function(){});
+  }
+
+  function start(){
+    render();
+    if(!window.claude || !window.claude.use){ fail(); return; }
+    window.claude.use("db").then(function(d){
+      db = d;
+      if(!db){ fail(); return; }
+      db.collection("days").onSnapshot(function(snap){
+        var m = {}; snap.docs.forEach(function(x){ m[x.id] = x.data(); });
+        state.days = m; state.loaded = true; render();
+      }, fail);
+      db.collection("payouts").onSnapshot(function(snap){
+        state.payouts = snap.docs.map(function(x){ return x.data(); }); render();
+      }, fail);
+    }).catch(fail);
+  }
+
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible"){
+      var t = ymd(new Date());
+      if(t !== state.today){ state.today = t; state.confirming = false; render(); }
+    }
+  });
+
+  start();
+})();
+</script>
+
+</body>
+</html>
