@@ -15,6 +15,10 @@
   --bad-soft:#fbe0e0;
   --font-display:"Fredoka","Be Vietnam Pro",system-ui,sans-serif;
   --font-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  /* Chỉ 2 font (display, body) và 3 cỡ chữ. Mọi font-size trong file này phải dùng một trong 3 biến dưới đây. */
+  --fs-s:13px;  /* nhãn, ghi chú, chip, ngày */
+  --fs-m:16px;  /* nội dung, nút, tiêu đề mục, số trong thẻ */
+  --fs-l:32px;  /* tiêu đề trang, số tiền hôm nay */
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -29,14 +33,15 @@
   --wait-soft:#3a2616;--wait-ink:#f3b17f;--bad:#f08a8e;--bad-soft:#3d1d1f;color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 40px}
+input,button,select,textarea{font:inherit}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-m);line-height:1.5;padding-inline:16px;padding-block:20px 40px}
 .wrap{max-width:520px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
 h1,h2,.num{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:balance}
-.date{color:var(--muted);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.date{color:var(--muted);font-size:var(--fs-s);letter-spacing:.04em;text-transform:uppercase}
 .hero{display:flex;flex-direction:column;gap:6px}
-.hero h1{font-size:30px;line-height:1.15}
+.hero h1{font-size:var(--fs-l);line-height:1.15}
 .today-money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.today-money .num{font-size:44px;line-height:1;color:var(--carrot);font-variant-numeric:tabular-nums}
+.today-money .num{font-size:var(--fs-l);line-height:1;color:var(--carrot);font-variant-numeric:tabular-nums}
 .today-money span{color:var(--muted)}
 .bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
 .bar i{height:8px;border-radius:4px;background:var(--line);transition:background .2s}
@@ -50,11 +55,11 @@ h1,h2,.num{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:ba
 .chore .box{flex:none;width:34px;height:34px;border-radius:10px;border:2px dashed var(--muted);display:grid;place-items:center;color:var(--muted)}
 .chore .box svg{width:20px;height:20px}
 .chore .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.chore .label{font-weight:500;font-size:16px}
+.chore .label{font-weight:500;font-size:var(--fs-m)}
 .chore .sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.chore .pay{font-family:var(--font-display);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14px}
+.chore .pay{font-family:var(--font-display);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:var(--fs-s)}
 .chore .thumb{flex:none;width:52px;height:52px;border-radius:10px;object-fit:cover;background:var(--line)}
-.chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--muted);white-space:nowrap}
+.chip{font-size:var(--fs-s);font-weight:600;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--muted);white-space:nowrap}
 .chip.pending{background:var(--wait-soft);color:var(--wait-ink)}
 .chip.approved{background:var(--leaf-soft);color:var(--leaf)}
 .chip.rejected{background:var(--bad-soft);color:var(--bad)}
@@ -68,8 +73,8 @@ h1,h2,.num{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:ba
 .chore.off{opacity:.55;cursor:not-allowed}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
-.stat small{display:block;color:var(--muted);font-size:12px}
-.stat .num{font-size:19px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat small{display:block;color:var(--muted);font-size:var(--fs-s)}
+.stat .num{font-size:var(--fs-m);font-variant-numeric:tabular-nums;white-space:nowrap}
 .owed{background:var(--carrot);border-color:var(--carrot)}
 .owed small,.owed .num{color:var(--carrot-ink)}
 button.act{font:inherit;font-weight:600;border-radius:10px;padding:11px 16px;border:1.5px solid var(--leaf);background:var(--leaf);color:var(--surface);cursor:pointer}
@@ -78,15 +83,15 @@ button.act.warn{background:transparent;color:var(--bad);border-color:var(--bad)}
 button.act:disabled{opacity:.45;cursor:not-allowed}
 button.act:focus-visible,.pin:focus-visible{outline:3px solid var(--carrot);outline-offset:2px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.hint{color:var(--muted);font-size:13px}
-h2{font-size:18px}
+.hint{color:var(--muted);font-size:var(--fs-s)}
+h2{font-size:var(--fs-m)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .card h2{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.badge{font-family:var(--font-body);font-size:12px;font-weight:600;background:var(--carrot);color:var(--carrot-ink);border-radius:999px;padding:2px 9px}
+.badge{font-family:var(--font-body);font-size:var(--fs-s);font-weight:600;background:var(--carrot);color:var(--carrot-ink);border-radius:999px;padding:2px 9px}
 .pin{font:inherit;width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);letter-spacing:.35em}
 .field{display:flex;flex-direction:column;gap:4px}
-.field label{font-size:13px;color:var(--muted)}
-.msg{color:var(--bad);font-size:13px}
+.field label{font-size:var(--fs-s);color:var(--muted)}
+.msg{color:var(--bad);font-size:var(--fs-s)}
 .queue{display:flex;flex-direction:column;gap:14px;margin:0;padding:0;list-style:none}
 .rev{display:flex;flex-direction:column;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .rev:last-child{border-bottom:0;padding-bottom:0}
@@ -103,3 +108,4 @@ h2{font-size:18px}
 .list .r.paid{color:var(--leaf)}
 .note{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted)}
 .note.err{border-color:var(--bad);color:var(--bad)}
+.list .l small,.rev-h small{font-size:var(--fs-s)}

@@ -17,6 +17,7 @@ Trang theo dõi việc hằng ngày, mỗi việc 10.000đ. Bé chụp ảnh n�
 - **Đổi giá mỗi việc:** sửa `RATE` ở đầu `js/app.js` và `RATE` ở đầu `apps-script/Code.gs`, rồi triển khai lại script.
 - **Thêm hoặc đổi việc:** sửa danh sách `TASKS` ở `js/app.js` và `TASKS` ở `apps-script/Code.gs` (hai nơi phải giống nhau).
 - **Đổi màu:** sửa các biến ở đầu `css/style.css`.
+- **Chữ:** trang chỉ dùng 2 font (Fredoka cho tiêu đề và số, Be Vietnam Pro cho nội dung) và 3 cỡ chữ: `--fs-s` 13px, `--fs-m` 16px, `--fs-l` 32px. Khi thêm phần tử mới, chỉ dùng 3 biến này, đừng ghi số px trực tiếp.
 
 ## Cập nhật máy chủ Apps Script
 
