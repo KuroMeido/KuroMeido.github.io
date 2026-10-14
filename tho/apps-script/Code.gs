@@ -11,6 +11,12 @@
  */
 var RATE = 10000;
 var TASKS = { cage: "Dọn chuồng thỏ", feed: "Cho thỏ ăn", water: "Lấy nước cho thỏ", laundry: "Phơi đồ" };
+/* Side quest: bài kiểm tra điểm 10 đổi thưởng. Mỗi lần nộp là một dòng riêng, mã dạng q15, q15-2, q15-3... */
+var QUESTS = {
+  q15: { name: "Side quest: Bài kiểm tra 15 phút điểm 10", money: 5000 },
+  q45: { name: "Side quest: Bài kiểm tra 1 tiết điểm 10", money: 10000 },
+  qhk: { name: "Side quest: Bài thi học kì điểm 10", money: 20000 }
+};
 var FOLDER_NAME = "tho-photos";
 var SHEET_ITEMS = "Công việc";
 var SHEET_PAID = "Đã trả";
@@ -114,8 +120,16 @@ function writeItem(row, v) {
   sh.getRange(row, 1, 1, ITEM_HEADERS.length).setValues([v]);
   sh.getRange(row, 5, 1, 2).setNumberFormat(TIME_FORMAT);
 }
+/** Tên và tiền của một mã việc (việc hằng ngày hoặc side quest). Trả null nếu mã không hợp lệ. */
+function taskInfo(t) {
+  t = String(t || "");
+  if (TASKS.hasOwnProperty(t)) return { name: TASKS[t], money: RATE };
+  var m = /^(q15|q45|qhk)(?:-(\d{1,2}))?$/.exec(t);
+  if (m) return { name: QUESTS[m[1]].name + (m[2] ? " #" + m[2] : ""), money: QUESTS[m[1]].money };
+  return null;
+}
 function itemRow(d, t, status, at, rt, money, fid) {
-  return [d, t, TASKS[t], STATUS_TO_TEXT[status], at ? new Date(at) : "", rt ? new Date(rt) : "", money, fid || "", fid ? "https://drive.google.com/file/d/" + fid + "/view" : ""];
+  return [d, t, (taskInfo(t) || { name: t }).name, STATUS_TO_TEXT[status], at ? new Date(at) : "", rt ? new Date(rt) : "", money, fid || "", fid ? "https://drive.google.com/file/d/" + fid + "/view" : ""];
 }
 
 /* ---------- Trạng thái trả về cho trang ---------- */
@@ -174,7 +188,8 @@ function photoFolder() {
 }
 function submit(r) {
   var d = String(r.day || ""), t = String(r.task || "");
-  if (!DAY_RE.test(d) || !TASKS.hasOwnProperty(t)) return { error: "bad_input" };
+  var info = taskInfo(t);
+  if (!DAY_RE.test(d) || !info) return { error: "bad_input" };
   var img = String(r.img || "");
   var prefix = "data:image/jpeg;base64,";
   if (img.indexOf(prefix) !== 0 || img.length > 600000) return { error: "bad_image" };
@@ -189,7 +204,7 @@ function submit(r) {
   var file = photoFolder().createFile(blob);
   if (cur && cur.fid) { try { DriveApp.getFileById(cur.fid).setTrashed(true); } catch (err) {} }
 
-  var row = itemRow(d, t, "pending", at, 0, RATE, file.getId());
+  var row = itemRow(d, t, "pending", at, 0, info.money, file.getId());
   if (cur) writeItem(cur.row, row);
   else {
     var sh = getSheet(SHEET_ITEMS, ITEM_HEADERS);
@@ -199,7 +214,7 @@ function submit(r) {
 }
 
 function photo(pid) {
-  var m = /^(\d{4}-\d{2}-\d{2})_(\w+)$/.exec(String(pid || ""));
+  var m = /^(\d{4}-\d{2}-\d{2})_([\w-]+)$/.exec(String(pid || ""));
   if (!m) return { error: "bad_input" };
   var it = findItem(readItems(), m[1], m[2]);
   if (!it || !it.fid) return { error: "no_photo" };

@@ -10,6 +10,12 @@
     {id:"water", label:"Lấy nước cho thỏ"},
     {id:"laundry", label:"Phơi đồ"}
   ];
+  /* Side quest: nộp bài kiểm tra điểm 10 để đổi thưởng. Mỗi lần nộp là một bài riêng (q15, q15-2, ...). */
+  var QUESTS = [
+    {id:"q15", label:"Bài kiểm tra 15 phút", reward:5000},
+    {id:"q45", label:"Bài kiểm tra 1 tiết",  reward:10000},
+    {id:"qhk", label:"Bài thi học kì",       reward:20000}
+  ];
   var SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
   var ICON = {
     cam:   SVG + '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
@@ -18,6 +24,7 @@
     redo:  SVG + '<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg>'
   };
   var CHIP = { none:"Chụp ảnh để nộp", pending:"Chờ nghiệm thu", approved:"Đã duyệt", rejected:"Làm lại, chụp ảnh mới" };
+  var STATUS_TEXT = { pending:"Chờ nghiệm thu", approved:"Đã duyệt", rejected:"Làm lại" };
   var ERRORS = {
     bad_pin:"Sai mã PIN.",
     locked:"Nhập sai nhiều lần. Thử lại sau 10 phút.",
@@ -30,7 +37,7 @@
 
   var state = { days:{}, payouts:[], hasPin:false, photos:{}, photoReq:{}, today:ymd(new Date()), loaded:false, err:"", sig:"" };
   var busy = 0;
-  var T = { state:state, RATE:RATE, TASKS:TASKS, ICON:ICON, CHIP:CHIP, ERRORS:ERRORS, NET_ERR:NET_ERR, onChange:null, onError:null, onHide:null, pauseRefresh:null };
+  var T = { state:state, RATE:RATE, TASKS:TASKS, QUESTS:QUESTS, STATUS_TEXT:STATUS_TEXT, ICON:ICON, CHIP:CHIP, ERRORS:ERRORS, NET_ERR:NET_ERR, onChange:null, onError:null, onHide:null, pauseRefresh:null };
 
   /* ---------- Tiện ích ---------- */
   function pad(n){ return n < 10 ? "0"+n : ""+n; }
@@ -39,13 +46,22 @@
   function money(n){ return n.toLocaleString("vi-VN") + "đ"; }
   function $(id){ return document.getElementById(id); }
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
-  function taskLabel(id){ for(var i=0;i<TASKS.length;i++) if(TASKS[i].id === id) return TASKS[i].label; return id; }
+  function questOf(id){ var m = /^(q15|q45|qhk)(?:-(\d{1,2}))?$/.exec(id); if(!m) return null; for(var i=0;i<QUESTS.length;i++) if(QUESTS[i].id === m[1]) return { quest:QUESTS[i], n:m[2] ? +m[2] : 1 }; return null; }
+  function isQuest(id){ return !!questOf(id); }
+  /* Tiền của một mã việc: việc hằng ngày là RATE, side quest theo cấp. */
+  function rateOf(id){ var q = questOf(id); return q ? q.quest.reward : RATE; }
+  function taskLabel(id){
+    var q = questOf(id);
+    if(q) return "Side quest: " + q.quest.label + " điểm 10" + (q.n > 1 ? " #" + q.n : "");
+    for(var i=0;i<TASKS.length;i++) if(TASKS[i].id === id) return TASKS[i].label;
+    return id;
+  }
   function errText(code){ return ERRORS[code] || "Có lỗi xảy ra. Thử lại sau."; }
   function dayLabel(key){ return parse(key).toLocaleDateString("vi-VN", { weekday:"short", day:"numeric", month:"numeric" }); }
   function timeLabel(ms){ return ms ? new Date(ms).toLocaleString("vi-VN", { weekday:"short", day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit" }) : ""; }
   function monthLabel(key){ return "Tháng " + parseInt(key.slice(5), 10) + "/" + key.slice(0, 4); }
   function render(){ if(T.onChange) T.onChange(); }
-  T.$ = $; T.el = el; T.ymd = ymd; T.parse = parse; T.money = money; T.taskLabel = taskLabel; T.errText = errText;
+  T.isQuest = isQuest; T.rateOf = rateOf; T.$ = $; T.el = el; T.ymd = ymd; T.parse = parse; T.money = money; T.taskLabel = taskLabel; T.errText = errText;
   T.dayLabel = dayLabel; T.timeLabel = timeLabel; T.monthLabel = monthLabel; T.render = render;
 
   /* ---------- Mạng ---------- */
@@ -101,7 +117,9 @@
   /* ---------- Dữ liệu theo ngày và tháng ---------- */
   function itemsOf(key){ var d = state.days[key]; return d ? d.items : {}; }
   function statusOf(key, id){ var it = itemsOf(key)[id]; return it ? it.status : "none"; }
-  function countBy(key, st){ var it = itemsOf(key), n = 0; Object.keys(it).forEach(function(k){ if(it[k].status === st) n++; }); return n; }
+  /* Đếm theo trạng thái. Mặc định chỉ đếm việc hằng ngày; all=true đếm cả side quest. */
+  function countBy(key, st, all){ var it = itemsOf(key), n = 0; Object.keys(it).forEach(function(k){ if(it[k].status === st && (all || !isQuest(k))) n++; }); return n; }
+  function questCount(key, st){ return countBy(key, st, true) - countBy(key, st); }
   function earnedOf(key){
     var it = itemsOf(key), t = 0;
     Object.keys(it).forEach(function(k){ if(it[k].status === "approved") t += it[k].money || RATE; });
@@ -127,13 +145,13 @@
     var map = {};
     function row(k){ return map[k] || (map[k] = { key:k, earned:0, paid:0, count:0 }); }
     Object.keys(state.days).forEach(function(day){
-      var e = earnedOf(day), c = countBy(day, "approved");
+      var e = earnedOf(day), c = countBy(day, "approved", true);
       if(c > 0){ var r = row(day.slice(0, 7)); r.earned += e; r.count += c; }
     });
     state.payouts.forEach(function(p){ if(p.d){ row(String(p.d).slice(0, 7)).paid += p.amount || 0; } });
     return Object.keys(map).sort().reverse().map(function(k){ var r = map[k]; r.owed = Math.max(0, r.earned - r.paid); return r; });
   }
-  T.itemsOf = itemsOf; T.statusOf = statusOf; T.countBy = countBy; T.earnedOf = earnedOf; T.pendingList = pendingList;
+  T.itemsOf = itemsOf; T.statusOf = statusOf; T.countBy = countBy; T.questCount = questCount; T.earnedOf = earnedOf; T.pendingList = pendingList;
   T.weekStartKey = weekStartKey; T.monthStartKey = monthStartKey; T.sumFrom = sumFrom; T.owed = owed; T.monthRows = monthRows;
 
   /* ---------- Ảnh ---------- */
@@ -151,6 +169,23 @@
     return null;
   }
   T.photoOf = photoOf;
+
+  /* Mã mới cho một lần nộp side quest trong ngày: q15, q15-2, q15-3... */
+  T.newQuestId = function(base, day){
+    var it = itemsOf(day);
+    for(var n = 1; n <= 99; n++){ var id = n === 1 ? base : base + "-" + n; if(!it[id]) return id; }
+    return null;
+  };
+  /* Các lần nộp side quest trong số ngày gần đây, mới nhất trước. */
+  T.questList = function(days){
+    var out = [];
+    Object.keys(state.days).forEach(function(day){
+      if((parse(state.today) - parse(day)) / 86400000 >= days) return;
+      var it = itemsOf(day);
+      Object.keys(it).forEach(function(id){ if(isQuest(id)) out.push({ key:day, id:id, item:it[id] }); });
+    });
+    return out.sort(function(a, b){ return (b.item.at || 0) - (a.item.at || 0); });
+  };
   T.photoKey = function(day, id, at){ return day + "_" + id + "@" + at; };
 
   /* ---------- Phần đầu trang dùng chung ---------- */

@@ -22,6 +22,21 @@ Trang của bé không có liên kết nào tới trang nghiệm thu, nên chỉ
 | `js/duyet.js` | Chỉ trang nghiệm thu: PIN, hàng đợi duyệt, trả tiền |
 | `apps-script/Code.gs` | Máy chủ chạy trong Google Sheet. Không được GitHub Pages dùng, chỉ lưu ở đây để quản lý phiên bản |
 
+## Side quest: điểm 10 đổi thưởng
+
+Bé nộp ảnh bài kiểm tra được điểm 10 để đổi thưởng, qua cùng quy trình nghiệm thu với việc hằng ngày.
+
+| Cấp | Bài | Thưởng |
+| --- | --- | --- |
+| `q15` | Kiểm tra 15 phút | 5.000đ |
+| `q45` | Kiểm tra 1 tiết | 10.000đ |
+| `qhk` | Thi học kì | 20.000đ |
+
+- Mỗi lần được điểm 10 là một lần nộp riêng. Nộp nhiều bài cùng cấp trong một ngày thì mã thành `q15`, `q15-2`, `q15-3`...
+- Trang của bé có ghi chú: ảnh phải thể hiện rõ ngày tháng để kiểm tra. Trang nghiệm thu nhắc người duyệt đối chiếu ngày tháng trên bài với giờ nộp.
+- Side quest không tính vào "x/4 việc" của ngày, nhưng tiền được cộng vào tháng như việc thường.
+- Đổi tiền thưởng hoặc tên cấp: sửa `QUESTS` trong `js/core.js` và `QUESTS` trong `apps-script/Code.gs` (hai nơi phải giống nhau), rồi triển khai lại script.
+
 ## Sửa thường gặp
 
 - **Đổi giá mỗi việc:** sửa `RATE` trong `js/core.js` và `RATE` ở đầu `apps-script/Code.gs`, rồi triển khai lại script.

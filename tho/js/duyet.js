@@ -91,6 +91,7 @@
       var li = el("li", "rev");
       var rh = el("div", "rev-h"); rh.appendChild(el("b", null, T.taskLabel(p.id))); rh.appendChild(el("small", null, T.timeLabel(p.item.at) || T.dayLabel(p.key)));
       li.appendChild(rh);
+      if(T.isQuest(p.id)){ var hn = el("p", "hint", "Side quest: kiểm tra bài có điểm 10 và ngày tháng làm bài, khớp với giờ nộp."); hn.style.margin = "0"; li.appendChild(hn); }
       var ph = T.photoOf(p.key, p.id);
       if(ph){ var im = document.createElement("img"); im.src = ph; im.alt = "Ảnh nộp: " + T.taskLabel(p.id); li.appendChild(im); }
       else li.appendChild(el("div", "none", p.item.photo ? "Đang tải ảnh…" : "Không có ảnh"));

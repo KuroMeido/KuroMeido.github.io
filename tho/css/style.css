@@ -110,3 +110,4 @@ h2{font-size:var(--fs-m)}
 .note.err{border-color:var(--bad);color:var(--bad)}
 .list .l small,.rev-h small{font-size:var(--fs-s)}
 .col{display:flex;flex-direction:column;gap:12px}
+.note.alert{border-style:solid;border-color:var(--carrot);background:var(--wait-soft);color:var(--wait-ink)}
