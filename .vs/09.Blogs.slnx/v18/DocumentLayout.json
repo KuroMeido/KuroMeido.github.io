@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\huyenntt\\09.Blogs\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\js\\revit-data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\revit-data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\js\\main.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\main.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
@@ -15,12 +19,16 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\js\\revit-data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\revit-data.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\css\\components.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\css\\components.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\js\\FixtureConnector.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\js\\FixtureConnector.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\huyenntt\\09.Blogs\\assets\\css\\FixtureConnector.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:assets\\css\\FixtureConnector.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,24 +38,35 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "data.js",
-              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\data.js",
-              "RelativeDocumentMoniker": "assets\\js\\data.js",
-              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\js\\data.js",
-              "RelativeToolTip": "assets\\js\\data.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAACAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-09-18T07:52:39.59Z",
-              "EditorCaption": ""
+              "DocumentIndex": 6,
+              "Title": "FixtureConnector.css",
+              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\css\\FixtureConnector.css",
+              "RelativeDocumentMoniker": "assets\\css\\FixtureConnector.css",
+              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\css\\FixtureConnector.css",
+              "RelativeToolTip": "assets\\css\\FixtureConnector.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGkBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-09-22T06:28:35.048Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
+              "Title": "FixtureConnector.js",
+              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\FixtureConnector.js",
+              "RelativeDocumentMoniker": "assets\\js\\FixtureConnector.js",
+              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\js\\FixtureConnector.js",
+              "RelativeToolTip": "assets\\js\\FixtureConnector.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHwAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-09-22T06:28:18.898Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "revit.html",
               "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\revit.html",
               "RelativeDocumentMoniker": "revit.html",
@@ -55,12 +74,11 @@
               "RelativeToolTip": "revit.html",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
-              "WhenOpened": "2026-09-18T07:50:20.216Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-18T07:50:20.216Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "main.js",
               "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\main.js",
               "RelativeDocumentMoniker": "assets\\js\\main.js",
@@ -68,16 +86,7 @@
               "RelativeToolTip": "assets\\js\\main.js",
               "ViewState": "AgIAAL4AAAAAAAAAAAAcwKsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-09-18T07:30:59.878Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "WhenOpened": "2026-09-18T07:30:59.878Z"
             },
             {
               "$type": "Bookmark",
@@ -97,21 +106,32 @@
               "RelativeToolTip": "assets\\css\\components.css",
               "ViewState": "AgIAADYAAAAAAAAAAAAAAA4AAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2026-09-18T07:30:44.33Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-18T07:30:44.33Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "revit-data.js",
               "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\revit-data.js",
               "RelativeDocumentMoniker": "assets\\js\\revit-data.js",
               "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\js\\revit-data.js",
               "RelativeToolTip": "assets\\js\\revit-data.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAdAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAA0AAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2026-09-18T07:28:10.487Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "data.js",
+              "DocumentMoniker": "C:\\huyenntt\\09.Blogs\\assets\\js\\data.js",
+              "RelativeDocumentMoniker": "assets\\js\\data.js",
+              "ToolTip": "C:\\huyenntt\\09.Blogs\\assets\\js\\data.js",
+              "RelativeToolTip": "assets\\js\\data.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-09-18T07:52:39.59Z"
             }
           ]
         }
