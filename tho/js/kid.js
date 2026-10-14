@@ -37,12 +37,12 @@
   /* Side quest: ba cấp để nộp bài điểm 10, và danh sách các lần đã nộp. */
   function renderQuests(live){
     var ul = $("questList"); ul.innerHTML = "";
-    T.QUESTS.forEach(function(q){
+    T.QUESTS.forEach(function(q, qi){
       var li = document.createElement("li");
       var row = el("label", "chore none" + (live ? "" : " off")); row.id = "quest-" + q.id;
       var bx = el("span", "box"); bx.innerHTML = T.ICON.cam;
       var meta = el("span", "meta"); meta.appendChild(el("span", "label", q.label));
-      var sub = el("span", "sub"); sub.appendChild(el("span", "chip none", "Nộp bài điểm 10")); sub.appendChild(el("span", "pay", "+" + money(q.reward)));
+      var sub = el("span", "sub"); sub.appendChild(el("span", "chip none", "Cấp " + (qi + 1) + " · Nộp bài điểm 10")); sub.appendChild(el("span", "pay", "+" + money(q.reward)));
       meta.appendChild(sub);
       row.appendChild(bx); row.appendChild(meta);
       if(live){

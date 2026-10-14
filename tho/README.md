@@ -39,6 +39,8 @@ Bé nộp ảnh bài kiểm tra được điểm 10 để đổi thưởng, qua 
 
 ## Sửa thường gặp
 
+- **Sau mỗi lần sửa CSS hoặc JS:** đổi số trong `?v=3` ở các thẻ `<link>` và `<script>` của `index.html` và `duyet/index.html` (ví dụ thành `?v=4`). Nếu không, trình duyệt có thể giữ bản cũ vài phút đến vài giờ và trang bị lỗi vì HTML mới chạy với JS cũ.
+
 - **Đổi giá mỗi việc:** sửa `RATE` trong `js/core.js` và `RATE` ở đầu `apps-script/Code.gs`, rồi triển khai lại script.
 - **Thêm hoặc đổi việc:** sửa danh sách `TASKS` trong `js/core.js` và `TASKS` ở `apps-script/Code.gs` (hai nơi phải giống nhau).
 - **Đổi màu:** sửa các biến ở đầu `css/style.css`.
