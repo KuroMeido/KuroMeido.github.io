@@ -109,3 +109,4 @@ h2{font-size:var(--fs-m)}
 .note{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted)}
 .note.err{border-color:var(--bad);color:var(--bad)}
 .list .l small,.rev-h small{font-size:var(--fs-s)}
+.col{display:flex;flex-direction:column;gap:12px}

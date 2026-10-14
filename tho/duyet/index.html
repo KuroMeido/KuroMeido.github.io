@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<title>Nghiệm thu việc của thỏ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="date" id="date"></div>
+    <h1>Nghiệm thu</h1>
+    <p class="hint" style="margin:0">Xem ảnh bé nộp, duyệt rồi trả tiền theo tháng. Cần mã PIN.</p>
+  </header>
+
+  <div class="note err" id="err" role="alert" hidden></div>
+  <div class="note" id="setup" hidden>Chưa kết nối Google Sheet. Dán URL ứng dụng web Apps Script vào apiUrl trong file js/config.js.</div>
+  <div class="note" id="loading" hidden>Đang tải dữ liệu từ Google Sheet…</div>
+
+  <section class="card" id="panel"></section>
+</main>
+
+<script src="../js/config.js"></script>
+<script src="../js/core.js"></script>
+<script src="../js/duyet.js"></script>
+</body>
+</html>
