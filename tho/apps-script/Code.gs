@@ -19,6 +19,7 @@ var PAID_HEADERS = ["Tháng", "Số tiền", "Lúc"];
 var STATUS_TO_TEXT = { pending: "Chờ nghiệm thu", approved: "Đã duyệt", rejected: "Làm lại" };
 var TEXT_TO_STATUS = { "Chờ nghiệm thu": "pending", "Đã duyệt": "approved", "Làm lại": "rejected" };
 var DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+var TIME_FORMAT = "dd/MM/yyyy HH:mm"; // hiển thị ngày giờ phút trong Sheet (múi giờ của Sheet)
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -65,10 +66,18 @@ function getSheet(name, headers) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
     sh.setFrozenRows(1);
     sh.getRange(1, 1, sh.getMaxRows(), 2).setNumberFormat("@");
+    formatTimeColumns(sh, name);
   } else if (sh.getRange(1, 1).getValue() !== headers[0]) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
   }
   return sh;
+}
+/** Cột giờ: Công việc có "Nộp lúc" (E) và "Duyệt lúc" (F); Đã trả có "Lúc" (C). */
+function formatTimeColumns(sh, name) {
+  var col = name === SHEET_ITEMS ? 5 : 3;
+  var n = name === SHEET_ITEMS ? 2 : 1;
+  sh.getRange(2, col, Math.max(1, sh.getMaxRows() - 1), n).setNumberFormat(TIME_FORMAT);
+  for (var i = 0; i < n; i++) sh.setColumnWidth(col + i, 130);
 }
 function dayText(v) {
   if (v instanceof Date) return Utilities.formatDate(v, Session.getScriptTimeZone(), "yyyy-MM-dd");
@@ -103,6 +112,7 @@ function findItem(items, d, t) {
 function writeItem(row, v) {
   var sh = getSheet(SHEET_ITEMS, ITEM_HEADERS);
   sh.getRange(row, 1, 1, ITEM_HEADERS.length).setValues([v]);
+  sh.getRange(row, 5, 1, 2).setNumberFormat(TIME_FORMAT);
 }
 function itemRow(d, t, status, at, rt, money, fid) {
   return [d, t, TASKS[t], STATUS_TO_TEXT[status], at ? new Date(at) : "", rt ? new Date(rt) : "", money, fid || "", fid ? "https://drive.google.com/file/d/" + fid + "/view" : ""];
@@ -225,13 +235,15 @@ function pay(r) {
   var owed = earned - paid;
   if (owed <= 0) return stateOut({ error: "nothing_owed" });
   var sh = getSheet(SHEET_PAID, PAID_HEADERS);
-  sh.getRange(sh.getLastRow() + 1, 1, 1, 3).setValues([[month, owed, new Date()]]);
+  var payRow = sh.getLastRow() + 1;
+  sh.getRange(payRow, 1, 1, 3).setValues([[month, owed, new Date()]]);
+  sh.getRange(payRow, 3).setNumberFormat(TIME_FORMAT);
   return stateOut({ ok: true });
 }
 
-/** Chạy hàm này một lần trong trình soạn thảo để Google hỏi quyền truy cập Sheet và Drive. */
+/** Chạy hàm này trong trình soạn thảo: Google hỏi quyền truy cập Sheet và Drive (lần đầu), đồng thời định dạng lại cột giờ cho các dòng đã có. Chạy lại bao nhiêu lần cũng được. */
 function authorize() {
-  getSheet(SHEET_ITEMS, ITEM_HEADERS);
-  getSheet(SHEET_PAID, PAID_HEADERS);
+  formatTimeColumns(getSheet(SHEET_ITEMS, ITEM_HEADERS), SHEET_ITEMS);
+  formatTimeColumns(getSheet(SHEET_PAID, PAID_HEADERS), SHEET_PAID);
   photoFolder();
 }
