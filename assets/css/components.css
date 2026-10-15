@@ -7,7 +7,7 @@
 .menu a {
   color: var(--muted);
   font-size: 0.95rem;
-  transition: 0.25s ease;
+  transition: color 0.25s ease;
 }
 
 .menu a:hover,
@@ -24,12 +24,13 @@
   margin-bottom: 16px;
 }
 
+/* Buttons */
 .btn {
   display: inline-block;
   padding: 14px 22px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   font-weight: 700;
-  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+  transition: transform var(--ease), opacity var(--ease), background var(--ease);
 }
 
 .btn:hover {
@@ -37,7 +38,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--brand), #9b7cff);
+  background: linear-gradient(135deg, var(--brand), var(--brand-3));
   color: white;
   box-shadow: var(--shadow);
 }
@@ -48,6 +49,7 @@
   color: var(--text);
 }
 
+/* Cards */
 .card,
 .post-card,
 .panel-card,
@@ -55,7 +57,7 @@
 .resource-card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
 
@@ -63,6 +65,20 @@
 .post-card,
 .resource-card {
   padding: 24px;
+}
+
+/* Interactive cards share one hover behavior */
+.post-card,
+.resource-card {
+  transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+}
+
+.post-card:hover,
+.post-card-link:focus-visible .post-card,
+.resource-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--brand-line);
 }
 
 .card-icon {
@@ -87,30 +103,44 @@
 .post-card a,
 .split-card a,
 .resource-card a {
-  color: #c9d6ff;
+  color: var(--brand-ink);
   font-weight: 700;
 }
 
+.resource-card a.is-disabled,
 .revit-card a.is-disabled {
   opacity: 0.5;
   pointer-events: none;
   cursor: not-allowed;
 }
 
-.resource-card a.is-disabled {
-  opacity: 0.5;
-  pointer-events: none;
-  cursor: not-allowed;
-}
-
+/* Pill badge: one component, several historical class names */
+.badge,
+.mini-badge,
 .revit-status {
   display: inline-block;
   width: fit-content;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  border: 1px solid var(--brand-line);
   font-size: 0.8rem;
   font-weight: 700;
-  color: #c9d6ff;
-  background: rgba(124, 156, 255, 0.12);
-  border: 1px solid rgba(124, 156, 255, 0.3);
-  border-radius: 999px;
-  padding: 4px 10px;
+  letter-spacing: 0.4px;
+}
+
+/* Inline code and code blocks, site-wide */
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+p code,
+li code {
+  background: var(--brand-soft);
+  padding: 2px 7px;
+  border-radius: 6px;
+  color: var(--brand-ink);
+  font-size: 0.9em;
 }

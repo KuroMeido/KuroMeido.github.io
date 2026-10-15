@@ -118,15 +118,8 @@
   padding: 10px;
 }
 
-.mini-badge {
-  display: inline-block;
+.panel-body .badge {
   margin-bottom: 14px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(124, 156, 255, 0.15);
-  color: #c9d6ff;
-  font-size: 0.85rem;
-  border: 1px solid rgba(124, 156, 255, 0.25);
 }
 
 .panel-body h3 {

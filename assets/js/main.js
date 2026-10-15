@@ -13,23 +13,9 @@ function renderBlogPosts(postsToRender) {
     const link = document.createElement("a");
     link.href = post.url;
     link.className = "post-card-link";
-    link.style.textDecoration = "none";
-    link.style.color = "inherit";
 
     const article = document.createElement("article");
     article.className = "post-card";
-    article.style.cursor = "pointer";
-    article.style.transition = "transform 0.2s, box-shadow 0.2s";
-
-    article.addEventListener("mouseenter", () => {
-      article.style.transform = "translateY(-4px)";
-      article.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
-    });
-
-    article.addEventListener("mouseleave", () => {
-      article.style.transform = "translateY(0)";
-      article.style.boxShadow = "";
-    });
 
     const image = document.createElement("img");
     image.src = post.image;
