@@ -1,4 +1,8 @@
+/* Fonts: one source of truth for every page that loads base.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
 :root {
+  /* Color */
   --bg: #0b1020;
   --bg-soft: #121a2f;
   --panel: rgba(255, 255, 255, 0.05);
@@ -8,7 +12,26 @@
   --line: rgba(255, 255, 255, 0.1);
   --brand: #7c9cff;
   --brand-2: #5eead4;
+  --brand-3: #9b7cff;
+  --brand-ink: #c9d6ff;
+  --brand-soft: rgba(124, 156, 255, 0.12);
+  --brand-soft-strong: rgba(124, 156, 255, 0.15);
+  --brand-line: rgba(124, 156, 255, 0.3);
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 24px 64px rgba(0, 0, 0, 0.45);
+
+  /* Typography */
+  --font-body: Inter, "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Shape */
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --ease: 0.2s ease;
 }
 
 * {
@@ -22,7 +45,7 @@ html {
 }
 
 body {
-  font-family: Inter, Arial, sans-serif;
+  font-family: var(--font-body);
   background:
     radial-gradient(circle at top left, rgba(124, 156, 255, 0.18), transparent 30%),
     radial-gradient(circle at top right, rgba(94, 234, 212, 0.12), transparent 25%),
@@ -46,4 +69,20 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-2);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  * {
+    transition: none !important;
+  }
 }
