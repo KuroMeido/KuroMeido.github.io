@@ -15,20 +15,24 @@
   <header id="site-header" class="site-header"></header>
 
   <main class="article-page">
-    <section class="article-hero">
-      <div class="container narrow">
-        <span class="badge">Revit API</span>
+    <div class="drawing-sheet">
+      <header class="title-block">
+        <div class="frame-corner tl"></div>
+        <div class="frame-corner tr"></div>
+        <div class="doc-meta">
+          <span>SHEET A-03</span>
+          <span>SCALE: NOT TO SCALE</span>
+          <span>TYPE: REVIT API</span>
+        </div>
         <h1>Export Views/Sheets — Revit Add-in</h1>
-        <p class="article-lead">
+        <p class="subhead">
           A Revit add-in that exports a checklist-selected set of sheets and/or views to PDF or DWG,
           with file names built from Sheet/Project Parameters or Global Parameters, combined or one-file-per-item,
           to a folder you pick — with a progress bar and a per-item log.
         </p>
-      </div>
-    </section>
+      </header>
 
-    <section class="section">
-      <div class="container narrow article-content">
+      <div class="article-content">
         <h2>What it does</h2>
         <ol>
           <li>
@@ -126,7 +130,12 @@ Services/ExportService.cs   PDF/DWG export + progress events</code></pre>
           <a class="btn btn-primary" href="../blog.html">← Back to blogs</a>
         </div>
       </div>
-    </section>
+
+      <div class="sheet-footer">
+        <span>DRAWN BY: KURO HITSUJI</span>
+        <span>SHEET 3 OF 5</span>
+      </div>
+    </div>
   </main>
 
   <footer class="site-footer">
