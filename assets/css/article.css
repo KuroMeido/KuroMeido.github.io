@@ -1,54 +1,142 @@
-/* Article Page Layout */
+/* ==========================================================================
+   Article pages: every blog post is laid out as a technical drawing sheet.
+   Structure:
+     main.article-page            grid-paper background
+       .drawing-sheet             framed sheet
+         header.title-block       sheet meta, title, subhead
+         .article-content         the post body
+         .sheet-footer            drawing-register strip
+   ========================================================================== */
+
 .article-page {
+  /* Drawing tokens (also used by stylesheet.css for the roadmap timeline) */
+  --sheet-line: var(--brand-line);
+  --sheet-paper: rgba(11, 16, 32, 0.62);
+  --blue-line: var(--brand);
+  --blue-line-soft: var(--brand-line);
+  --blue-mid: var(--brand-soft-strong);
+  --paper-dim: var(--muted);
+  --accent: var(--brand-2);
+  --font-display: var(--font-body);
+
   min-height: calc(100vh - 72px);
   display: flex;
   flex-direction: column;
+
+  /* Grid paper: fine 28px cells with a heavier line every 5th cell */
+  background-image:
+    linear-gradient(rgba(124, 156, 255, 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 156, 255, 0.13) 1px, transparent 1px),
+    linear-gradient(rgba(124, 156, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 156, 255, 0.055) 1px, transparent 1px);
+  background-size: 140px 140px, 140px 140px, 28px 28px, 28px 28px;
+  background-attachment: fixed;
 }
 
-.article-hero {
-  padding: 80px 0 60px;
-  border-bottom: 1px solid var(--line);
+/* Framed sheet with a double border, like a drawing border line */
+.drawing-sheet {
+  position: relative;
+  width: min(920px, calc(100% - 32px));
+  margin: 40px auto 64px;
+  padding: 0 40px;
+  background: var(--sheet-paper);
+  border: 1px solid var(--sheet-line);
+  box-shadow:
+    inset 0 0 0 6px var(--sheet-paper),
+    inset 0 0 0 7px var(--sheet-line),
+    var(--shadow);
 }
 
-.article-hero .container {
+/* Title block */
+.title-block {
+  position: relative;
+  padding: 56px 0 40px;
+  border-bottom: 2px solid var(--sheet-line);
+}
+
+.frame-corner {
+  position: absolute;
+  top: 18px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
+}
+
+.frame-corner.tl {
+  left: -20px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.frame-corner.tr {
+  right: -20px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.doc-meta {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 28px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--blue-line);
 }
 
-/* Larger variant of the shared .badge for article headers */
-.article-hero .badge {
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  letter-spacing: 0.8px;
-  margin-bottom: 24px;
-}
-
-.article-hero h1 {
-  font-size: clamp(1.8rem, 5vw, 3.2rem);
-  line-height: 1.2;
-  margin-bottom: 20px;
+.title-block h1 {
+  max-width: 22ch;
+  margin: 0 0 18px;
+  font-size: clamp(1.7rem, 4.4vw, 3.1rem);
+  font-weight: 700;
+  line-height: 1.1;
   color: var(--text);
 }
 
-.article-lead {
-  font-size: 1.1rem;
-  color: var(--muted);
-  line-height: 1.7;
-  max-width: 700px;
+.subhead {
+  max-width: 56ch;
+  font-size: 1.08rem;
+  line-height: 1.6;
+  color: var(--paper-dim);
 }
 
-/* Article Content */
+.subhead a,
+.article-content a:not(.btn) {
+  color: var(--brand-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--brand-line);
+  text-underline-offset: 3px;
+}
+
+/* Note block (callout) */
+.note {
+  margin: 40px 0 64px;
+  padding: 20px 24px;
+  background: var(--brand-soft);
+  border-left: 3px solid var(--blue-line);
+  border-radius: 2px;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--paper-dim);
+}
+
+.note strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Article body */
 .article-content {
-  flex: 1;
-  padding: 60px 0;
+  padding: 48px 0 8px;
 }
 
 .article-content h2 {
-  font-size: 1.8rem;
+  margin: 48px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.6rem;
   font-weight: 700;
-  margin-top: 48px;
-  margin-bottom: 20px;
   color: var(--text);
 }
 
@@ -57,10 +145,9 @@
 }
 
 .article-content h3 {
-  font-size: 1.3rem;
+  margin: 32px 0 16px;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin-top: 32px;
-  margin-bottom: 16px;
   color: var(--text);
 }
 
@@ -72,8 +159,7 @@
 
 .article-content ul,
 .article-content ol {
-  margin-bottom: 24px;
-  margin-left: 24px;
+  margin: 0 0 24px 24px;
   color: var(--muted);
 }
 
@@ -91,39 +177,66 @@
   font-weight: 700;
 }
 
-/* Code Blocks */
+.article-content strong {
+  color: var(--text);
+}
+
+/* Figures read as drawing plates */
+.article-content figure {
+  margin: 28px 0;
+}
+
+.article-content figure img {
+  border: 1px solid var(--sheet-line);
+  border-radius: 2px;
+  background: var(--panel);
+}
+
+.article-content figcaption {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--blue-line);
+}
+
+.article-content figcaption em {
+  font-style: normal;
+}
+
+/* Code */
 .article-content pre {
+  margin: 24px 0;
+  padding: 20px;
+  overflow-x: auto;
   background: var(--panel-strong);
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin: 24px 0;
-  overflow-x: auto;
+  border-left: 3px solid var(--blue-line);
+  border-radius: 2px;
 }
 
 .article-content code {
-  font-size: 0.95rem;
-  color: var(--brand-ink);
+  font-size: 0.92rem;
   line-height: 1.6;
+  color: var(--brand-ink);
 }
 
 .article-content p code,
 .article-content li code {
-  background: rgba(124, 156, 255, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: #b5c7ff;
-  font-size: 0.9rem;
+  padding: 2px 7px;
+  background: var(--brand-soft);
+  border-radius: 3px;
+  font-size: 0.88rem;
 }
 
-/* Call-to-Action */
+/* Call to action */
 .article-cta {
-  padding: 40px 0;
-  border-top: 1px solid var(--line);
-  margin-top: 40px;
   display: flex;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 40px;
+  padding: 32px 0 0;
+  border-top: 1px solid var(--line);
 }
 
 .article-cta .btn {
@@ -132,54 +245,63 @@
   gap: 8px;
 }
 
-/* Responsive */
+/* Drawing-register strip at the bottom of the sheet */
+.sheet-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 40px;
+  padding: 20px 0 28px;
+  border-top: 2px solid var(--sheet-line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--blue-line);
+}
+
 @media (max-width: 980px) {
-  .article-hero {
-    padding: 60px 0 50px;
-  }
-
-  .article-hero h1 {
-    font-size: 2rem;
-  }
-
-  .article-content {
-    padding: 50px 0;
-  }
-
   .article-content h2 {
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     margin-top: 40px;
   }
 }
 
 @media (max-width: 640px) {
-  .article-hero {
-    padding: 50px 0 40px;
+  .drawing-sheet {
+    width: calc(100% - 20px);
+    margin: 16px auto 40px;
+    padding: 0 20px;
   }
 
-  .article-hero h1 {
-    font-size: 1.6rem;
-    margin-bottom: 16px;
+  .frame-corner.tl {
+    left: -12px;
   }
 
-  .article-lead {
+  .frame-corner.tr {
+    right: -12px;
+  }
+
+  .title-block {
+    padding: 44px 0 32px;
+  }
+
+  .doc-meta {
+    gap: 14px;
+    font-size: 11px;
+  }
+
+  .subhead {
     font-size: 1rem;
   }
 
-  .badge {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    margin-bottom: 16px;
-  }
-
   .article-content {
-    padding: 40px 0;
+    padding-top: 36px;
   }
 
   .article-content h2 {
     font-size: 1.3rem;
-    margin-top: 32px;
-    margin-bottom: 16px;
+    margin: 32px 0 16px;
   }
 
   .article-content h3 {
@@ -204,12 +326,25 @@
 
   .article-cta {
     flex-direction: column;
-    padding: 30px 0;
-    margin-top: 30px;
   }
 
   .article-cta .btn {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Body wrapper for hand-built sheets (e.g. the roadmap timeline) */
+.sheet-body {
+  padding: 48px 0 8px;
+}
+
+@media (max-width: 640px) {
+  .sheet-body {
+    padding-top: 36px;
+  }
+}
+
+.sheet-body > .note:first-child {
+  margin-top: 0;
 }

@@ -15,20 +15,24 @@
   <header id="site-header" class="site-header"></header>
 
   <main class="article-page">
-    <section class="article-hero">
-      <div class="container narrow">
-        <span class="badge">Revit API</span>
+    <div class="drawing-sheet">
+      <header class="title-block">
+        <div class="frame-corner tl"></div>
+        <div class="frame-corner tr"></div>
+        <div class="doc-meta">
+          <span>SHEET A-02</span>
+          <span>SCALE: NOT TO SCALE</span>
+          <span>TYPE: REVIT API</span>
+        </div>
         <h1>Why Your Icons8 Icons Get Cropped in Revit (and How to Fix It for Good)</h1>
-        <p class="article-lead">
+        <p class="subhead">
           If you build Revit add-ins and pull your ribbon icons from
           <a href="https://icons8.com" target="_blank" rel="noopener noreferrer">icons8.com</a>,
           you may see icons render cropped in Revit. This post explains why and provides a reusable <code>ImageHelper</code>.
         </p>
-      </div>
-    </section>
+      </header>
 
-    <section class="section">
-      <div class="container narrow article-content">
+      <div class="article-content">
         <h2>The symptom</h2>
         <p>
           A 32×32 PNG downloaded from Icons8 can appear zoomed and clipped on a ribbon button,
@@ -254,7 +258,12 @@ pushButtonData.LargeImage = ImageHelper.LoadFromResx("rotate3d-32.png");</code><
           <a class="btn btn-primary" href="../blog.html">← Back to blogs</a>
         </div>
       </div>
-    </section>
+
+      <div class="sheet-footer">
+        <span>DRAWN BY: KURO HITSUJI</span>
+        <span>SHEET 2 OF 5</span>
+      </div>
+    </div>
   </main>
 
   <footer class="site-footer">
