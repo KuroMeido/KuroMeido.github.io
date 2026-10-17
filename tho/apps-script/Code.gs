@@ -10,6 +10,14 @@
  *  - Mã PIN của mụ phù thủy lưu dưới dạng băm trong Script Properties, không nằm trong Sheet.
  */
 var RATE = 10000;
+/* Đổi giá theo ngày áp dụng (yyyy-MM-dd). Giá tính theo ngày của việc, ghi vào cột Tiền lúc nộp và không bao giờ tính lại cho dòng cũ.
+ * Việc không có trong bảng này dùng RATE. Thêm mốc mới ở cuối danh sách của việc đó. */
+var RATE_CHANGES = { cage: [{ from: "2026-10-18", money: 15000 }] };
+function rateFor(t, day) {
+  var m = RATE;
+  (RATE_CHANGES[t] || []).forEach(function (c) { if (String(day) >= c.from) m = c.money; });
+  return m;
+}
 var TASKS = { cage: "Dọn chuồng thỏ", feed: "Cho thỏ ăn", water: "Lấy nước cho thỏ", laundry: "Phơi đồ" };
 /* Side quest: bài kiểm tra điểm 10 đổi thưởng. Mỗi lần nộp là một dòng riêng, mã dạng q15, q15-2, q15-3... */
 var QUESTS = {
@@ -121,9 +129,9 @@ function writeItem(row, v) {
   sh.getRange(row, 5, 1, 2).setNumberFormat(TIME_FORMAT);
 }
 /** Tên và tiền của một mã việc (việc hằng ngày hoặc side quest). Trả null nếu mã không hợp lệ. */
-function taskInfo(t) {
+function taskInfo(t, day) {
   t = String(t || "");
-  if (TASKS.hasOwnProperty(t)) return { name: TASKS[t], money: RATE };
+  if (TASKS.hasOwnProperty(t)) return { name: TASKS[t], money: rateFor(t, day) };
   var m = /^(q15|q45|qhk)(?:-(\d{1,2}))?$/.exec(t);
   if (m) return { name: QUESTS[m[1]].name + (m[2] ? " #" + m[2] : ""), money: QUESTS[m[1]].money };
   return null;
@@ -188,7 +196,7 @@ function photoFolder() {
 }
 function submit(r) {
   var d = String(r.day || ""), t = String(r.task || "");
-  var info = taskInfo(t);
+  var info = taskInfo(t, d);
   if (!DAY_RE.test(d) || !info) return { error: "bad_input" };
   var img = String(r.img || "");
   var prefix = "data:image/jpeg;base64,";

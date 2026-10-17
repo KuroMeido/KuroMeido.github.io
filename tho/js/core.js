@@ -4,6 +4,9 @@
   var API_URL = (window.THO_CONFIG && window.THO_CONFIG.apiUrl) || "";
 
   var RATE = 10000;
+  /* Đổi giá việc hằng ngày theo ngày áp dụng (yyyy-MM-dd). Phải giống RATE_CHANGES trong apps-script/Code.gs.
+   * Chỉ ảnh hưởng ngày hiển thị và dòng mới nộp, tiền đã ghi trong Sheet không đổi. */
+  var RATE_CHANGES = { cage: [{ from: "2026-10-18", money: 15000 }] };
   var TASKS = [
     {id:"cage",  label:"Dọn chuồng thỏ"},
     {id:"feed",  label:"Cho thỏ ăn"},
@@ -49,7 +52,12 @@
   function questOf(id){ var m = /^(q15|q45|qhk)(?:-(\d{1,2}))?$/.exec(id); if(!m) return null; for(var i=0;i<QUESTS.length;i++) if(QUESTS[i].id === m[1]) return { quest:QUESTS[i], n:m[2] ? +m[2] : 1 }; return null; }
   function isQuest(id){ return !!questOf(id); }
   /* Tiền của một mã việc: việc hằng ngày là RATE, side quest theo cấp. */
-  function rateOf(id){ var q = questOf(id); return q ? q.quest.reward : RATE; }
+  function rateOf(id, day){
+    var q = questOf(id); if(q) return q.quest.reward;
+    var m = RATE, d = day || state.today;
+    (RATE_CHANGES[id] || []).forEach(function(c){ if(d >= c.from) m = c.money; });
+    return m;
+  }
   function taskLabel(id){
     var q = questOf(id);
     if(q) return "Side quest: " + q.quest.label + " điểm 10" + (q.n > 1 ? " #" + q.n : "");

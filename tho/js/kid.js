@@ -27,7 +27,7 @@
       if(!id){ S.err = "Hôm nay đã nộp quá nhiều bài. Hãy nhờ mụ phù thủy duyệt trước."; render(); return; }
       var at = Math.floor(Date.now() / 1000) * 1000;
       var d = S.days[day] || (S.days[day] = { date:day, items:{} });
-      d.items[id] = { status:"pending", at:at, money:T.rateOf(id), photo:true };
+      d.items[id] = { status:"pending", at:at, money:T.rateOf(id, day), photo:true };
       S.photos[T.photoKey(day, id, at)] = img;
       S.err = ""; render();
       T.write({ a:"submit", day:day, task:id, img:img, at:at });
@@ -81,7 +81,7 @@
       var row = el("label", "chore " + st + (live ? "" : " off")); row.id = "chore-" + t.id;
       var bx = el("span", "box"); bx.innerHTML = st === "approved" ? T.ICON.check : st === "pending" ? T.ICON.clock : st === "rejected" ? T.ICON.redo : T.ICON.cam;
       var meta = el("span", "meta"); meta.appendChild(el("span", "label", t.label));
-      var sub = el("span", "sub"); sub.appendChild(el("span", "chip " + st, T.CHIP[st])); sub.appendChild(el("span", "pay", "+" + money(T.RATE)));
+      var sub = el("span", "sub"); sub.appendChild(el("span", "chip " + st, T.CHIP[st])); sub.appendChild(el("span", "pay", "+" + money(T.rateOf(t.id, S.today))));
       meta.appendChild(sub);
       row.appendChild(bx); row.appendChild(meta);
       if(photo){ var im = el("img", "thumb"); im.src = photo; im.alt = "Ảnh " + t.label; row.appendChild(im); }

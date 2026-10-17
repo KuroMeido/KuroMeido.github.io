@@ -42,6 +42,7 @@ Bé nộp ảnh bài kiểm tra được điểm 10 để đổi thưởng, qua 
 - **Sau mỗi lần sửa CSS hoặc JS:** đổi số trong `?v=3` ở các thẻ `<link>` và `<script>` của `index.html` và `duyet/index.html` (ví dụ thành `?v=4`). Nếu không, trình duyệt có thể giữ bản cũ vài phút đến vài giờ và trang bị lỗi vì HTML mới chạy với JS cũ.
 
 - **Đổi giá mỗi việc:** sửa `RATE` trong `js/core.js` và `RATE` ở đầu `apps-script/Code.gs`, rồi triển khai lại script.
+- **Đổi giá một việc từ một ngày nào đó:** thêm mốc vào `RATE_CHANGES` ở cả `js/core.js` và `apps-script/Code.gs` (hai nơi phải giống nhau), ví dụ `cage: [{ from: "2026-10-18", money: 15000 }]`. Giá tính theo ngày của việc và được ghi vào cột Tiền lúc nộp, nên các dòng cũ không bị tính lại. Hiện tại: dọn chuồng 15.000đ từ 18/10/2026, trước đó 10.000đ.
 - **Thêm hoặc đổi việc:** sửa danh sách `TASKS` trong `js/core.js` và `TASKS` ở `apps-script/Code.gs` (hai nơi phải giống nhau).
 - **Đổi màu:** sửa các biến ở đầu `css/style.css`.
 - **Chữ:** trang chỉ dùng 2 font (Fredoka cho tiêu đề và số, Be Vietnam Pro cho nội dung) và 3 cỡ chữ: `--fs-s` 13px, `--fs-m` 16px, `--fs-l` 32px. Khi thêm phần tử mới, chỉ dùng 3 biến này, đừng ghi số px trực tiếp.
