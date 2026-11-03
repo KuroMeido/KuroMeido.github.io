@@ -33,13 +33,99 @@
     { project: "Warehouse Hub", size_mb: 295, issues: 1563, dwg_drawings: 2, morphs: 10, hotlinks: null, layers: 33, unused_attrs: 47, views: 590, layouts: 122 }
   ];
 
+  /* Model Information checks. good and mod are the highest values still rated
+     Good and Moderate; anything above mod is Critical. Items without good/mod
+     have no threshold yet and show grey. These are starting values: adjust them
+     to your office standard. */
+  var INFO_GROUPS = [
+    { name: "Performance", items: [
+      { key: "open_time_s", label: "Open time (s)", good: 60, mod: 180, tip: "Seconds to open the project." },
+      { key: "send_time_s", label: "Send/Receive time (s)", good: 60, mod: 180, tip: "Seconds for a Teamwork Send or Receive. N/A for local projects." }
+    ] },
+    { name: "Model setup", items: [
+      { key: "stories", label: "Stories", tip: "Stories in the project." },
+      { key: "layers", label: "Layers", good: 60, mod: 100, tip: "Layers defined in the project." },
+      { key: "hotlinks", label: "Hotlinks", good: 5, mod: 10, tip: "Hotlink modules and linked files." },
+      { key: "missing_parts", label: "Missing library parts", good: 0, mod: 5, tip: "Library parts the project needs but cannot find." }
+    ] },
+    { name: "Elements", items: [
+      { key: "total_elements", label: "Total elements", good: 50000, mod: 150000, tip: "All elements on the plan." },
+      { key: "unused_attrs", label: "Unused attributes", good: 100, mod: 250, tip: "Attributes no element uses; safe to purge." },
+      { key: "duplicates", label: "Duplicate elements", good: 0, mod: 25, tip: "Elements stacked on top of each other." },
+      { key: "morphs", label: "Morphs", good: 20, mod: 80, tip: "Morph elements." },
+      { key: "groups", label: "Groups", good: 50, mod: 150, tip: "Groups of elements." },
+      { key: "unclassified", label: "Unclassified elements", good: 500, mod: 2000, tip: "Elements with no classification." }
+    ] },
+    { name: "Annotation and imports", items: [
+      { key: "fills", label: "2D fills", good: 150, mod: 400, tip: "Fill elements drawn in 2D." },
+      { key: "pictures", label: "Pictures", good: 10, mod: 30, tip: "Raster pictures placed in the project." },
+      { key: "dwg_drawings", label: "DWG drawings", good: 5, mod: 20, tip: "DWG and DXF files placed as drawings." }
+    ] },
+    { name: "Views and layouts", items: [
+      { key: "views", label: "Total views", good: 500, mod: 1000, tip: "Views in the View Map." },
+      { key: "unplaced_views", label: "Views not on layouts", good: 50, mod: 150, tip: "Views that appear on no layout." },
+      { key: "layouts", label: "Layouts", good: 300, mod: 600, tip: "Layouts in the Layout Book." },
+      { key: "schedules", label: "Schedules", tip: "Schedules in the project." }
+    ] },
+    { name: "Standards", items: [
+      { key: "line_types", label: "Line types", good: 30, mod: 60, tip: "Line types defined in the project." },
+      { key: "fill_types", label: "Fill types", good: 60, mod: 120, tip: "Fill types defined in the project." },
+      { key: "surfaces", label: "Surfaces", good: 250, mod: 500, tip: "Surface attributes defined in the project." },
+      { key: "building_materials", label: "Building materials", good: 100, mod: 250, tip: "Building materials defined in the project." },
+      { key: "composites", label: "Composites", tip: "Composite structures defined in the project." }
+    ] }
+  ];
+
+  var COLUMN_KEYS = COLUMNS.map(function (c) { return c.key; });
+  var INFO_KEYS = [];
+  INFO_GROUPS.forEach(function (g) {
+    g.items.forEach(function (it) {
+      if (COLUMN_KEYS.indexOf(it.key) === -1 && INFO_KEYS.indexOf(it.key) === -1) INFO_KEYS.push(it.key);
+    });
+  });
+  var ALL_KEYS = COLUMN_KEYS.concat(INFO_KEYS);
+
+  /* Sample values for the Model Information checks. Invented, repeatable. */
+  function seeded(seed) {
+    return function () {
+      seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  SAMPLE.forEach(function (r, i) {
+    var rnd = seeded(i + 11);
+    var f = function (a, b) { return Math.floor(a + rnd() * (b - a)); };
+    r.open_time_s = Math.round(8 + r.size_mb / 6 + rnd() * 20);
+    r.send_time_s = rnd() < 0.5 ? null : Math.round(10 + r.size_mb / 8 + rnd() * 20);
+    r.stories = f(3, 42);
+    r.missing_parts = rnd() < 0.5 ? 0 : f(1, 9);
+    r.total_elements = Math.round(r.size_mb * f(55, 95));
+    r.duplicates = f(0, Math.max(2, Math.round(r.issues / 120)));
+    r.groups = f(0, 190);
+    r.unclassified = Math.round(r.issues * (0.1 + rnd() * 0.6));
+    r.fills = f(20, 520);
+    r.pictures = f(0, 38);
+    r.unplaced_views = Math.round(r.views * (0.05 + rnd() * 0.35));
+    r.schedules = f(5, 75);
+    r.line_types = f(14, 84);
+    r.fill_types = f(25, 165);
+    r.surfaces = f(90, 590);
+    r.building_materials = f(30, 290);
+    r.composites = f(10, 90);
+  });
+
   var state = {
     rows: SAMPLE.slice(),
     sourceLabel: "Sample data: 15 invented projects, not real models.",
     sortKey: "issues",
     sortDir: -1,
     query: "",
-    limit: 2000
+    limit: 2000,
+    selected: null,
+    checks: {},
+    scored: null
   };
 
   var el = {
@@ -53,7 +139,13 @@
     sample: document.getElementById("ah-sample"),
     template: document.getElementById("ah-template"),
     limit: document.getElementById("ah-limit"),
-    search: document.getElementById("ah-search")
+    search: document.getElementById("ah-search"),
+    infoBody: document.getElementById("ai-body"),
+    infoTag: document.getElementById("ai-tag"),
+    infoProject: document.getElementById("ai-project"),
+    infoAll: document.getElementById("ai-all"),
+    infoNone: document.getElementById("ai-none"),
+    infoRun: document.getElementById("ai-run")
   };
 
   if (!el.body || !el.head) return;
@@ -73,6 +165,12 @@
   ALIASES.file_size_mb = "size_mb";
   ALIASES.dwg = "dwg_drawings";
   ALIASES.unused_attributes = "unused_attrs";
+  INFO_GROUPS.forEach(function (g) {
+    g.items.forEach(function (it) {
+      ALIASES[it.key] = it.key;
+      ALIASES[normalizeKey(it.label)] = it.key;
+    });
+  });
 
   function toNumber(value) {
     if (value === null || value === undefined) return null;
@@ -100,7 +198,7 @@
         }
       });
       if (!row.project) row.project = "Project " + (index + 1);
-      COLUMNS.forEach(function (c) { if (!(c.key in row)) row[c.key] = null; });
+      ALL_KEYS.forEach(function (k) { if (!(k in row)) row[k] = null; });
       return row;
     }).filter(Boolean);
     if (!rows.length) throw new Error("No projects found in the file.");
@@ -275,6 +373,13 @@
       var name = document.createElement("td");
       name.className = "ah-name";
       name.textContent = r.project;
+      name.tabIndex = 0;
+      name.title = "Show Model Information for this project";
+      if (r.project === state.selected) tr.className = "ah-selected";
+      name.addEventListener("click", function () { selectProject(r.project); });
+      name.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectProject(r.project); }
+      });
       tr.appendChild(name);
       COLUMNS.forEach(function (c) {
         var td = document.createElement("td");
@@ -305,10 +410,127 @@
     markSort();
   }
 
+  function selectedRow() {
+    var found = state.rows.filter(function (r) { return r.project === state.selected; })[0];
+    return found || state.rows[0];
+  }
+
+  function statusOf(item, value) {
+    if (value == null) return "na";
+    if (item.good == null) return "none";
+    if (value <= item.good) return "good";
+    if (value <= item.mod) return "moderate";
+    return "critical";
+  }
+
+  function isOn(key) {
+    return state.checks[key] !== false;
+  }
+
+  function selectProject(name) {
+    state.selected = name;
+    state.scored = null;
+    renderBody();
+    renderInfo();
+  }
+
+  function renderInfo() {
+    if (!el.infoBody) return;
+    var row = selectedRow();
+    state.selected = row.project;
+
+    var key = state.rows.map(function (r) { return r.project; }).join("\n");
+    if (el.infoProject.dataset.key !== key) {
+      el.infoProject.dataset.key = key;
+      var opts = state.rows.map(function (r) { return new Option(r.project, r.project); });
+      el.infoProject.replaceChildren.apply(el.infoProject, opts);
+    }
+    el.infoProject.value = row.project;
+
+    var activeId = document.activeElement && el.infoBody.contains(document.activeElement)
+      ? document.activeElement.id : "";
+
+    var good = 0, mod = 0, crit = 0, checked = 0, pts = 0, scoredN = 0;
+    var frag = document.createDocumentFragment();
+
+    INFO_GROUPS.forEach(function (g) {
+      var group = document.createElement("section");
+      group.className = "ai-group";
+      var head = document.createElement("div");
+      head.className = "ai-group-head";
+      var h = document.createElement("h3");
+      h.textContent = g.name;
+      var counts = document.createElement("span");
+      var gc = 0, gm = 0;
+      var list = document.createElement("div");
+      list.className = "ai-items";
+
+      g.items.forEach(function (it) {
+        var v = row[it.key];
+        var st = statusOf(it, v);
+        var on = isOn(it.key);
+        var label = document.createElement("label");
+        label.className = "ai-item ai-" + st + (on ? "" : " ai-off");
+        label.title = it.tip;
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        box.id = "ai-chk-" + it.key;
+        box.checked = on;
+        box.addEventListener("change", function () {
+          state.checks[it.key] = box.checked;
+          state.scored = null;
+          renderInfo();
+        });
+        var name = document.createElement("span");
+        name.className = "ai-label";
+        name.textContent = it.label;
+        var val = document.createElement("strong");
+        val.className = "ai-value";
+        val.textContent = v == null ? "N/A" : fmt.format(v);
+        label.append(box, name, val);
+        list.appendChild(label);
+
+        if (on) {
+          checked++;
+          if (st === "good") { good++; pts += 1; scoredN++; }
+          if (st === "moderate") { mod++; gm++; pts += 0.5; scoredN++; }
+          if (st === "critical") { crit++; gc++; scoredN++; }
+        }
+      });
+
+      var bits = [];
+      if (gc) bits.push(gc + " critical");
+      if (gm) bits.push(gm + " moderate");
+      counts.textContent = bits.join(" · ");
+      counts.className = "ai-counts" + (gc ? " ai-counts-critical" : "");
+      head.append(h, counts);
+      group.append(head, list);
+      frag.appendChild(group);
+    });
+
+    el.infoBody.replaceChildren(frag);
+    if (activeId) {
+      var again = document.getElementById(activeId);
+      if (again) again.focus();
+    }
+
+    state.lastScore = scoredN ? Math.round((pts / scoredN) * 100) : null;
+    el.infoRun.disabled = !checked;
+    if (state.scored == null) {
+      el.infoTag.textContent = "not scored";
+      el.infoTag.className = "ai-tag";
+    } else {
+      el.infoTag.textContent = "Score " + state.scored + " · " + good + " good, " + mod + " moderate, " + crit + " critical";
+      el.infoTag.className = "ai-tag " + (state.scored >= 80 ? "ai-tag-good" : state.scored >= 50 ? "ai-tag-mod" : "ai-tag-crit");
+    }
+  }
+
   function render() {
     renderSource();
     renderTake();
+    state.selected = selectedRow().project;
     renderBody();
+    renderInfo();
   }
 
   function renderDefs() {
@@ -322,6 +544,18 @@
       wrap.append(dt, dd);
       frag.appendChild(wrap);
     });
+    INFO_GROUPS.forEach(function (g) {
+      g.items.forEach(function (it) {
+        if (COLUMN_KEYS.indexOf(it.key) !== -1) return;
+        var wrap = document.createElement("div");
+        var dt = document.createElement("dt");
+        var dd = document.createElement("dd");
+        dt.textContent = it.label;
+        dd.textContent = it.tip;
+        wrap.append(dt, dd);
+        frag.appendChild(wrap);
+      });
+    });
     el.defs.replaceChildren(frag);
   }
 
@@ -329,7 +563,7 @@
     if (!el.format) return;
     var one = {};
     one.project = "Riverside Tower A";
-    COLUMNS.forEach(function (c) { one[c.key] = SAMPLE[0][c.key]; });
+    ALL_KEYS.forEach(function (k) { one[k] = SAMPLE[0][k]; });
     el.format.textContent = JSON.stringify([one], null, 2);
   }
 
@@ -370,6 +604,26 @@
   el.search.addEventListener("input", function () {
     state.query = el.search.value;
     renderBody();
+  });
+
+  el.infoProject.addEventListener("change", function () { selectProject(el.infoProject.value); });
+
+  el.infoAll.addEventListener("click", function () {
+    state.checks = {};
+    state.scored = null;
+    renderInfo();
+  });
+
+  el.infoNone.addEventListener("click", function () {
+    ALL_KEYS.forEach(function (k) { state.checks[k] = false; });
+    state.scored = null;
+    renderInfo();
+  });
+
+  el.infoRun.addEventListener("click", function () {
+    renderInfo();
+    state.scored = state.lastScore;
+    renderInfo();
   });
 
   renderHead();

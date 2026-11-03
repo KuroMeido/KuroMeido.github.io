@@ -74,6 +74,39 @@
                     </p>
                 </div>
 
+                <div class="ah-card ai-card" id="model-information">
+                    <div class="ai-head">
+                        <div class="ai-title">
+                            <h2>Model Information</h2>
+                            <span class="ai-tag" id="ai-tag">not scored</span>
+                        </div>
+                        <div class="ai-tools">
+                            <label class="ah-field ai-project">
+                                <span>Project</span>
+                                <select id="ai-project"></select>
+                            </label>
+                            <span class="ai-links">
+                                <button type="button" class="ai-link" id="ai-all">All</button> /
+                                <button type="button" class="ai-link" id="ai-none">None</button>
+                            </span>
+                            <button type="button" class="btn btn-primary" id="ai-run">Run selected</button>
+                        </div>
+                    </div>
+                    <div class="ai-body" id="ai-body"></div>
+                    <div class="ai-legend" aria-label="Status colours">
+                        <span><i class="ai-sw ai-sw-good"></i>Good</span>
+                        <span><i class="ai-sw ai-sw-moderate"></i>Moderate</span>
+                        <span><i class="ai-sw ai-sw-critical"></i>Critical</span>
+                        <span><i class="ai-sw ai-sw-none"></i>No threshold yet / N/A</span>
+                    </div>
+                    <p class="ah-note">
+                        Pick a project here or select its name in the table above. Tick the checks you want and
+                        select Run selected to score them: Good counts 1, Moderate counts 0.5, Critical counts 0.
+                        Checks with no threshold are not scored. Thresholds are starting values and can be changed in
+                        <code>assets/js/archicad-health.js</code>.
+                    </p>
+                </div>
+
                 <div class="ah-card">
                     <h2>What each column counts</h2>
                     <dl class="ah-defs" id="ah-defs"></dl>
