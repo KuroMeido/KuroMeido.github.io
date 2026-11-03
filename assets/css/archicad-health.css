@@ -1,0 +1,255 @@
+/* ArchiCAD Model Health. Uses the site tokens from base.css. */
+
+.ah-section {
+  padding-top: 0;
+}
+
+.ah-section .container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ah-take {
+  max-width: 70ch;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.ah-take b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ah-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ah-actions,
+.ah-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.ah-file {
+  cursor: pointer;
+}
+
+.ah-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.ah-field input {
+  min-width: 0;
+  width: 10rem;
+  padding: 9px 12px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.ah-field input[type="number"] {
+  width: 7rem;
+}
+
+.ah-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.ah-card h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.ah-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.ah-source,
+.ah-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.ah-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.ah-legend i {
+  display: inline-block;
+  width: 28px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.ah-scroll {
+  overflow: auto;
+  max-height: min(72vh, 46rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+#ah-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#ah-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0;
+  text-align: center;
+  vertical-align: bottom;
+  background: var(--bg-soft);
+  border-bottom: 2px solid var(--text);
+}
+
+#ah-table th:first-child {
+  left: 0;
+  z-index: 3;
+  text-align: left;
+}
+
+#ah-table th button {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 5.5rem;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+#ah-table th:first-child button {
+  min-width: 12rem;
+}
+
+#ah-table th button:hover {
+  background: var(--panel-strong);
+}
+
+#ah-table th button:focus-visible {
+  outline: 2px solid var(--brand-2);
+  outline-offset: -2px;
+}
+
+#ah-table th[aria-sort="descending"] button::after {
+  content: " \2193";
+}
+
+#ah-table th[aria-sort="ascending"] button::after {
+  content: " \2191";
+}
+
+#ah-table td {
+  padding: 9px 12px;
+  text-align: center;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--bg-soft);
+}
+
+#ah-table td.ah-name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  font-weight: 500;
+  background: var(--bg-soft);
+  border-bottom-color: var(--line);
+}
+
+#ah-table td.ah-empty {
+  text-align: left;
+  color: var(--muted);
+}
+
+.h0 { background: #167a69; color: #fff; }
+.h1 { background: #5fb39a; color: #0b2a24; }
+.h2 { background: #e3c45a; color: #2b2406; }
+.h3 { background: #ec8a5c; color: #2e1304; }
+.h4 { background: #c8453c; color: #fff; }
+#ah-table td.ah-none { background: #fff; color: #555; }
+
+.ah-defs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px 24px;
+}
+
+.ah-defs div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ah-defs dt {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ah-defs dd {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.ah-code {
+  overflow-x: auto;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--brand-ink);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 640px) {
+  .ah-card {
+    padding: 16px;
+  }
+
+  .ah-field input {
+    width: 100%;
+  }
+
+  .ah-filters,
+  .ah-field {
+    width: 100%;
+  }
+}

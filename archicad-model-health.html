@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kuro Hitsuji | ArchiCAD Model Health</title>
+    <meta name="description"
+          content="A static model health heat-map for ArchiCAD projects. Load a JSON or CSV export and compare projects by issues, links, layers, views and layouts." />
+    <link rel="stylesheet" href="assets/css/base.css" />
+    <link rel="stylesheet" href="assets/css/layout.css" />
+    <link rel="stylesheet" href="assets/css/components.css" />
+    <link rel="stylesheet" href="assets/css/pages.css" />
+    <link rel="stylesheet" href="assets/css/archicad-health.css" />
+</head>
+<body data-page="archicad">
+    <header id="site-header" class="site-header">
+    </header>
+
+    <main>
+        <section class="page-hero">
+            <div class="container narrow">
+                <p class="section-tag">ARCHICAD TOOL</p>
+                <h1>Model Health</h1>
+                <p>
+                    A heat-map to audit ArchiCAD projects side by side. Load a JSON or CSV export and see which
+                    models carry the most issues, links, unused attributes, views and layouts.
+                </p>
+            </div>
+        </section>
+
+        <section class="section ah-section">
+            <div class="container">
+                <p class="ah-take" id="ah-take" aria-live="polite"></p>
+
+                <div class="ah-bar">
+                    <div class="ah-actions">
+                        <label class="btn btn-primary ah-file" for="ah-file">Load JSON or CSV</label>
+                        <input id="ah-file" type="file" accept=".json,.csv,application/json,text/csv" hidden />
+                        <button type="button" class="btn btn-secondary" id="ah-sample">Use sample data</button>
+                        <button type="button" class="btn btn-secondary" id="ah-template">Download template</button>
+                    </div>
+                    <div class="ah-filters">
+                        <label class="ah-field">
+                            <span>Issue limit</span>
+                            <input id="ah-limit" type="number" min="0" step="100" value="2000" inputmode="numeric" />
+                        </label>
+                        <label class="ah-field">
+                            <span>Search</span>
+                            <input id="ah-search" type="search" placeholder="Project name" autocomplete="off" />
+                        </label>
+                    </div>
+                </div>
+
+                <div class="ah-card">
+                    <div class="ah-card-head">
+                        <h2>Projects</h2>
+                        <p class="ah-source" id="ah-source"></p>
+                    </div>
+                    <div class="ah-legend" aria-label="Colour scale">
+                        <span>Lowest in column</span>
+                        <i class="h0"></i><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i>
+                        <span>Highest in column</span>
+                    </div>
+                    <div class="ah-scroll" tabindex="0" role="region" aria-label="Model health table">
+                        <table id="ah-table">
+                            <thead id="ah-head"></thead>
+                            <tbody id="ah-body"></tbody>
+                        </table>
+                    </div>
+                    <p class="ah-note">
+                        Colour shows each project's rank within its own column, from the lowest fifth (green) to the
+                        highest fifth (red). Select a column heading to sort. Files are read in your browser and are
+                        never uploaded.
+                    </p>
+                </div>
+
+                <div class="ah-card">
+                    <h2>What each column counts</h2>
+                    <dl class="ah-defs" id="ah-defs"></dl>
+                </div>
+
+                <div class="ah-card">
+                    <h2>File format</h2>
+                    <p class="ah-note">
+                        JSON is an array with one object per project. CSV uses the same names in the first row.
+                        Leave a value empty when the project could not report it.
+                    </p>
+                    <pre class="ah-code" id="ah-format"></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <p>© <span data-current-year>2026</span> Kuro Hitsuji. Built with GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/header.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/archicad-health.js"></script>
+</body>
+</html>
