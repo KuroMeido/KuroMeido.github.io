@@ -76,33 +76,24 @@
 
                 <div class="ah-card ai-card" id="model-information">
                     <div class="ai-head">
-                        <div class="ai-title">
-                            <h2>Model Information</h2>
-                            <span class="ai-tag" id="ai-tag">not scored</span>
-                        </div>
-                        <div class="ai-tools">
-                            <label class="ah-field ai-project">
-                                <span>Project</span>
-                                <select id="ai-project"></select>
-                            </label>
-                            <span class="ai-links">
-                                <button type="button" class="ai-link" id="ai-all">All</button> /
-                                <button type="button" class="ai-link" id="ai-none">None</button>
-                            </span>
-                            <button type="button" class="btn btn-primary" id="ai-run">Run selected</button>
-                        </div>
+                        <h2>Project Audit</h2>
+                        <label class="ah-field ai-project">
+                            <span>Project</span>
+                            <select id="ai-project"></select>
+                        </label>
                     </div>
                     <div class="ai-body" id="ai-body"></div>
                     <div class="ai-legend" aria-label="Status colours">
-                        <span><i class="ai-sw ai-sw-good"></i>Good</span>
-                        <span><i class="ai-sw ai-sw-moderate"></i>Moderate</span>
-                        <span><i class="ai-sw ai-sw-critical"></i>Critical</span>
-                        <span><i class="ai-sw ai-sw-none"></i>No threshold yet / N/A</span>
+                        <span><i class="ai-sw ai-sw-good"></i>Good (3/3)</span>
+                        <span><i class="ai-sw ai-sw-moderate"></i>Moderate (2/3)</span>
+                        <span><i class="ai-sw ai-sw-critical"></i>Critical (0 or 1/3)</span>
+                        <span><i class="ai-sw ai-sw-na"></i>Not scored</span>
                     </div>
                     <p class="ah-note">
-                        Pick a project here or select its name in the table above. Tick the checks you want and
-                        select Run selected to score them: Good counts 1, Moderate counts 0.5, Critical counts 0.
-                        Checks with no threshold are not scored. Thresholds are starting values and can be changed in
+                        Pick a project here or select its name in the table above. Each check scores 0 to 3 points on
+                        up to three axes: Performance, Structure and BIM Essentials. A dash means the axis does not
+                        apply. An axis score is the points earned times each check's Impact Multiplier, divided by the
+                        most it could earn. Score steps are starting values and can be changed in
                         <code>assets/js/archicad-health.js</code>.
                     </p>
                 </div>

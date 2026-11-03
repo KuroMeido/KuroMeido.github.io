@@ -1,6 +1,8 @@
 (function archicadModelHealth() {
   "use strict";
 
+  /* ---------- Heat-map columns ---------- */
+
   var COLUMNS = [
     { key: "size_mb", label: "File size (MB)", def: "Size of the .pln, .pla or .bimproject file on disk, in MB." },
     { key: "issues", label: "Issues", def: "Integrity problems: unclassified elements, elements with no zone, unconnected walls and slabs, duplicates." },
@@ -33,59 +35,157 @@
     { project: "Warehouse Hub", size_mb: 295, issues: 1563, dwg_drawings: 2, morphs: 10, hotlinks: null, layers: 33, unused_attrs: 47, views: 590, layouts: 122 }
   ];
 
-  /* Model Information checks. good and mod are the highest values still rated
-     Good and Moderate; anything above mod is Critical. Items without good/mod
-     have no threshold yet and show grey. These are starting values: adjust them
-     to your office standard. */
-  var INFO_GROUPS = [
-    { name: "Performance", items: [
-      { key: "open_time_s", label: "Open time (s)", good: 60, mod: 180, tip: "Seconds to open the project." },
-      { key: "send_time_s", label: "Send/Receive time (s)", good: 60, mod: 180, tip: "Seconds for a Teamwork Send or Receive. N/A for local projects." }
-    ] },
-    { name: "Model setup", items: [
-      { key: "stories", label: "Stories", tip: "Stories in the project." },
-      { key: "layers", label: "Layers", good: 60, mod: 100, tip: "Layers defined in the project." },
-      { key: "hotlinks", label: "Hotlinks", good: 5, mod: 10, tip: "Hotlink modules and linked files." },
-      { key: "missing_parts", label: "Missing library parts", good: 0, mod: 5, tip: "Library parts the project needs but cannot find." }
-    ] },
-    { name: "Elements", items: [
-      { key: "total_elements", label: "Total elements", good: 50000, mod: 150000, tip: "All elements on the plan." },
-      { key: "unused_attrs", label: "Unused attributes", good: 100, mod: 250, tip: "Attributes no element uses; safe to purge." },
-      { key: "duplicates", label: "Duplicate elements", good: 0, mod: 25, tip: "Elements stacked on top of each other." },
-      { key: "morphs", label: "Morphs", good: 20, mod: 80, tip: "Morph elements." },
-      { key: "groups", label: "Groups", good: 50, mod: 150, tip: "Groups of elements." },
-      { key: "unclassified", label: "Unclassified elements", good: 500, mod: 2000, tip: "Elements with no classification." }
-    ] },
-    { name: "Annotation and imports", items: [
-      { key: "fills", label: "2D fills", good: 150, mod: 400, tip: "Fill elements drawn in 2D." },
-      { key: "pictures", label: "Pictures", good: 10, mod: 30, tip: "Raster pictures placed in the project." },
-      { key: "dwg_drawings", label: "DWG drawings", good: 5, mod: 20, tip: "DWG and DXF files placed as drawings." }
-    ] },
-    { name: "Views and layouts", items: [
-      { key: "views", label: "Total views", good: 500, mod: 1000, tip: "Views in the View Map." },
-      { key: "unplaced_views", label: "Views not on layouts", good: 50, mod: 150, tip: "Views that appear on no layout." },
-      { key: "layouts", label: "Layouts", good: 300, mod: 600, tip: "Layouts in the Layout Book." },
-      { key: "schedules", label: "Schedules", tip: "Schedules in the project." }
-    ] },
-    { name: "Standards", items: [
-      { key: "line_types", label: "Line types", good: 30, mod: 60, tip: "Line types defined in the project." },
-      { key: "fill_types", label: "Fill types", good: 60, mod: 120, tip: "Fill types defined in the project." },
-      { key: "surfaces", label: "Surfaces", good: 250, mod: 500, tip: "Surface attributes defined in the project." },
-      { key: "building_materials", label: "Building materials", good: 100, mod: 250, tip: "Building materials defined in the project." },
-      { key: "composites", label: "Composites", tip: "Composite structures defined in the project." }
-    ] }
+  /* ---------- Project Audit: inputs ---------- */
+
+  /* Numbers measured for the audit. Add more here as sections are added. */
+  var AUDIT_FIELDS = [
+    { key: "embedded_items", label: "Embedded Library items" },
+    { key: "ifc_lcf", label: "IFC LCF files" },
+    { key: "ifc_folders", label: "IFC folders" },
+    { key: "images_over_1mb", label: "Images over 1 MB" },
+    { key: "linked_libs", label: "Linked libraries" },
+    { key: "point_cloud_mb", label: "Point cloud size (MB)" },
+    { key: "missing_parts", label: "Missing library parts" },
+    { key: "duplicate_parts", label: "Duplicated library parts" }
   ];
 
-  var COLUMN_KEYS = COLUMNS.map(function (c) { return c.key; });
-  var INFO_KEYS = [];
-  INFO_GROUPS.forEach(function (g) {
-    g.items.forEach(function (it) {
-      if (COLUMN_KEYS.indexOf(it.key) === -1 && INFO_KEYS.indexOf(it.key) === -1) INFO_KEYS.push(it.key);
-    });
-  });
-  var ALL_KEYS = COLUMN_KEYS.concat(INFO_KEYS);
+  /* Text shown under "0. Audit Details". */
+  var AUDIT_TEXT = [
+    { key: "audit_date", label: "Date of audit", group: "audit" },
+    { key: "audit_version", label: "Audit version", group: "audit" },
+    { key: "auditor", label: "Auditor's name", group: "audit" },
+    { key: "audited_by", label: "Audit provided by", group: "audit" },
+    { key: "audit_archicad", label: "Archicad version used for auditing", group: "audit" },
+    { key: "report_language", label: "Report language", group: "audit" },
+    { key: "project_stage", label: "Project stage", group: "project" },
+    { key: "archicad_version", label: "Archicad version", group: "project" },
+    { key: "file_name", label: "Project file name", group: "project" },
+    { key: "addons", label: "3rd party add-ons used", group: "project" }
+  ];
 
-  /* Sample values for the Model Information checks. Invented, repeatable. */
+  /* ---------- Project Audit: scoring rules ----------
+     Every check gives 0 to 3 points. Each axis (Performance, Structure,
+     BIM Essentials) that applies to a check is worth points x multiplier out of
+     3 x multiplier. A section's score for an axis is the sum of what its checks
+     earned divided by the sum of what they could earn.
+     The step values below are starting values chosen to reproduce a sample
+     report. Replace them with your own standard.
+     steps = [a, b, c]: value <= a gives 3, <= b gives 2, <= c gives 1, else 0. */
+
+  function stepScore(field, steps) {
+    return function (row) {
+      var v = row[field];
+      if (v == null) return null;
+      return v <= steps[0] ? 3 : v <= steps[1] ? 2 : v <= steps[2] ? 1 : 0;
+    };
+  }
+
+  function ifcScore(row) {
+    var lcf = row.ifc_lcf;
+    var folders = row.ifc_folders;
+    if (lcf == null || folders == null) return null;
+    var total = lcf + folders;
+    var share = total ? folders / total : 0;
+    return share === 0 ? 3 : share < 0.34 ? 2 : share < 0.9 ? 1 : 0;
+  }
+
+  var SECTIONS = [
+    {
+      id: "1",
+      name: "Library Management",
+      intro: "Libraries add to file size and slow a project down when they are large, duplicated or broken. " +
+        "Missing or duplicated library parts, too many linked libraries and a heavy Embedded Library all cost speed. " +
+        "A common setup is the default Archicad library, one office library and one library for the project.",
+      checks: [
+        {
+          id: "1.1", title: "Embedded Library", axes: ["p", "s", "b"], mult: 5,
+          measures: [["Number of items in the Embedded Library", "embedded_items", ""]],
+          score: stepScore("embedded_items", [10, 50, 150]),
+          advice: {
+            good: "The Embedded Library is small. Nothing to do.",
+            mid: "The Embedded Library holds a number of items. Sorting them into folders keeps it tidy; leaving it is not a serious risk.",
+            low: "The Embedded Library is large. Move reusable objects into a proper library so the project file stays light and loads faster."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85477/"
+        },
+        {
+          id: "1.2", title: "IFC Libraries", axes: ["p", "s", "b"], mult: 3,
+          measures: [["IFC library container files (.lcf)", "ifc_lcf", ""], ["IFC folders", "ifc_folders", ""]],
+          score: ifcScore,
+          advice: {
+            good: "No IFC libraries are stored as plain folders. Nothing to do.",
+            mid: "Some IFC libraries are stored as folders. Save them as .lcf container files to load faster.",
+            low: "Most IFC libraries sit in folders, which slows library loading. Save them as .lcf container files."
+          },
+          ref: "https://helpcenter.graphisoft.com/knowledgebase/25729/"
+        },
+        {
+          id: "1.3", title: "Images over 1 MB", axes: ["p", "s"], mult: 3,
+          measures: [["Number of image files over 1 MB", "images_over_1mb", ""]],
+          score: stepScore("images_over_1mb", [5, 20, 50]),
+          advice: {
+            good: "There are few or no large images. Nothing to do.",
+            mid: "A number of large images are in use. Compress or resize those that do not need full size.",
+            low: "Many large images are loaded. Reduce their size, because they slow opening and 3D."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85477/"
+        },
+        {
+          id: "1.4", title: "Linked Libraries", axes: ["p", "s"], mult: 5,
+          measures: [["Number of linked and BIMcloud libraries", "linked_libs", ""]],
+          score: stepScore("linked_libs", [6, 9, 14]),
+          advice: {
+            good: "The number of linked libraries is within the recommended limit.",
+            mid: "More libraries are linked than needed. Remove the ones nobody uses.",
+            low: "Too many libraries are linked. Keep the default Archicad library, an office library and a project library, and remove the rest."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85478/"
+        },
+        {
+          id: "1.5", title: "Large Point Cloud files in the Library", axes: ["p", "s", "b"], mult: 3,
+          measures: [["Size of point clouds", "point_cloud_mb", " MB"]],
+          score: stepScore("point_cloud_mb", [200, 500, 1000]),
+          advice: {
+            good: "Point cloud files are small in total. Nothing to do.",
+            mid: "Point clouds are getting large. Remove the ones no longer needed.",
+            low: "Point clouds are very large and slow 3D navigation and library loading. Remove the ones no longer needed."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85653/"
+        },
+        {
+          id: "1.6", title: "Missing Library Parts", axes: ["p", "s"], mult: 3,
+          measures: [["Number of missing library parts", "missing_parts", ""]],
+          score: stepScore("missing_parts", [0, 10, 50]),
+          advice: {
+            good: "No library parts are missing.",
+            mid: "A few library parts are missing. Replace or delete them, or fix the surfaces that point to missing images.",
+            low: "Many library parts are missing. Fix these first; a clean library report shows none."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/127921"
+        },
+        {
+          id: "1.7", title: "Duplicated Library Parts", axes: ["p", "s"], mult: 1,
+          measures: [["Number of duplicated library parts", "duplicate_parts", ""]],
+          score: stepScore("duplicate_parts", [0, 5, 20]),
+          advice: {
+            good: "No library parts are duplicated.",
+            mid: "A few library parts are duplicated. Remove the extra copies from one of the libraries and reload.",
+            low: "Many library parts are duplicated. Remove them from the libraries and reload so the report shows none."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85653/"
+        }
+      ]
+    }
+  ];
+
+  var AXES = [
+    { key: "p", label: "Performance" },
+    { key: "s", label: "Structure" },
+    { key: "b", label: "BIM Essentials" }
+  ];
+
+  /* ---------- Sample values for the audit (invented) ---------- */
+
   function seeded(seed) {
     return function () {
       seed = (seed + 0x6D2B79F5) | 0;
@@ -94,27 +194,44 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
+
+  var STAGES = ["Concept Design", "Schematic Design", "Design Development", "Construction Documents"];
+
   SAMPLE.forEach(function (r, i) {
-    var rnd = seeded(i + 11);
+    var rnd = seeded(i + 31);
     var f = function (a, b) { return Math.floor(a + rnd() * (b - a)); };
-    r.open_time_s = Math.round(8 + r.size_mb / 6 + rnd() * 20);
-    r.send_time_s = rnd() < 0.5 ? null : Math.round(10 + r.size_mb / 8 + rnd() * 20);
-    r.stories = f(3, 42);
-    r.missing_parts = rnd() < 0.5 ? 0 : f(1, 9);
-    r.total_elements = Math.round(r.size_mb * f(55, 95));
-    r.duplicates = f(0, Math.max(2, Math.round(r.issues / 120)));
-    r.groups = f(0, 190);
-    r.unclassified = Math.round(r.issues * (0.1 + rnd() * 0.6));
-    r.fills = f(20, 520);
-    r.pictures = f(0, 38);
-    r.unplaced_views = Math.round(r.views * (0.05 + rnd() * 0.35));
-    r.schedules = f(5, 75);
-    r.line_types = f(14, 84);
-    r.fill_types = f(25, 165);
-    r.surfaces = f(90, 590);
-    r.building_materials = f(30, 290);
-    r.composites = f(10, 90);
+    r.embedded_items = f(0, 120);
+    r.ifc_lcf = f(0, 4);
+    r.ifc_folders = f(0, 5);
+    r.images_over_1mb = f(0, 40);
+    r.linked_libs = f(2, 18);
+    r.point_cloud_mb = f(0, 700);
+    r.missing_parts = rnd() < 0.4 ? 0 : f(1, 25);
+    r.duplicate_parts = rnd() < 0.5 ? 0 : f(1, 12);
+    r.audit_date = "2026-11-03";
+    r.audit_version = "Sample";
+    r.auditor = "Sample data";
+    r.audited_by = "Kuro Hitsuji";
+    r.audit_archicad = "Archicad 2027";
+    r.report_language = "English";
+    r.project_stage = STAGES[f(0, STAGES.length)];
+    r.archicad_version = "Archicad 2027";
+    r.file_name = r.project.replace(/\s+/g, "_") + ".pln";
+    r.addons = rnd() < 0.6 ? "No 3rd party add-ons." : "Tapir";
   });
+
+  /* The first sample project uses the values of the report this layout follows,
+     so its scores can be compared with that report: 64%, 64%, 67%, 64%. */
+  Object.assign(SAMPLE[0], {
+    embedded_items: 31, ifc_lcf: 1, ifc_folders: 2, images_over_1mb: 3,
+    linked_libs: 13, point_cloud_mb: 153, missing_parts: 7, duplicate_parts: 1
+  });
+
+  /* ---------- State and elements ---------- */
+
+  var NUMBER_KEYS = COLUMNS.map(function (c) { return c.key; })
+    .concat(AUDIT_FIELDS.map(function (a) { return a.key; }));
+  var TEXT_KEYS = AUDIT_TEXT.map(function (a) { return a.key; });
 
   var state = {
     rows: SAMPLE.slice(),
@@ -123,9 +240,7 @@
     sortDir: -1,
     query: "",
     limit: 2000,
-    selected: null,
-    checks: {},
-    scored: null
+    selected: null
   };
 
   var el = {
@@ -140,17 +255,15 @@
     template: document.getElementById("ah-template"),
     limit: document.getElementById("ah-limit"),
     search: document.getElementById("ah-search"),
-    infoBody: document.getElementById("ai-body"),
-    infoTag: document.getElementById("ai-tag"),
-    infoProject: document.getElementById("ai-project"),
-    infoAll: document.getElementById("ai-all"),
-    infoNone: document.getElementById("ai-none"),
-    infoRun: document.getElementById("ai-run")
+    auditBody: document.getElementById("ai-body"),
+    auditProject: document.getElementById("ai-project")
   };
 
   if (!el.body || !el.head) return;
 
   var fmt = new Intl.NumberFormat("en-US");
+
+  /* ---------- Reading files ---------- */
 
   function normalizeKey(text) {
     return String(text).trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -161,16 +274,14 @@
     ALIASES[c.key] = c.key;
     ALIASES[normalizeKey(c.label)] = c.key;
   });
+  AUDIT_FIELDS.concat(AUDIT_TEXT).forEach(function (a) {
+    ALIASES[a.key] = a.key;
+    ALIASES[normalizeKey(a.label)] = a.key;
+  });
   ALIASES.file_size = "size_mb";
   ALIASES.file_size_mb = "size_mb";
   ALIASES.dwg = "dwg_drawings";
   ALIASES.unused_attributes = "unused_attrs";
-  INFO_GROUPS.forEach(function (g) {
-    g.items.forEach(function (it) {
-      ALIASES[it.key] = it.key;
-      ALIASES[normalizeKey(it.label)] = it.key;
-    });
-  });
 
   function toNumber(value) {
     if (value === null || value === undefined) return null;
@@ -180,6 +291,12 @@
       value = Number(t.replace(/,/g, ""));
     }
     return typeof value === "number" && isFinite(value) ? value : null;
+  }
+
+  function toText(value) {
+    if (value === null || value === undefined) return null;
+    var t = String(value).trim();
+    return t === "" ? null : t;
   }
 
   function normalizeRows(raw) {
@@ -194,11 +311,12 @@
           row.project = String(item[k] == null ? "" : item[k]);
           named = true;
         } else if (ALIASES[nk]) {
-          row[ALIASES[nk]] = toNumber(item[k]);
+          var key = ALIASES[nk];
+          row[key] = TEXT_KEYS.indexOf(key) !== -1 ? toText(item[k]) : toNumber(item[k]);
         }
       });
       if (!row.project) row.project = "Project " + (index + 1);
-      ALL_KEYS.forEach(function (k) { if (!(k in row)) row[k] = null; });
+      NUMBER_KEYS.concat(TEXT_KEYS).forEach(function (k) { if (!(k in row)) row[k] = null; });
       return row;
     }).filter(Boolean);
     if (!rows.length) throw new Error("No projects found in the file.");
@@ -265,6 +383,8 @@
     reader.readAsText(file);
   }
 
+  /* ---------- Heat-map table ---------- */
+
   function renderHead() {
     var tr = document.createElement("tr");
     var cols = [{ key: "project", label: "Project file" }].concat(COLUMNS);
@@ -323,7 +443,6 @@
       .sort(function (a, b) { return b.issues - a.issues; });
     el.take.replaceChildren();
     var parts = [
-      [null, ""],
       ["b", fmt.format(over)], [null, " of "], ["b", fmt.format(rows.length)],
       [null, " projects carry more than "], ["b", fmt.format(state.limit)], [null, " integrity issues."]
     ];
@@ -332,7 +451,6 @@
         ["b", fmt.format(ranked[0].issues)], [null, "."]);
     }
     parts.forEach(function (p) {
-      if (!p[1]) return;
       if (p[0]) {
         var b = document.createElement(p[0]);
         b.textContent = p[1];
@@ -374,7 +492,7 @@
       name.className = "ah-name";
       name.textContent = r.project;
       name.tabIndex = 0;
-      name.title = "Show Model Information for this project";
+      name.title = "Show the project audit for this project";
       if (r.project === state.selected) tr.className = "ah-selected";
       name.addEventListener("click", function () { selectProject(r.project); });
       name.addEventListener("keydown", function (e) {
@@ -410,119 +528,195 @@
     markSort();
   }
 
+  /* ---------- Project audit ---------- */
+
   function selectedRow() {
     var found = state.rows.filter(function (r) { return r.project === state.selected; })[0];
     return found || state.rows[0];
   }
 
-  function statusOf(item, value) {
-    if (value == null) return "na";
-    if (item.good == null) return "none";
-    if (value <= item.good) return "good";
-    if (value <= item.mod) return "moderate";
-    return "critical";
-  }
-
-  function isOn(key) {
-    return state.checks[key] !== false;
-  }
-
   function selectProject(name) {
     state.selected = name;
-    state.scored = null;
     renderBody();
-    renderInfo();
+    renderAudit();
   }
 
-  function renderInfo() {
-    if (!el.infoBody) return;
+  /* Points 3 = good, 2 = moderate, 0 or 1 = critical, null = not scored. */
+  function levelOf(points) {
+    if (points == null) return "na";
+    return points >= 3 ? "good" : points >= 2 ? "moderate" : "critical";
+  }
+
+  function make(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function scoreSection(section, row) {
+    var totals = { p: [0, 0], s: [0, 0], b: [0, 0] };
+    var results = section.checks.map(function (check) {
+      var points = check.score(row);
+      if (points != null) {
+        check.axes.forEach(function (a) {
+          totals[a][0] += points * check.mult;
+          totals[a][1] += 3 * check.mult;
+        });
+      }
+      return { check: check, points: points };
+    });
+    var earned = totals.p[0] + totals.s[0] + totals.b[0];
+    var possible = totals.p[1] + totals.s[1] + totals.b[1];
+    var pct = function (pair) { return pair[1] ? Math.round((pair[0] / pair[1]) * 100) : null; };
+    return {
+      results: results,
+      overall: possible ? Math.round((earned / possible) * 100) : null,
+      p: pct(totals.p),
+      s: pct(totals.s),
+      b: pct(totals.b)
+    };
+  }
+
+  function detailList(title, pairs) {
+    var box = make("div", "ai-detail");
+    box.appendChild(make("h4", null, title));
+    var dl = make("dl", "ai-dl");
+    pairs.forEach(function (p) {
+      var wrap = make("div");
+      wrap.appendChild(make("dt", null, p[0]));
+      wrap.appendChild(make("dd", null, p[1] == null ? "N/A" : p[1]));
+      dl.appendChild(wrap);
+    });
+    box.appendChild(dl);
+    return box;
+  }
+
+  function renderDetails(row) {
+    var sec = make("section", "ai-sec");
+    sec.appendChild(make("h3", "ai-sec-title", "0. Audit Details"));
+    var grid = make("div", "ai-details");
+    var auditPairs = AUDIT_TEXT.filter(function (t) { return t.group === "audit"; })
+      .map(function (t) { return [t.label, row[t.key]]; });
+    var projectPairs = [["Project's name", row.project]]
+      .concat(AUDIT_TEXT.filter(function (t) { return t.group === "project"; })
+        .map(function (t) { return [t.label, row[t.key]]; }));
+    projectPairs.splice(4, 0, ["Project file size", row.size_mb == null ? null : fmt.format(row.size_mb) + " MB"]);
+    grid.appendChild(detailList("Audit Details", auditPairs));
+    grid.appendChild(detailList("Project Details", projectPairs));
+    sec.appendChild(grid);
+    return sec;
+  }
+
+  function renderCheck(result, row) {
+    var check = result.check;
+    var level = levelOf(result.points);
+    var wrap = make("article", "ai-check");
+    var main = make("div", "ai-check-main");
+    main.appendChild(make("h4", null, check.id + " " + check.title));
+
+    var meas = make("p", "ai-measure");
+    check.measures.forEach(function (m, idx) {
+      if (idx) meas.appendChild(document.createTextNode("   "));
+      meas.appendChild(document.createTextNode(m[0] + ": "));
+      var v = row[m[1]];
+      meas.appendChild(make("strong", null, v == null ? "N/A" : fmt.format(v) + m[2]));
+    });
+    main.appendChild(meas);
+
+    var advice = result.points == null
+      ? "Not enough data to score this check."
+      : result.points >= 3 ? check.advice.good : result.points === 2 ? check.advice.mid : check.advice.low;
+    main.appendChild(make("p", "ai-advice", advice));
+
+    var ref = make("p", "ai-ref");
+    ref.appendChild(document.createTextNode("Reference: "));
+    var link = make("a", null, check.ref.replace(/^https?:\/\//, ""));
+    link.href = check.ref;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    ref.appendChild(link);
+    main.appendChild(ref);
+
+    var side = make("div", "ai-check-side");
+    var scores = make("dl", "ai-scores");
+    AXES.forEach(function (axis) {
+      var line = make("div");
+      line.appendChild(make("dt", null, axis.label));
+      var applies = check.axes.indexOf(axis.key) !== -1 && result.points != null;
+      line.appendChild(make("dd", null, applies ? result.points + "/3" : "—"));
+      scores.appendChild(line);
+    });
+    var mult = make("div");
+    mult.appendChild(make("dt", null, "Impact Multiplier"));
+    mult.appendChild(make("dd", null, String(check.mult)));
+    scores.appendChild(mult);
+    side.appendChild(scores);
+
+    var bar = make("i", "ai-bar ai-bar-" + level);
+    bar.setAttribute("role", "img");
+    bar.setAttribute("aria-label", level === "na" ? "Not scored" : level);
+
+    wrap.append(main, side, bar);
+    return wrap;
+  }
+
+  function potentialRow(label, pct) {
+    var line = make("div", "ai-pot-row");
+    line.appendChild(make("span", "ai-pot-label", label));
+    var track = make("div", "ai-pot-track");
+    if (pct == null) {
+      track.appendChild(make("span", "ai-pot-na", "N/A"));
+    } else {
+      var have = make("span", "ai-pot-have", pct + "%");
+      have.style.width = pct + "%";
+      var gap = make("span", "ai-pot-gap", 100 - pct + "%");
+      gap.style.width = 100 - pct + "%";
+      if (pct === 0) have.textContent = "";
+      if (pct === 100) gap.textContent = "";
+      track.append(have, gap);
+    }
+    line.appendChild(track);
+    return line;
+  }
+
+  function renderSection(section, row) {
+    var scored = scoreSection(section, row);
+    var sec = make("section", "ai-sec");
+    sec.appendChild(make("h3", "ai-sec-title", section.id + ". " + section.name));
+    sec.appendChild(make("p", "ai-intro", section.intro));
+    var list = make("div", "ai-checks");
+    scored.results.forEach(function (res) { list.appendChild(renderCheck(res, row)); });
+    sec.appendChild(list);
+
+    var pot = make("div", "ai-pot");
+    pot.appendChild(make("h4", null, section.name + " Potential"));
+    pot.appendChild(potentialRow("Overall score", scored.overall));
+    pot.appendChild(make("div", "ai-pot-space"));
+    pot.appendChild(potentialRow("Performance", scored.p));
+    pot.appendChild(potentialRow("Structure", scored.s));
+    pot.appendChild(potentialRow("BIM Essentials", scored.b));
+    sec.appendChild(pot);
+    return sec;
+  }
+
+  function renderAudit() {
+    if (!el.auditBody) return;
     var row = selectedRow();
     state.selected = row.project;
 
     var key = state.rows.map(function (r) { return r.project; }).join("\n");
-    if (el.infoProject.dataset.key !== key) {
-      el.infoProject.dataset.key = key;
+    if (el.auditProject.dataset.key !== key) {
+      el.auditProject.dataset.key = key;
       var opts = state.rows.map(function (r) { return new Option(r.project, r.project); });
-      el.infoProject.replaceChildren.apply(el.infoProject, opts);
+      el.auditProject.replaceChildren.apply(el.auditProject, opts);
     }
-    el.infoProject.value = row.project;
+    el.auditProject.value = row.project;
 
-    var activeId = document.activeElement && el.infoBody.contains(document.activeElement)
-      ? document.activeElement.id : "";
-
-    var good = 0, mod = 0, crit = 0, checked = 0, pts = 0, scoredN = 0;
     var frag = document.createDocumentFragment();
-
-    INFO_GROUPS.forEach(function (g) {
-      var group = document.createElement("section");
-      group.className = "ai-group";
-      var head = document.createElement("div");
-      head.className = "ai-group-head";
-      var h = document.createElement("h3");
-      h.textContent = g.name;
-      var counts = document.createElement("span");
-      var gc = 0, gm = 0;
-      var list = document.createElement("div");
-      list.className = "ai-items";
-
-      g.items.forEach(function (it) {
-        var v = row[it.key];
-        var st = statusOf(it, v);
-        var on = isOn(it.key);
-        var label = document.createElement("label");
-        label.className = "ai-item ai-" + st + (on ? "" : " ai-off");
-        label.title = it.tip;
-        var box = document.createElement("input");
-        box.type = "checkbox";
-        box.id = "ai-chk-" + it.key;
-        box.checked = on;
-        box.addEventListener("change", function () {
-          state.checks[it.key] = box.checked;
-          state.scored = null;
-          renderInfo();
-        });
-        var name = document.createElement("span");
-        name.className = "ai-label";
-        name.textContent = it.label;
-        var val = document.createElement("strong");
-        val.className = "ai-value";
-        val.textContent = v == null ? "N/A" : fmt.format(v);
-        label.append(box, name, val);
-        list.appendChild(label);
-
-        if (on) {
-          checked++;
-          if (st === "good") { good++; pts += 1; scoredN++; }
-          if (st === "moderate") { mod++; gm++; pts += 0.5; scoredN++; }
-          if (st === "critical") { crit++; gc++; scoredN++; }
-        }
-      });
-
-      var bits = [];
-      if (gc) bits.push(gc + " critical");
-      if (gm) bits.push(gm + " moderate");
-      counts.textContent = bits.join(" · ");
-      counts.className = "ai-counts" + (gc ? " ai-counts-critical" : "");
-      head.append(h, counts);
-      group.append(head, list);
-      frag.appendChild(group);
-    });
-
-    el.infoBody.replaceChildren(frag);
-    if (activeId) {
-      var again = document.getElementById(activeId);
-      if (again) again.focus();
-    }
-
-    state.lastScore = scoredN ? Math.round((pts / scoredN) * 100) : null;
-    el.infoRun.disabled = !checked;
-    if (state.scored == null) {
-      el.infoTag.textContent = "not scored";
-      el.infoTag.className = "ai-tag";
-    } else {
-      el.infoTag.textContent = "Score " + state.scored + " · " + good + " good, " + mod + " moderate, " + crit + " critical";
-      el.infoTag.className = "ai-tag " + (state.scored >= 80 ? "ai-tag-good" : state.scored >= 50 ? "ai-tag-mod" : "ai-tag-crit");
-    }
+    frag.appendChild(renderDetails(row));
+    SECTIONS.forEach(function (s) { frag.appendChild(renderSection(s, row)); });
+    el.auditBody.replaceChildren(frag);
   }
 
   function render() {
@@ -530,8 +724,10 @@
     renderTake();
     state.selected = selectedRow().project;
     renderBody();
-    renderInfo();
+    renderAudit();
   }
+
+  /* ---------- Definitions, file format, buttons ---------- */
 
   function renderDefs() {
     var frag = document.createDocumentFragment();
@@ -544,18 +740,6 @@
       wrap.append(dt, dd);
       frag.appendChild(wrap);
     });
-    INFO_GROUPS.forEach(function (g) {
-      g.items.forEach(function (it) {
-        if (COLUMN_KEYS.indexOf(it.key) !== -1) return;
-        var wrap = document.createElement("div");
-        var dt = document.createElement("dt");
-        var dd = document.createElement("dd");
-        dt.textContent = it.label;
-        dd.textContent = it.tip;
-        wrap.append(dt, dd);
-        frag.appendChild(wrap);
-      });
-    });
     el.defs.replaceChildren(frag);
   }
 
@@ -563,7 +747,7 @@
     if (!el.format) return;
     var one = {};
     one.project = "Riverside Tower A";
-    ALL_KEYS.forEach(function (k) { one[k] = SAMPLE[0][k]; });
+    NUMBER_KEYS.concat(TEXT_KEYS).forEach(function (k) { one[k] = SAMPLE[0][k]; });
     el.format.textContent = JSON.stringify([one], null, 2);
   }
 
@@ -606,25 +790,7 @@
     renderBody();
   });
 
-  el.infoProject.addEventListener("change", function () { selectProject(el.infoProject.value); });
-
-  el.infoAll.addEventListener("click", function () {
-    state.checks = {};
-    state.scored = null;
-    renderInfo();
-  });
-
-  el.infoNone.addEventListener("click", function () {
-    ALL_KEYS.forEach(function (k) { state.checks[k] = false; });
-    state.scored = null;
-    renderInfo();
-  });
-
-  el.infoRun.addEventListener("click", function () {
-    renderInfo();
-    state.scored = state.lastScore;
-    renderInfo();
-  });
+  el.auditProject.addEventListener("change", function () { selectProject(el.auditProject.value); });
 
   renderHead();
   renderDefs();
