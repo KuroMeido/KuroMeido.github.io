@@ -82,6 +82,14 @@
                             <select id="ai-project"></select>
                         </label>
                     </div>
+                    <div class="ai-cards" id="ai-cards"></div>
+                    <div class="ai-toolbar">
+                        <div class="ai-filters" id="ai-filters" role="group" aria-label="Filter checks by status"></div>
+                        <div class="ai-tools">
+                            <button type="button" class="ai-tool" id="ai-expand">Expand all</button>
+                            <button type="button" class="ai-tool" id="ai-collapse">Collapse all</button>
+                        </div>
+                    </div>
                     <div class="ai-body" id="ai-body"></div>
                     <div class="ai-legend" aria-label="Status colours">
                         <span><i class="ai-sw ai-sw-good"></i>Good (3/3)</span>
@@ -90,10 +98,10 @@
                         <span><i class="ai-sw ai-sw-na"></i>Not scored</span>
                     </div>
                     <p class="ah-note">
-                        Pick a project here or select its name in the table above. Each check scores 0 to 3 points on
-                        up to three axes: Performance, Structure and BIM Essentials. A dash means the axis does not
-                        apply. An axis score is the points earned times each check's Impact Multiplier, divided by the
-                        most it could earn. Score steps are starting values and can be changed in
+                        Pick a project here or select its name in the table above. Select a section card to jump to
+                        it, a status to show only those checks, or any row to see its figures and advice. Each check
+                        scores 0 to 3 points on up to three axes (P Performance, S Structure, B BIM Essentials), weighted
+                        by its Impact Multiplier. Score steps are starting values and can be changed in
                         <code>assets/js/archicad-health.js</code>.
                     </p>
                 </div>
