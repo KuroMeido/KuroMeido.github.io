@@ -46,7 +46,35 @@
     { key: "linked_libs", label: "Linked libraries" },
     { key: "point_cloud_mb", label: "Point cloud size (MB)" },
     { key: "missing_parts", label: "Missing library parts" },
-    { key: "duplicate_parts", label: "Duplicated library parts" }
+    { key: "duplicate_parts", label: "Duplicated library parts" },
+    { key: "seo_ops", label: "Solid element operations" },
+    { key: "seo_targets", label: "SEO target elements" },
+    { key: "seo_operators", label: "SEO operator elements" },
+    { key: "open_tabs", label: "Open tabs" },
+    { key: "trace_active", label: "Active trace references" },
+    { key: "trace_views", label: "Trace references using views or layouts" },
+    { key: "elements_total", label: "Total elements" },
+    { key: "elements_3d", label: "3D elements" },
+    { key: "elements_2d", label: "2D elements" },
+    { key: "groups", label: "Groups" },
+    { key: "styles_sun", label: "3D styles with sun shadows" },
+    { key: "styles_total", label: "3D styles" },
+    { key: "session_errors", label: "Session report errors" },
+    { key: "polygons", label: "Polygons" },
+    { key: "duplicate_elements", label: "Duplicated elements" },
+    { key: "origin_distance_m", label: "Distance from origin (m)" },
+    { key: "inaccurate_walls", label: "Inaccurate wall connections" },
+    { key: "lw_duplicates", label: "Linework deleted duplicates" },
+    { key: "lw_merged_connecting", label: "Linework merged connecting lines" },
+    { key: "lw_merged_overlapping", label: "Linework merged overlapping lines" },
+    { key: "lw_identical", label: "Linework deleted lines overlapped by identical lines" },
+    { key: "lw_covered", label: "Linework deleted lines covered by solid lines" },
+    { key: "lw_different", label: "Linework deleted lines overlapped by different type lines" },
+    { key: "lw_adjusted", label: "Linework adjusted lines" },
+    { key: "lw_split", label: "Linework split lines" },
+    { key: "lw_total", label: "Linework total affected lines" },
+    { key: "fills_before", label: "Fills before consolidation" },
+    { key: "fills_after", label: "Fills after consolidation" }
   ];
 
   /* Text shown under "0. Audit Details". */
@@ -87,6 +115,19 @@
     var total = lcf + folders;
     var share = total ? folders / total : 0;
     return share === 0 ? 3 : share < 0.34 ? 2 : share < 0.9 ? 1 : 0;
+  }
+
+  function ratioPct(a, b) {
+    return a == null || b == null || !b ? null : Math.round((a / b) * 100);
+  }
+
+  function share3d(row) {
+    if (row.elements_3d == null || row.elements_2d == null) return null;
+    return ratioPct(row.elements_3d, row.elements_3d + row.elements_2d);
+  }
+
+  function sunShare(row) {
+    return ratioPct(row.styles_sun, row.styles_total);
   }
 
   var SECTIONS = [
@@ -175,6 +216,218 @@
           ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85653/"
         }
       ]
+    },
+    {
+      id: "2",
+      name: "Project Management",
+      intro: "How the model and the annotation are managed affects the size and speed of a project. " +
+        "2D and 3D elements and trace references can all slow it down and add bulk when they are not kept in check.",
+      checks: [
+        {
+          id: "2.1", title: "Solid Element Operations", axes: ["p", "s", "b"], mult: 5,
+          measures: [
+            ["Number of Solid Element Operations", "seo_ops", ""],
+            ["Number of target elements", "seo_targets", ""],
+            ["Number of operator elements", "seo_operators", ""]
+          ],
+          score: stepScore("seo_ops", [50, 200, 600]),
+          advice: {
+            good: "There are few Solid Element Operations. Nothing to do.",
+            mid: "The project has a sizeable number of Solid Element Operations. Be careful adding more; where you can, use polygon editing, priority-based connections or trims instead.",
+            low: "Too many Solid Element Operations slow Archicad down considerably. Replace them with polygon editing, priority-based connections or trims where you can."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85547/"
+        },
+        {
+          id: "2.2", title: "Simultaneously open tabs", axes: ["p"], mult: 1,
+          measures: [["Number of tabs open simultaneously", "open_tabs", ""]],
+          score: stepScore("open_tabs", [7, 20, 40]),
+          advice: {
+            good: "A reasonable number of tabs is open. Around 6 or 7 is the most that works well.",
+            mid: "More tabs are open than is comfortable. Close the ones you do not need, or open views inside existing tabs (see the User Preferences schemes under More Options).",
+            low: "Far too many tabs are open and the project will bog down. Close the tabs you do not need and open views inside existing tabs."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85468"
+        },
+        {
+          id: "2.3", title: "Simultaneously active Trace References", axes: ["p", "s"], mult: 3,
+          measures: [["Number of Trace References active simultaneously", "trace_active", ""]],
+          score: stepScore("trace_active", [8, 15, 30]),
+          advice: {
+            good: "A manageable number of Trace References is active. Nothing to do.",
+            mid: "A fair number of Trace References are active at once. Turn off the ones you are not using.",
+            low: "Many Trace References are active at once and slow the project. Turn off the ones you are not using."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide-chapter/85501/"
+        },
+        {
+          id: "2.4", title: "Trace Referencing Views & Layouts", axes: ["p"], mult: 3,
+          measures: [["Number of Trace References using Views or Layouts as source", "trace_views", ""]],
+          score: stepScore("trace_views", [10, 30, 80]),
+          advice: {
+            good: "Few or no views or layouts are used as trace sources. Nothing to do.",
+            mid: "Several views or layouts are used as trace sources. Archicad has to work out the view settings of each, so prefer viewpoints from the project map.",
+            low: "Many views and layouts are used as trace sources, which slows updates. Switch to viewpoints from the project map where you can."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128016/"
+        },
+        {
+          id: "2.5", title: "Number of Elements", axes: ["p"], mult: 3,
+          measures: [["Total number of all (2D and 3D) elements in the entire project", "elements_total", ""]],
+          score: stepScore("elements_total", [100000, 300000, 1000000]),
+          advice: {
+            good: "The project has 100 000 elements or fewer, which is manageable. Nothing to do. Elements on the Archicad layer are not counted.",
+            mid: "The element count is getting large. Remove what you no longer need. Elements on the Archicad layer are not counted.",
+            low: "The element count is very high. Split the model or remove unneeded elements. Elements on the Archicad layer are not counted."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128013/"
+        },
+        {
+          id: "2.6", title: "Utilizing Archicad's 3D modeling capabilities", axes: ["p", "b"], mult: 1,
+          measures: [
+            ["Number of 3D elements in the 3D model space and floor plans", "elements_3d", ""],
+            ["Number of 2D elements in floor plans", "elements_2d", ""],
+            {
+              label: "Number of all (2D and 3D) elements in the 3D model space and floor plans",
+              get: function (r) { return r.elements_3d == null || r.elements_2d == null ? null : r.elements_3d + r.elements_2d; }
+            },
+            { label: "Percentage of 3D elements out of all elements", get: share3d, unit: "%" }
+          ],
+          score: function (row) {
+            var pct = share3d(row);
+            return pct == null ? null : pct >= 80 ? 3 : pct >= 50 ? 2 : pct >= 25 ? 1 : 0;
+          },
+          advice: {
+            good: "Most or all building elements are modelled in 3D. Nothing to do.",
+            mid: "A fair share of the model is drawn in 2D. Model more of it in 3D where it makes sense.",
+            low: "Most of the content is drawn in 2D. Build the building elements in 3D so the model can be reused."
+          },
+          ref: "https://helpcenter.graphisoft.com/knowledgebase/25478/"
+        },
+        {
+          id: "2.7", title: "Number of Groups", axes: ["p"], mult: 3,
+          measures: [["Number of groups in the 3D model space and floor plans", "groups", ""]],
+          score: stepScore("groups", [100, 300, 1000]),
+          advice: {
+            good: "The number of groups is manageable. Nothing to do.",
+            mid: "There are over 100 groups, which can slow Archicad down. Reduce them where you can; under 100 is a good aim.",
+            low: "There are very many groups. Ungroup or merge them to bring the count well down."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128013/"
+        },
+        {
+          id: "2.8", title: "Sun Shadows in 3D Styles", axes: ["p"], mult: 3,
+          measures: [
+            ["Number of 3D styles that have Sun Shadows turned on", "styles_sun", ""],
+            ["Total number of 3D styles in the project", "styles_total", ""],
+            { label: "Percentage of 3D styles with Sun Shadows out of all 3D styles", get: sunShare, unit: "%" }
+          ],
+          score: function (row) {
+            var pct = sunShare(row);
+            return pct == null ? null : pct <= 10 ? 3 : pct <= 50 ? 2 : pct <= 80 ? 1 : 0;
+          },
+          advice: {
+            good: "Few 3D styles use Sun Shadows. Nothing to do.",
+            mid: "Some 3D styles have Sun Shadows on, which costs performance. Keep them only where needed, especially if they are assigned to views.",
+            low: "Most 3D styles have Sun Shadows on, which costs performance. Turn them off where they are not needed."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128998/"
+        },
+        {
+          id: "2.9", title: "Errors in 3D", axes: ["p", "s"], mult: 1,
+          measures: [["Number of errors in the Session Report", "session_errors", ""]],
+          score: stepScore("session_errors", [0, 10, 30]),
+          advice: {
+            good: "No errors were reported in 3D. Nothing to do.",
+            mid: "Archicad reports errors when opening the 3D window. Find the broken elements with Find & Select and fix or replace them. Turning on error interruption and the report in the Model Rebuild Options helps, as does the Element ID Manager when elements share an ID.",
+            low: "Many 3D errors are reported. Fix the broken elements first, using Find & Select, the Model Rebuild Options and the Element ID Manager."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128945/#XREF_78293_Session_Report"
+        },
+        {
+          id: "2.10", title: "Number of Polygons", axes: ["p", "s"], mult: 5,
+          measures: [["Number of polygons in the project", "polygons", ""]],
+          score: stepScore("polygons", [1000000, 5000000, 10000000]),
+          advice: {
+            good: "The polygon count is low. Nothing to do.",
+            mid: "The project is under 5 million polygons, so Archicad should run smoothly. Keep the count low: lower the detail level in Model View Options when you are not visualising, delete elements you no longer use and hide layers you do not need. Downloaded objects often carry many polygons.",
+            low: "The polygon count is very high. Lower the detail level, delete unused elements and heavy downloaded objects, and hide layers you do not need."
+          },
+          ref: "https://helpcenter.graphisoft.com/knowledgebase/25868/"
+        },
+        {
+          id: "2.11", title: "Number of Duplicates", axes: ["p", "s", "b"], mult: 3,
+          measures: [["Number of duplicated elements in the entire project", "duplicate_elements", ""]],
+          score: stepScore("duplicate_elements", [10, 50, 200]),
+          advice: {
+            good: "There are very few or no duplicates. Run a duplicate check now and then to keep it that way, for example the Check Duplicates command in the Graphisoft Goodies add-on.",
+            mid: "Some elements are duplicated. Find and remove them.",
+            low: "Many elements are duplicated. Find and remove them; they bloat the file and can cause errors."
+          },
+          ref: "https://helpcenter.graphisoft.com/knowledgebase/64529/"
+        },
+        {
+          id: "2.12", title: "Model extents and position", axes: ["p", "s", "b"], mult: 3,
+          measures: [{ label: "Model's distance from the Archicad project origin", key: "origin_distance_m", unit: " m", dec: 2 }],
+          score: stepScore("origin_distance_m", [1000, 10000, 100000]),
+          advice: {
+            good: "The model is close to the project origin and no elements are out of bounds. Nothing to do.",
+            mid: "The model sits far from the project origin. Move it closer to avoid precision problems.",
+            low: "The model is very far from the project origin. Move it back close to the origin."
+          },
+          ref: null
+        },
+        {
+          id: "2.13", title: "Model Accuracy", axes: ["p", "s", "b"], mult: 3,
+          measures: [{ label: "Amount of inaccurate perpendicular wall connections", key: "inaccurate_walls", zeroText: "None" }],
+          score: stepScore("inaccurate_walls", [0, 10, 50]),
+          advice: {
+            good: "All walls in all stories are straight and square. Nothing to do.",
+            mid: "A few wall connections are slightly off perpendicular. Correct them.",
+            low: "Many wall connections are not perpendicular. Correct them to keep the model accurate."
+          },
+          ref: "https://bimcomponents.com/LCF/Details/6119"
+        },
+        {
+          id: "2.14", title: "2D Linework Consolidation (in Floor Plans)", axes: ["p", "s"], mult: 3,
+          measures: [
+            ["Number of deleted duplicates", "lw_duplicates", ""],
+            ["Number of merged connecting lines", "lw_merged_connecting", ""],
+            ["Number of merged overlapping lines", "lw_merged_overlapping", ""],
+            ["Number of deleted lines overlapped by identical lines", "lw_identical", ""],
+            ["Number of deleted lines covered by solid lines", "lw_covered", ""],
+            ["Number of deleted lines overlapped by different type lines", "lw_different", ""],
+            ["Number of adjusted lines", "lw_adjusted", ""],
+            ["Number of split lines", "lw_split", ""],
+            ["Total number of affected lines", "lw_total", ""]
+          ],
+          score: stepScore("lw_total", [10, 100, 1000]),
+          advice: {
+            good: "The plan views needed no or very little linework consolidation. Nothing to do, although other viewpoints may still need it.",
+            mid: "Some linework consolidation was needed in the plan views. Clean up the drawn lines.",
+            low: "A lot of linework consolidation was needed. Clean up duplicated and overlapping lines in the plans."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128023/"
+        },
+        {
+          id: "2.15", title: "2D Fill Consolidation (in Floor Plans)", axes: ["p", "s"], mult: 3,
+          measures: [
+            ["Number of fills before consolidation", "fills_before", ""],
+            ["Number of fills after consolidation", "fills_after", ""]
+          ],
+          score: function (row) {
+            if (row.fills_before == null || row.fills_after == null) return null;
+            var removed = row.fills_before - row.fills_after;
+            return removed <= 10 ? 3 : removed <= 50 ? 2 : removed <= 200 ? 1 : 0;
+          },
+          advice: {
+            good: "The plan views needed no or very little fill consolidation. Nothing to do, although other viewpoints may still need it.",
+            mid: "Some fill consolidation was needed. Merge the fills that can be combined.",
+            low: "A lot of fill consolidation was needed. Merge or remove the extra fills."
+          },
+          ref: "https://helpcenter.graphisoft.com/user-guide/128023/"
+        }
+      ]
     }
   ];
 
@@ -220,11 +473,55 @@
     r.addons = rnd() < 0.6 ? "No 3rd party add-ons." : "Tapir";
   });
 
-  /* The first sample project uses the values of the report this layout follows,
-     so its scores can be compared with that report: 64%, 64%, 67%, 64%. */
+  SAMPLE.forEach(function (r, i) {
+    var rnd = seeded(i + 97);
+    var f = function (a, b) { return Math.floor(a + rnd() * (b - a)); };
+    r.seo_ops = f(0, 700);
+    r.seo_targets = Math.round(r.seo_ops * (0.2 + rnd() * 0.5));
+    r.seo_operators = Math.round(r.seo_ops * (0.2 + rnd() * 0.5));
+    r.open_tabs = f(2, 30);
+    r.trace_active = f(0, 22);
+    r.trace_views = f(0, 45);
+    r.elements_3d = Math.round(r.size_mb * f(30, 90));
+    r.elements_2d = Math.round(r.elements_3d * (0.01 + rnd() * 0.6));
+    r.elements_total = Math.round((r.elements_3d + r.elements_2d) * (1 + rnd() * 0.15));
+    r.groups = f(0, 420);
+    r.styles_total = f(3, 30);
+    r.styles_sun = f(0, r.styles_total + 1);
+    r.session_errors = rnd() < 0.4 ? 0 : f(1, 40);
+    r.polygons = Math.round(r.size_mb * f(1500, 14000));
+    r.duplicate_elements = rnd() < 0.3 ? 0 : f(1, 260);
+    r.origin_distance_m = Math.round(rnd() * rnd() * 150000) / 100;
+    r.inaccurate_walls = rnd() < 0.5 ? 0 : f(1, 80);
+    r.lw_duplicates = rnd() < 0.5 ? 0 : f(1, 60);
+    r.lw_merged_connecting = rnd() < 0.5 ? 0 : f(1, 120);
+    r.lw_merged_overlapping = rnd() < 0.5 ? 0 : f(1, 120);
+    r.lw_identical = rnd() < 0.5 ? 0 : f(1, 80);
+    r.lw_covered = rnd() < 0.5 ? 0 : f(1, 80);
+    r.lw_different = rnd() < 0.5 ? 0 : f(1, 40);
+    r.lw_adjusted = rnd() < 0.5 ? 0 : f(1, 60);
+    r.lw_split = rnd() < 0.5 ? 0 : f(1, 60);
+    r.lw_total = r.lw_duplicates + r.lw_merged_connecting + r.lw_merged_overlapping + r.lw_identical +
+      r.lw_covered + r.lw_different + r.lw_adjusted + r.lw_split;
+    r.fills_after = f(0, 400);
+    r.fills_before = r.fills_after + (rnd() < 0.5 ? f(0, 8) : f(8, 260));
+  });
+
+  /* The first sample project uses the values of the reports this layout follows,
+     so its scores can be compared with them: section 1 gives 64%, 64%, 64%, 67%
+     (overall, performance, structure, BIM Essentials) and section 2 gives
+     87%, 86%, 87%, 89%. */
   Object.assign(SAMPLE[0], {
     embedded_items: 31, ifc_lcf: 1, ifc_folders: 2, images_over_1mb: 3,
-    linked_libs: 13, point_cloud_mb: 153, missing_parts: 7, duplicate_parts: 1
+    linked_libs: 13, point_cloud_mb: 153, missing_parts: 7, duplicate_parts: 1,
+    seo_ops: 128, seo_targets: 49, seo_operators: 45, open_tabs: 15,
+    trace_active: 5, trace_views: 1, elements_total: 11170,
+    elements_3d: 10120, elements_2d: 151, groups: 145,
+    styles_sun: 5, styles_total: 13, session_errors: 2, polygons: 2134404,
+    duplicate_elements: 6, origin_distance_m: 0, inaccurate_walls: 0,
+    lw_duplicates: 0, lw_merged_connecting: 0, lw_merged_overlapping: 0, lw_identical: 0,
+    lw_covered: 0, lw_different: 0, lw_adjusted: 0, lw_split: 0, lw_total: 0,
+    fills_before: 7, fills_after: 2
   });
 
   /* ---------- State and elements ---------- */
@@ -608,6 +905,21 @@
     return sec;
   }
 
+  function measureOf(m, row) {
+    if (Array.isArray(m)) m = { label: m[0], key: m[1], unit: m[2] };
+    var v = m.get ? m.get(row) : row[m.key];
+    var text;
+    if (v == null) {
+      text = "N/A";
+    } else if (m.zeroText && v === 0) {
+      text = m.zeroText;
+    } else {
+      var dec = m.dec || 0;
+      text = new Intl.NumberFormat("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v) + (m.unit || "");
+    }
+    return [m.label, text];
+  }
+
   function renderCheck(result, row) {
     var check = result.check;
     var level = levelOf(result.points);
@@ -615,12 +927,11 @@
     var main = make("div", "ai-check-main");
     main.appendChild(make("h4", null, check.id + " " + check.title));
 
-    var meas = make("p", "ai-measure");
-    check.measures.forEach(function (m, idx) {
-      if (idx) meas.appendChild(document.createTextNode("   "));
-      meas.appendChild(document.createTextNode(m[0] + ": "));
-      var v = row[m[1]];
-      meas.appendChild(make("strong", null, v == null ? "N/A" : fmt.format(v) + m[2]));
+    var meas = make("div", "ai-measures");
+    check.measures.forEach(function (m) {
+      var shown = measureOf(m, row);
+      meas.appendChild(make("span", "ai-measure-label", shown[0] + ":"));
+      meas.appendChild(make("strong", "ai-measure-value", shown[1]));
     });
     main.appendChild(meas);
 
@@ -629,14 +940,16 @@
       : result.points >= 3 ? check.advice.good : result.points === 2 ? check.advice.mid : check.advice.low;
     main.appendChild(make("p", "ai-advice", advice));
 
-    var ref = make("p", "ai-ref");
-    ref.appendChild(document.createTextNode("Reference: "));
-    var link = make("a", null, check.ref.replace(/^https?:\/\//, ""));
-    link.href = check.ref;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    ref.appendChild(link);
-    main.appendChild(ref);
+    if (check.ref) {
+      var ref = make("p", "ai-ref");
+      ref.appendChild(document.createTextNode("Reference: "));
+      var link = make("a", null, check.ref.replace(/^https?:\/\//, ""));
+      link.href = check.ref;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      ref.appendChild(link);
+      main.appendChild(ref);
+    }
 
     var side = make("div", "ai-check-side");
     var scores = make("dl", "ai-scores");

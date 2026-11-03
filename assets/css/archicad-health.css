@@ -371,16 +371,22 @@
   font-weight: 600;
 }
 
-.ai-measure {
+.ai-measures {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) auto;
+  justify-content: start;
+  gap: 2px 20px;
   font-size: 0.9rem;
-  font-style: italic;
-  color: var(--muted);
-  white-space: pre-wrap;
 }
 
-.ai-measure strong {
-  color: var(--text);
-  font-style: normal;
+.ai-measure-label {
+  font-style: italic;
+  color: var(--muted);
+}
+
+.ai-measure-value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .ai-advice {
