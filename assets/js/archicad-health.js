@@ -93,13 +93,56 @@
     { key: "dup_ids", label: "Elements with duplicate IDs" },
     { key: "undef_structural", label: "Elements with undefined Structural Function" },
     { key: "undef_position", label: "Elements with undefined Position" },
-    { key: "undef_classification", label: "Elements with undefined Classification" }
+    { key: "undef_classification", label: "Elements with undefined Classification" },
+    { key: "dimprefs_used", label: "Dimension Preferences in use" },
+    { key: "dimprefs_total", label: "Dimension Preferences" },
+    { key: "legacy_enabled", label: "Legacy Preferences enabled" },
+    { key: "hidden_rules", label: "Hidden Stair Rules" },
+    { key: "stair_rules_total", label: "Stair Rules" },
+    { key: "vp_stories", label: "Stories" },
+    { key: "vp_sections", label: "Sections" },
+    { key: "vp_elevations", label: "Elevations" },
+    { key: "vp_interior", label: "Interior Elevations" },
+    { key: "vp_worksheets", label: "Worksheets" },
+    { key: "vp_details", label: "Details" },
+    { key: "vp_cameras", label: "Cameras" },
+    { key: "vp_schedules", label: "Schedules" },
+    { key: "vp_indexes", label: "Project Indexes" },
+    { key: "vp_3d", label: "3D Documents" },
+    { key: "vp_lists", label: "Lists" },
+    { key: "vp_independent", label: "Independent or linked Viewpoints" },
+    { key: "vp_derived", label: "Viewpoints derived from the 3D model" },
+    { key: "vp_shadow", label: "Viewpoints with shadows" },
+    { key: "vp_shadow_total", label: "Sections, Elevations and 3D Documents" },
+    { key: "views_clone", label: "Views in cloned folders" },
+    { key: "views_total", label: "Views" },
+    { key: "views_custom", label: "Views with custom or missing settings" },
+    { key: "layouts_count", label: "Layouts in the Layout Book" },
+    { key: "drawings_stored", label: "Drawings stored in the project file" },
+    { key: "drawings_total", label: "Drawings" },
+    { key: "master_unused", label: "Unused Master Layouts" },
+    { key: "master_total", label: "Master Layouts" },
+    { key: "linked_drawings_master", label: "Linked Drawings on Master Layouts" },
+    { key: "shortcut_items", label: "Publisher Set items in shortcut folders" },
+    { key: "publisher_items", label: "Publisher Set items" },
+    { key: "missing_internal_drawings", label: "Missing internal drawings" },
+    { key: "external_drawings", label: "External drawings" },
+    { key: "hl_pln", label: "Hotlinks from PLN files" },
+    { key: "hl_mod", label: "Hotlinks from MOD files" },
+    { key: "hl_teamwork", label: "Hotlinks from Teamwork projects" },
+    { key: "hl_ifc", label: "Hotlinks from IFC files" },
+    { key: "hl_3dm", label: "Hotlinks from 3DM files" },
+    { key: "xref_bound", label: "XREFs bound to the project" },
+    { key: "xref_attached", label: "XREFs attached to the project" }
   ];
 
   /* Checks scored by an auditor or a script are given as points (0 to 3) in
      q_<section>_<number>, for example q_3_2. Leave empty when not scored. */
   var Q_IDS = ["3.2", "3.3", "3.4", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.16", "3.17",
-    "4.1", "4.2", "4.3", "4.4", "4.5", "4.10", "4.12", "4.13", "4.15", "4.17", "4.18", "4.20", "4.22", "4.23", "4.24", "4.29", "4.30"];
+    "4.1", "4.2", "4.3", "4.4", "4.5", "4.10", "4.12", "4.13", "4.15", "4.17", "4.18", "4.20", "4.22", "4.23", "4.24", "4.29", "4.30",
+    "5.1", "5.2", "5.4", "5.5", "5.6", "5.7", "5.10",
+    "6.1", "6.4", "6.5", "6.6", "6.7", "6.8", "6.9", "6.10", "6.11", "6.12", "6.13", "6.15", "6.18", "6.20", "6.21",
+    "6.22", "6.23", "6.27", "6.28", "6.30", "6.31", "7.5"];
   Q_IDS.forEach(function (id) {
     AUDIT_FIELDS.push({ key: "q_" + id.replace(".", "_"), label: "Score " + id });
   });
@@ -121,7 +164,10 @@
     { key: "notes_1", label: "Auditor notes, section 1", group: "notes" },
     { key: "notes_2", label: "Auditor notes, section 2", group: "notes" },
     { key: "notes_3", label: "Auditor notes, section 3", group: "notes" },
-    { key: "notes_4", label: "Auditor notes, section 4", group: "notes" }
+    { key: "notes_4", label: "Auditor notes, section 4", group: "notes" },
+    { key: "notes_5", label: "Auditor notes, section 5", group: "notes" },
+    { key: "notes_6", label: "Auditor notes, section 6", group: "notes" },
+    { key: "notes_7", label: "Auditor notes, section 7", group: "notes" }
   ];
 
   /* ---------- Project Audit: scoring rules ----------
@@ -217,10 +263,39 @@
     return function (row) { return scorer(ratioPct(row[partKey], row[totalKey])); };
   }
 
+  /* Shorthand for a check scored by hand that has one text for "all good" and one for "needs work". */
+  function qs(id, title, axes, mult, good, fix) {
+    return qCheck(id, title, axes, mult, { good: good, mid: fix, low: fix });
+  }
+
+  function sumOrNull(row, keys) {
+    var total = 0;
+    for (var i = 0; i < keys.length; i++) {
+      if (row[keys[i]] == null) return null;
+      total += row[keys[i]];
+    }
+    return total;
+  }
+
+  function vpTotal(row) {
+    return sumOrNull(row, ["vp_stories", "vp_sections", "vp_elevations", "vp_interior", "vp_worksheets", "vp_details",
+      "vp_cameras", "vp_schedules", "vp_indexes", "vp_3d", "vp_lists"]);
+  }
+
+  function independentTotal(row) { return sumOrNull(row, ["vp_independent", "vp_derived"]); }
+
+  function independentPct(row) {
+    var t = independentTotal(row);
+    return t == null ? null : ratioPct(row.vp_independent, t);
+  }
+
+  function hotlinkTotal(row) { return sumOrNull(row, ["hl_pln", "hl_mod", "hl_teamwork", "hl_ifc", "hl_3dm"]); }
+
   var SECTIONS = [
     {
       id: "1",
       name: "Library Management",
+      short: "Library",
       intro: "Libraries add to file size and slow a project down when they are large, duplicated or broken. " +
         "Missing or duplicated library parts, too many linked libraries and a heavy Embedded Library all cost speed. " +
         "A common setup is the default Archicad library, one office library and one library for the project.",
@@ -301,6 +376,7 @@
     {
       id: "2",
       name: "Project Management",
+      short: "Management",
       intro: "How the model and the annotation are managed affects the size and speed of a project. " +
         "2D and 3D elements and trace references can all slow it down and add bulk when they are not kept in check.",
       checks: [
@@ -499,6 +575,7 @@
     {
       id: "3",
       name: "Attribute Management",
+      short: "Attributes",
       intro: "Attributes do not greatly affect performance, but a tight structure matters, especially when several people work together or hotlinked modules are shared between projects. " +
         "Attributes are managed in the Attribute Manager and should have thoughtful names and IDs. Special Graphisoft attributes such as pens and fills should stay as they came, or elements may not appear correctly.",
       checks: [
@@ -579,6 +656,7 @@
     {
       id: "4",
       name: "Project Settings",
+      short: "Settings",
       intro: "Project settings affect performance less than they affect structure. The items below are suggestions that improve how the project is organised rather than faults that harm its health.",
       checks: [
         qCheck("4.1", "Autogrouping", ["p"], 1, {
@@ -823,6 +901,336 @@
           na: "No Find & Select criteria sets are saved. Saving them makes finding and selecting elements easier; ask your BIM consultant how to apply them."
         })
       ]
+    },
+    {
+      id: "5",
+      name: "Project Preferences",
+      short: "Preferences",
+      intro: "Project Preferences hardly affect performance, but sensible preferences give correct results and ease the workflow. " +
+        "The items below are suggestions that improve structure rather than faults that harm the project.",
+      checks: [
+        qs("5.1", "Working Units", ["s"], 3, "Working Units match the template defaults or the local standards. Nothing to do.", "Working Units differ from the template defaults and local standards. Align them."),
+        qs("5.2", "Dimension Preferences", ["s", "b"], 5, "Dimension Preferences match the template defaults or the local standards. Nothing to do.", "Dimension Preferences differ from the template defaults and local standards. Align them."),
+        {
+          id: "5.3", title: "Dimension Preferences in use", axes: ["s"], mult: 5,
+          measures: [
+            ["Number of Dimension Preferences in use in the project", "dimprefs_used", ""],
+            ["Total number of Dimension Preferences in the project", "dimprefs_total", ""],
+            pctMeasure("Percentage in use out of total", "dimprefs_used", "dimprefs_total")
+          ],
+          headlineIndex: 2,
+          score: shareScore("dimprefs_used", "dimprefs_total", usedShareScore),
+          advice: {
+            good: "Most Dimension Standards are assigned to views. Nothing to do.",
+            mid: "Some Dimension Standards are not assigned to views, or custom ones are. Fix or delete the extra ones.",
+            low: "Many Dimension Standards are not assigned to views, and custom ones are assigned. Fix them and delete what you do not need."
+          }
+        },
+        qs("5.4", "Calculation Units & Rules", ["s"], 1, "The template defaults are kept, or the new settings are appropriate. Nothing to do.", "The Calculation Units & Rules differ from the defaults without a clear reason. Review them."),
+        qs("5.5", "Conditional Rules", ["s"], 1, "No schedules use conditional parameters, or the rules they rely on are set correctly. Nothing to do.", "Conditional Rules are not set correctly for the schedules that use conditional parameters. Check them."),
+        qs("5.6", "Zone Preferences", ["s"], 1, "Zone Preferences are set correctly. Nothing to do.", "Zone Preferences give unexpected results. Review them."),
+        qs("5.7", "Reference Levels", ["p", "s"], 1, "The Sea Level (and some Reference Levels) are used. They automate annotation in sections, elevations and level dimensions, and the Sea Level links to the altitude in Project Location. Nothing to do.", "Reference Levels are not used. Set them up to automate annotation and level dimensions."),
+        {
+          id: "5.8", title: "Legacy Preferences", axes: ["p", "s"], mult: 3,
+          measures: [["Number of Legacy Preferences enabled", "legacy_enabled", ""]],
+          score: stepScore("legacy_enabled", [0, 2, 5]),
+          advice: {
+            good: "No Legacy Preferences are enabled, so the project uses the latest features. Nothing to do.",
+            mid: "A few Legacy Preferences are enabled, which can mean the latest features are not fully used. Review them.",
+            low: "Many Legacy Preferences are enabled, so the project is not using the latest features. Review and turn them off."
+          }
+        },
+        {
+          id: "5.9", title: "Stair Rules and Standards", axes: ["p", "s"], mult: 1,
+          measures: [
+            ["Number of hidden Rules", "hidden_rules", ""],
+            ["Total number of Rules", "stair_rules_total", ""]
+          ],
+          headline: function (r) { return r.hidden_rules == null || r.stair_rules_total == null ? null : r.hidden_rules + " / " + r.stair_rules_total; },
+          score: function (row) {
+            var p = ratioPct(row.hidden_rules, row.stair_rules_total);
+            return p == null ? null : p >= 50 ? 3 : p >= 25 ? 2 : p > 0 ? 1 : 0;
+          },
+          advice: {
+            good: "Unused Stair Rules are hidden, so the Rules & Standards panel stays clear. Nothing to do.",
+            mid: "Some Stair Rules are hidden. Hide the rest of the ones you do not use.",
+            low: "No Stair Rules are hidden. Rules that are hidden do not show in the Stair Settings panel, so hiding the ones you do not use keeps it clear and avoids confusing users. Ask your BIM consultant how to apply this."
+          }
+        },
+        qs("5.10", "Project Location Settings", ["s", "b"], 3, "The Project Location matches the address in Project Info, and the Project North and Altitude are set. Nothing to do.", "The Project Location does not match Project Info, or the Project North or Altitude is missing. Complete it.")
+      ]
+    },
+    {
+      id: "6",
+      name: "Project Structure",
+      short: "Structure",
+      intro: "Project Structure covers the viewpoints in the Project Map, the views in the View Map, the Layout Book and the Publisher Sets. " +
+        "A well organised structure saves time because it is consistent, predictable and easy to understand. Very large projects with too many layouts can run into performance issues.",
+      checks: [
+        qs("6.1", "Structuring of Project Map", ["p", "s"], 3, "Viewpoints in the Project Map are organised and spelled correctly. Nothing to do.", "The Project Map is disorganised or has spelling mistakes. Tidy it."),
+        {
+          id: "6.2", title: "Number of Viewpoints", axes: ["p", "s"], mult: 5,
+          measures: [
+            ["Number of Stories", "vp_stories", ""],
+            ["Number of Sections", "vp_sections", ""],
+            ["Number of Elevations", "vp_elevations", ""],
+            ["Number of Interior Elevations", "vp_interior", ""],
+            ["Number of Worksheets", "vp_worksheets", ""],
+            ["Number of Details", "vp_details", ""],
+            ["Number of Cameras", "vp_cameras", ""],
+            ["Number of Schedules", "vp_schedules", ""],
+            ["Number of Project Indexes", "vp_indexes", ""],
+            ["Number of 3D Documents", "vp_3d", ""],
+            ["Number of Lists", "vp_lists", ""],
+            { label: "Total Number of Viewpoints", get: vpTotal }
+          ],
+          headlineIndex: 11,
+          score: function (row) {
+            var v = vpTotal(row);
+            return v == null ? null : v <= 150 ? 3 : v <= 400 ? 2 : v <= 1000 ? 1 : 0;
+          },
+          advice: {
+            good: "There are no excess viewpoints. Nothing to do.",
+            mid: "The project has many viewpoints. Remove the ones you do not need.",
+            low: "The project has far too many viewpoints, which slows it down. Remove the ones you do not need."
+          }
+        },
+        {
+          id: "6.3", title: "Viewpoints not derived from 3D model", axes: ["s"], mult: 5,
+          measures: [
+            ["Number of Independent/Linked Viewpoints", "vp_independent", ""],
+            ["Number of Viewpoints derived from the 3D model (Auto/Manual rebuild)", "vp_derived", ""],
+            { label: "Total number of Viewpoints", get: independentTotal },
+            { label: "Percentage of Independent/Linked out of all Viewpoints", get: independentPct, unit: "%" }
+          ],
+          headlineIndex: 3,
+          score: function (row) {
+            var p = independentPct(row);
+            return p == null ? null : p <= 10 ? 3 : p <= 30 ? 2 : p <= 60 ? 1 : 0;
+          },
+          advice: {
+            good: "Apart from Worksheets and Details, all viewpoints are set to Auto-rebuild or Manual-rebuild, so the model can be rebuilt and updated at any time. Nothing to do.",
+            mid: "Some viewpoints are independent or linked. Set them to Auto-rebuild or Manual-rebuild unless there is a special reason.",
+            low: "Many viewpoints are independent or linked, so they cannot be updated from the model. Set them to Auto-rebuild or Manual-rebuild unless there is a special reason."
+          }
+        },
+        qs("6.4", "Story Settings", ["s", "b"], 3, "The story structure is sound: names are correct and follow a convention, and heights are relevant with no zero-height stories. Nothing to do.", "The story structure has naming or height problems, such as zero-height stories. Fix them."),
+        qs("6.5", "Section Settings", ["s"], 1, "All (or most) Sections are set correctly. Nothing to do.", "Some Sections have wrong settings. Correct them."),
+        qs("6.6", "Elevation Settings", ["s"], 1, "All (or most) Elevations are set correctly. Nothing to do.", "Some Elevations have wrong settings. Correct them."),
+        qs("6.7", "Interior Elevation Settings", ["s"], 1, "All Interior Elevations are set correctly. Nothing to do.", "Some Interior Elevations have wrong settings. Correct them."),
+        qs("6.8", "Worksheet Settings", ["s"], 1, "All Worksheets are set correctly. Nothing to do.", "Some Worksheets have wrong settings. Correct them."),
+        qs("6.9", "Detail Settings", ["s"], 1, "All Details are set correctly. Nothing to do.", "Some Details have wrong settings. Correct them."),
+        qs("6.10", "3D Document settings", ["s"], 1, "All 3D Documents are set correctly. Nothing to do.", "Some 3D Documents have wrong settings. Correct them."),
+        qCheck("6.11", "Camera and Path Settings", ["p"], 1, {
+          good: "Cameras and Paths are set correctly. Nothing to do.",
+          mid: "There are some issues with Cameras and Paths. Cameras are only needed for fly-throughs and Gallery Views in BIMx Publisher Sets, and you can save 3D Views without them. No action is required.",
+          low: "Cameras and Paths have serious setting problems. Review or delete the ones you do not need."
+        }),
+        qCheck("6.12", "Schedule Settings", ["s"], 5, {
+          good: "Schedule Schemes are set correctly. Nothing to do.",
+          mid: "Some Schedule Schemes have issues: missing criteria to omit elements, wrong criteria or sorting, or no summation. Review them.",
+          low: "Many Schedule Schemes have one or more of these issues: no criteria to omit elements, incorrect criteria, incorrect sorting or no summation. Some listed Archicad Property fields may also have been deleted from the project and show as MISSING in the scheme settings. Consider fixing them."
+        }),
+        qCheck("6.13", "Project Index Settings", ["s"], 1, {
+          good: "Project Indexes are set up correctly. Nothing to do.",
+          mid: "Some Project Indexes have wrong settings. Correct them.",
+          low: "Project Indexes have wrong settings. Correct them.",
+          na: "Project Indexes were not used. That may be fine at this project stage, but they are an important part of Archicad projects. Ask your BIM consultant how to apply them."
+        }),
+        {
+          id: "6.14", title: "Shadow Casting in 2D Viewpoints", axes: ["p"], mult: 5,
+          measures: [
+            ["Number of Viewpoints with shadows applied", "vp_shadow", ""],
+            ["Total number of Sections, (Interior) Elevations & 3D Documents", "vp_shadow_total", ""],
+            pctMeasure("Percentage of Viewpoints with shadows out of the total", "vp_shadow", "vp_shadow_total")
+          ],
+          headlineIndex: 2,
+          score: shareScore("vp_shadow", "vp_shadow_total", lowerShareScore),
+          advice: {
+            good: "Few viewpoints have Shadow Casting on. Nothing to do.",
+            mid: "Some views have Shadow Casting on, which takes time to calculate. Use shadows only for presentation, not while editing. If rebuilds get slow, turn them off until you publish.",
+            low: "Many views have Shadow Casting on, which slows rebuilds. Use shadows only for presentation, and turn them off while editing."
+          }
+        },
+        qs("6.15", "Structuring of View Map", ["s"], 5, "The View Map is organised into folders that match the Layout Book and has no spelling errors. Nothing to do.", "The View Map is not organised to match the Layout Book, or has spelling errors. Tidy it."),
+        {
+          id: "6.16", title: "Views in Clone folders", axes: ["s", "b"], mult: 3,
+          measures: [
+            ["Number of Views in cloned folders", "views_clone", ""],
+            ["Total number of Views", "views_total", ""],
+            pctMeasure("Percentage of Views in cloned folders out of the total", "views_clone", "views_total")
+          ],
+          headlineIndex: 2,
+          score: function (row) {
+            var p = ratioPct(row.views_clone, row.views_total);
+            return p == null ? null : p >= 50 ? 3 : p >= 20 ? 2 : p >= 5 ? 1 : 0;
+          },
+          advice: {
+            good: "Many views use clone folders. Nothing to do.",
+            mid: "The project contains some clones, but it could use more. Clones are encouraged for views that show the final status of a project.",
+            low: "Few views are in clone folders. Use more clones for views that show the final status of the project."
+          }
+        },
+        {
+          id: "6.17", title: "View Settings", axes: ["s"], mult: 1,
+          measures: [["Number of views with custom or missing settings", "views_custom", ""]],
+          score: stepScore("views_custom", [0, 5, 20]),
+          advice: {
+            good: "There are no MISSING or CUSTOM settings in View Settings. Nothing to do. If a Settings Combination or Preset is deleted, or was not saved before being applied, the view loses its link and can output differently from what was intended.",
+            mid: "Some views have custom or missing settings. Restore or save the combinations they refer to.",
+            low: "Many views have custom or missing settings, which can change their output. Restore or save the combinations they refer to."
+          }
+        },
+        qs("6.18", "Structuring of Layout Book", ["s"], 5, "The Layout Book is organised into subsets with correct numbering and no spelling errors. Nothing to do.", "The Layout Book has subset, numbering or spelling problems. Tidy it."),
+        {
+          id: "6.19", title: "Number of Layouts", axes: ["p"], mult: 5,
+          measures: [["Number of Layouts in the Layout Book", "layouts_count", ""]],
+          score: stepScore("layouts_count", [150, 300, 600]),
+          advice: {
+            good: "There are fewer than 150 layouts. Nothing to do.",
+            mid: "The project has many layouts. Remove the ones you do not need.",
+            low: "The project has far too many layouts, which can cause performance issues. Remove the ones you do not need."
+          }
+        },
+        qs("6.20", "Layout IDs inherited from Subsets", ["s"], 3, "All layouts get their ID from the subsets and Layout Book, which automates layout numbering. Nothing to do.", "Some layouts do not inherit their ID from subsets. Set them to, so numbering is automatic."),
+        qs("6.21", "Drawing Name by Source View Name", ["s"], 1, "Drawings take their name from the View Map, so a renamed view renames its drawing. Nothing to do.", "Some drawings do not take their name from the source view. Set them to, so names stay in sync."),
+        qs("6.22", "Drawing IDs inherited from Layout", ["s"], 3, "Drawings take their ID from the layouts and are part of the drawing ID sequence, which automates numbering. Nothing to do.", "Some drawings do not inherit their ID from the layout. Set them to, so numbering is automatic."),
+        qs("6.23", "Drawing Settings", ["s"], 3, "All (or most) drawings have consistent, robust settings. Nothing to do.", "Some drawings have inconsistent settings. Review them."),
+        {
+          id: "6.24", title: "Drawings stored in the project file", axes: ["p", "s"], mult: 3,
+          measures: [
+            ["Number of Drawings stored in the project file", "drawings_stored", ""],
+            ["Total number of Drawings", "drawings_total", ""],
+            pctMeasure("Percentage of stored Drawings out of total", "drawings_stored", "drawings_total")
+          ],
+          headlineIndex: 2,
+          score: shareScore("drawings_stored", "drawings_total", lowerShareScore),
+          advice: {
+            good: "Few or no drawings are stored in the project file. Nothing to do.",
+            mid: "Some drawings have 'Store Drawing in the Project File' checked. Stored drawings keep their lines, fills and text in the file and can greatly increase its size. Consider reviewing them.",
+            low: "Many drawings have 'Store Drawing in the Project File' checked, which greatly increases the project file size. Review them."
+          }
+        },
+        {
+          id: "6.25", title: "Unused Master Layouts", axes: ["p", "s"], mult: 3,
+          measures: [
+            ["Number of unused Master Layouts", "master_unused", ""],
+            ["Total number of Master Layouts", "master_total", ""],
+            pctMeasure("Percentage of unused Master Layouts out of total", "master_unused", "master_total")
+          ],
+          headlineIndex: 2,
+          score: shareScore("master_unused", "master_total", lowerShareScore),
+          advice: {
+            good: "Few or no Master Layouts are unused. Nothing to do.",
+            mid: "Some Master Layouts are unused. They can be redundant and add size. Keep only the ones you may need later.",
+            low: "Many Master Layouts are unused and add unnecessary size. Delete the ones you will not need."
+          }
+        },
+        {
+          id: "6.26", title: "Linked Drawings on Master Layouts", axes: ["p", "s"], mult: 5,
+          measures: [["Number of Linked Drawings placed on Master Layouts", "linked_drawings_master", ""]],
+          score: stepScore("linked_drawings_master", [0, 5, 20]),
+          advice: {
+            good: "No linked drawings are placed on Master Layouts. Title blocks and logos that are linked onto Master Layouts add overhead even though they rarely change, so this is good. Nothing to do.",
+            mid: "A few linked drawings sit on Master Layouts. Linked title blocks and logos add overhead; use them sparingly.",
+            low: "Many linked drawings sit on Master Layouts, which adds unnecessary overhead. Reduce them."
+          }
+        },
+        qs("6.27", "Autotexts", ["s"], 5, "The Master Layouts make good use of Autotext. Nothing to do.", "The Master Layouts make little use of Autotext. Use it for values that change from layout to layout."),
+        qs("6.28", "Structuring of Publisher Sets", ["s", "b"], 5, "Publisher Sets are well structured, have no spelling errors and make good use of their functions. Nothing to do.", "Publisher Sets have structure or spelling problems. Tidy them."),
+        {
+          id: "6.29", title: "Shortcut folders in Publisher Sets", axes: ["s"], mult: 5,
+          measures: [
+            ["Number of Publisher Set items in shortcut folders", "shortcut_items", ""],
+            ["Total number of Publisher Set items", "publisher_items", ""],
+            pctMeasure("Percentage of items in shortcut folders out of total", "shortcut_items", "publisher_items")
+          ],
+          headlineIndex: 2,
+          score: function (row) {
+            var p = ratioPct(row.shortcut_items, row.publisher_items);
+            return p == null ? null : p >= 90 ? 3 : p >= 50 ? 2 : p >= 20 ? 1 : 0;
+          },
+          advice: {
+            good: "Almost all Publisher Set items use shortcuts. Nothing to do.",
+            mid: "Most Publisher Sets were created with shortcuts. Use as many shortcuts as possible, because placing views and layouts by hand can lead to unexpected or missing information. Consider recreating the rest with shortcuts.",
+            low: "Most Publisher Set items were placed by hand, which can lead to unexpected or missing information. Recreate them with shortcuts."
+          }
+        },
+        qs("6.30", "Use Architect Credits in BIMx Publisher Set", ["s"], 3, "'Use Architect Credits in BIMx Hyper-models' is checked in all BIMx Publisher Sets, so the credits show in BIMx. Nothing to do.", "'Use Architect Credits in BIMx Hyper-models' is not checked in some BIMx Publisher Sets. Turn it on."),
+        qCheck("6.31", "Info Sets in BIMx Publisher Set", ["s", "b"], 1, {
+          good: "The Info Sets use a schedule, which gives control over what is shown. Nothing to do.",
+          mid: "The Info Set is set to Classification and Properties in most BIMx Publisher Sets. That shows a lot of useful information but gives little control over what is displayed. Consider selecting a schedule instead.",
+          low: "The Info Sets show everything without control over what is displayed. Select a schedule for them."
+        })
+      ]
+    },
+    {
+      id: "7",
+      name: "External Content",
+      short: "External Content",
+      intro: "How external content is managed affects all three foundations of a project: size, speed and structure. " +
+        "Removing redundant or embedded data can solve many issues.",
+      checks: [
+        {
+          id: "7.1", title: "Internal Drawings", axes: ["p", "s"], mult: 5,
+          measures: [["Number of missing internal drawings", "missing_internal_drawings", ""]],
+          score: stepScore("missing_internal_drawings", [0, 5, 20]),
+          advice: {
+            good: "No internal drawings are missing. Nothing to do.",
+            mid: "Some internal drawings are missing. Relink or delete them. External drawings may also be missing, but they are not covered by the checkup and must be checked locally.",
+            low: "Many internal drawings are missing. Relink or delete them. External drawings may also be missing and must be checked locally."
+          }
+        },
+        {
+          id: "7.2", title: "External Drawings", axes: ["p", "s"], mult: 5,
+          measures: [["Number of external drawings", "external_drawings", ""]],
+          score: stepScore("external_drawings", [0, 5, 20]),
+          advice: {
+            good: "No external drawings are linked. Nothing to do.",
+            mid: "The project has some linked files. They may be large, and without access to them they cannot be assessed here. Check the images, PDFs and DWGs.",
+            low: "The project has many linked files, which may be large. Check the images, PDFs and DWGs."
+          }
+        },
+        {
+          id: "7.3", title: "Hotlink Module Management", axes: ["p", "s", "b"], mult: 5,
+          measures: [
+            ["Number of hotlinks referenced from PLN files", "hl_pln", ""],
+            ["Number of hotlinks referenced from MOD files", "hl_mod", ""],
+            ["Number of hotlinks referenced from Teamwork projects", "hl_teamwork", ""],
+            ["Number of hotlinks referenced from IFC files", "hl_ifc", ""],
+            ["Number of hotlinks referenced from 3DM files", "hl_3dm", ""]
+          ],
+          headline: function (r) { var t = hotlinkTotal(r); return t == null ? null : String(t); },
+          score: function (row) {
+            var t = hotlinkTotal(row);
+            return t == null || t === 0 ? null : t <= 10 ? 3 : t <= 30 ? 2 : t <= 60 ? 1 : 0;
+          },
+          advice: {
+            good: "Hotlink Modules are used in a manageable way. Nothing to do.",
+            mid: "The project uses a fair number of hotlinks. Review them and remove the ones you no longer need.",
+            low: "The project uses very many hotlinks. Review them and remove the ones you no longer need.",
+            na: "There are no Hotlink Modules in the project. They are an important part of Archicad projects, so ask your BIM consultant how to apply them."
+          }
+        },
+        {
+          id: "7.4", title: "XREF Management", axes: ["p", "s"], mult: 1,
+          measures: [
+            ["Number of XREFs bound to project", "xref_bound", ""],
+            ["Number of XREFs attached to project", "xref_attached", ""]
+          ],
+          score: stepScore("xref_bound", [0, 3, 10]),
+          advice: {
+            good: "No XREFs have been bound. Nothing to do.",
+            mid: "Some XREFs have been bound (or exploded), which can increase the project size. Consider whether you need that data. Deleting their layers removes most of it; removing their attributes in the Attribute Manager is the only way to remove every trace.",
+            low: "Many XREFs have been bound, which increases the project size. Delete their layers, and remove their attributes in the Attribute Manager to remove every trace."
+          }
+        },
+        qCheck("7.5", "IFC Translators", ["b"], 5, {
+          good: "Publisher Set IFC items use suitable translators for their purpose. Nothing to do.",
+          mid: "All the IFC items in the Publisher Sets use a Generic Translator. That makes sense if you only need a generic export and do not collaborate with other disciplines; otherwise export different IFC files with the appropriate translators.",
+          low: "The IFC items in the Publisher Sets have no suitable translator. Assign the appropriate translators."
+        })
+      ]
     }
   ];
 
@@ -934,6 +1342,58 @@
     r.q_4_3 = r.magic_wand_preference === "Best Match" ? 3 : 2;
   });
 
+  SAMPLE.forEach(function (r, i) {
+    var rnd = seeded(i + 523);
+    var f = function (a, b) { return Math.floor(a + rnd() * (b - a)); };
+    var q = function (id, nullable) {
+      var v = rnd();
+      r["q_" + id.replace(".", "_")] = nullable && rnd() < 0.5 ? null : v < 0.1 ? 0 : v < 0.3 ? 1 : v < 0.55 ? 2 : 3;
+    };
+    r.dimprefs_total = f(2, 12);
+    r.dimprefs_used = f(0, r.dimprefs_total + 1);
+    r.legacy_enabled = rnd() < 0.5 ? 0 : f(1, 6);
+    r.stair_rules_total = 6;
+    r.hidden_rules = f(0, 5);
+    r.vp_stories = f(2, 20);
+    r.vp_sections = f(0, 60);
+    r.vp_elevations = f(0, 60);
+    r.vp_interior = f(0, 40);
+    r.vp_worksheets = f(0, 30);
+    r.vp_details = f(0, 80);
+    r.vp_cameras = rnd() < 0.5 ? 0 : f(1, 10);
+    r.vp_schedules = f(0, 60);
+    r.vp_indexes = f(0, 12);
+    r.vp_3d = f(0, 12);
+    r.vp_lists = f(0, 100);
+    r.vp_independent = rnd() < 0.4 ? 0 : f(1, 120);
+    r.vp_derived = f(20, 400);
+    r.vp_shadow_total = r.vp_sections + r.vp_elevations + r.vp_interior + r.vp_3d;
+    r.vp_shadow = f(0, r.vp_shadow_total + 1);
+    r.views_total = f(20, 500);
+    r.views_clone = f(0, r.views_total + 1);
+    r.views_custom = rnd() < 0.5 ? 0 : f(1, 40);
+    r.layouts_count = f(5, 400);
+    r.drawings_total = f(1, 300);
+    r.drawings_stored = f(0, r.drawings_total + 1);
+    r.master_total = f(1, 12);
+    r.master_unused = f(0, r.master_total + 1);
+    r.linked_drawings_master = rnd() < 0.5 ? 0 : f(1, 30);
+    r.publisher_items = f(10, 500);
+    r.shortcut_items = f(0, r.publisher_items + 1);
+    r.missing_internal_drawings = rnd() < 0.5 ? 0 : f(1, 30);
+    r.external_drawings = rnd() < 0.4 ? 0 : f(1, 40);
+    r.hl_pln = rnd() < 0.5 ? 0 : f(1, 20);
+    r.hl_mod = rnd() < 0.7 ? 0 : f(1, 10);
+    r.hl_teamwork = rnd() < 0.8 ? 0 : f(1, 6);
+    r.hl_ifc = rnd() < 0.6 ? 0 : f(1, 12);
+    r.hl_3dm = rnd() < 0.9 ? 0 : f(1, 4);
+    r.xref_bound = rnd() < 0.5 ? 0 : f(1, 14);
+    r.xref_attached = f(0, 10);
+    Q_IDS.forEach(function (id) {
+      if (/^[567]\./.test(id)) q(id, id === "6.13");
+    });
+  });
+
   /* The first sample project uses the values of the reports this layout follows,
      so its scores can be compared with them: section 1 gives 64%, 64%, 64%, 67%
      (overall, performance, structure, BIM Essentials) and section 2 gives
@@ -960,6 +1420,19 @@
     q_4_1: 2, q_4_2: 2, q_4_3: 3, q_4_4: 2, q_4_5: 3, q_4_10: 3, q_4_12: 3, q_4_13: 3, q_4_15: 3,
     q_4_17: 3, q_4_18: 3, q_4_20: 3, q_4_22: null, q_4_23: 3, q_4_24: 3, q_4_29: 3, q_4_30: null,
     notes_3: "Layer and attribute names mix several conventions. Composite structures and complex profiles need the most tidying; layer combinations and surfaces are in good shape.",
+    dimprefs_used: 2, dimprefs_total: 7, legacy_enabled: 0, hidden_rules: 0, stair_rules_total: 6,
+    vp_stories: 7, vp_sections: 3, vp_elevations: 4, vp_interior: 4, vp_worksheets: 2, vp_details: 3,
+    vp_cameras: 0, vp_schedules: 23, vp_indexes: 5, vp_3d: 4, vp_lists: 54,
+    vp_independent: 0, vp_derived: 109, vp_shadow: 4, vp_shadow_total: 15,
+    views_clone: 14, views_total: 66, views_custom: 0, layouts_count: 26,
+    drawings_stored: 1, drawings_total: 2, master_unused: 2, master_total: 7, linked_drawings_master: 0,
+    shortcut_items: 144, publisher_items: 181, missing_internal_drawings: 3, external_drawings: 3,
+    hl_pln: 0, hl_mod: 0, hl_teamwork: 0, hl_ifc: 0, hl_3dm: 0, xref_bound: 2, xref_attached: 2,
+    q_5_1: 3, q_5_2: 3, q_5_4: 3, q_5_5: 3, q_5_6: 3, q_5_7: 3, q_5_10: 3,
+    q_6_1: 3, q_6_4: 3, q_6_5: 3, q_6_6: 3, q_6_7: 3, q_6_8: 3, q_6_9: 3, q_6_10: 3, q_6_11: 2, q_6_12: 1, q_6_13: null,
+    q_6_15: 3, q_6_18: 3, q_6_20: 3, q_6_21: 3, q_6_22: 3, q_6_23: 3, q_6_27: 3, q_6_28: 3, q_6_30: 3, q_6_31: 2, q_7_5: 2,
+    notes_6: "Drawing IDs mostly follow the source views, but some views have no ID so their drawings have none either. Few views use clone folders; more would speed up documentation. Some Dimension settings are custom and some Renovation Filters are missing. Shadow casting is used sensibly: only the elevations have it on, not the technical drawings.",
+    notes_7: "The Structural IFC Model item in the Publisher Set has no translator assigned.",
     notes_4: "Many elements still have Undefined for Structural Function, Position and Classification, and some share the same ID. Fixing these is the quickest way to raise the Structure and BIM Essentials scores."
   });
 
@@ -1313,6 +1786,7 @@
     var pct = function (pair) { return pair[1] ? Math.round((pair[0] / pair[1]) * 100) : null; };
     return {
       results: results,
+      totals: totals,
       overall: possible ? Math.round((earned / possible) * 100) : null,
       p: pct(totals.p),
       s: pct(totals.s),
@@ -1560,8 +2034,107 @@
     el.auditFilters.replaceChildren(frag);
   }
 
+  /* Scores pooled over every section: points earned divided by points possible. */
+  function overallScores(all) {
+    var t = { p: [0, 0], s: [0, 0], b: [0, 0] };
+    all.forEach(function (item) {
+      ["p", "s", "b"].forEach(function (a) {
+        t[a][0] += item.totals[a][0];
+        t[a][1] += item.totals[a][1];
+      });
+    });
+    var pct = function (pair) { return pair[1] ? Math.round((pair[0] / pair[1]) * 100) : null; };
+    var earned = t.p[0] + t.s[0] + t.b[0];
+    var possible = t.p[1] + t.s[1] + t.b[1];
+    return { overall: possible ? Math.round((earned / possible) * 100) : null, p: pct(t.p), s: pct(t.s), b: pct(t.b) };
+  }
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  function svg(tag, attrs, text) {
+    var node = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs || {}).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  /* Radar chart: one polygon per series, one spoke per label, rings every 20%. */
+  function radarChart(title, labels, series) {
+    var size = 320;
+    var c = size / 2;
+    var r = 100;
+    var n = labels.length;
+    var root = svg("svg", { viewBox: "0 0 " + size + " " + size, class: "ai-radar", role: "img", "aria-label": title });
+    var pt = function (i, v) {
+      var a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+      return [c + Math.cos(a) * r * v / 100, c + Math.sin(a) * r * v / 100];
+    };
+    [20, 40, 60, 80, 100].forEach(function (ring) {
+      var pts = labels.map(function (_, i) { return pt(i, ring).join(","); }).join(" ");
+      root.appendChild(svg("polygon", { points: pts, class: "ai-radar-ring" }));
+    });
+    labels.forEach(function (label, i) {
+      var e = pt(i, 100);
+      root.appendChild(svg("line", { x1: c, y1: c, x2: e[0], y2: e[1], class: "ai-radar-spoke" }));
+      var l = pt(i, 122);
+      var anchor = Math.abs(l[0] - c) < 6 ? "middle" : l[0] > c ? "start" : "end";
+      root.appendChild(svg("text", { x: l[0], y: l[1] + 4, "text-anchor": anchor, class: "ai-radar-label" }, label));
+    });
+    series.forEach(function (sr) {
+      var pts = sr.values.map(function (v, i) { return pt(i, v == null ? 0 : v).join(","); }).join(" ");
+      root.appendChild(svg("polygon", { points: pts, class: "ai-radar-area", fill: sr.color, stroke: sr.color }));
+    });
+    return root;
+  }
+
+  function renderSummary(all) {
+    var tot = overallScores(all);
+    var box = make("div", "ai-summary");
+    var top = make("div", "ai-summary-top");
+    var big = make("div", "ai-summary-big");
+    big.appendChild(make("span", "ai-summary-pct ai-text-" + pctLevel(tot.overall), pctText(tot.overall)));
+    big.appendChild(make("span", "ai-summary-label", "Overall score"));
+    top.appendChild(big);
+    var pot = make("div", "ai-pot");
+    pot.appendChild(potentialRow("Performance", tot.p));
+    pot.appendChild(potentialRow("Structure", tot.s));
+    pot.appendChild(potentialRow("BIM Essentials", tot.b));
+    top.appendChild(pot);
+    box.appendChild(top);
+
+    var labels = all.map(function (item) { return item.section.short || item.section.name; });
+    var d = makeDetails("ai-radars", "rad");
+    d.appendChild(make("summary", null, "Scores by section (radar charts)"));
+    var wrap = make("div", "ai-radar-wrap");
+    var one = make("figure", "ai-radar-fig");
+    one.appendChild(radarChart("Overall score by section", labels, [
+      { name: "Overall", color: "#6f7fd6", values: all.map(function (item) { return item.overall; }) }
+    ]));
+    one.appendChild(make("figcaption", null, "Overall"));
+    var cat = make("figure", "ai-radar-fig");
+    cat.appendChild(radarChart("Performance, Structure and BIM Essentials by section", labels, [
+      { name: "Performance", color: "#6f7fd6", values: all.map(function (item) { return item.p; }) },
+      { name: "Structure", color: "#ff6a00", values: all.map(function (item) { return item.s; }) },
+      { name: "BIM Essentials", color: "#2ea043", values: all.map(function (item) { return item.b; }) }
+    ]));
+    var cap = make("figcaption", "ai-radar-key");
+    [["Performance", "#6f7fd6"], ["Structure", "#ff6a00"], ["BIM Essentials", "#2ea043"]].forEach(function (k) {
+      var span = make("span", null, k[0]);
+      var sw = make("i", "ai-sw");
+      sw.style.background = k[1];
+      span.prepend(sw);
+      cap.appendChild(span);
+    });
+    cat.appendChild(cap);
+    wrap.append(one, cat);
+    d.appendChild(wrap);
+    box.appendChild(d);
+    return box;
+  }
+
   function renderCards(all) {
     var frag = document.createDocumentFragment();
+    frag.appendChild(renderSummary(all));
     all.forEach(function (item) {
       var s = item.section;
       var c = countLevels(item.results);
