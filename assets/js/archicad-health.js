@@ -216,8 +216,12 @@
      have a problem, for example issue_3_2 = 15 when 15% of the layers break the naming
      convention. For an on/off setting use 0 (fine) or 100 (wrong). Empty means not checked.
      Share of items with issues: up to 5% gives 3, up to 25% gives 2, up to 60% gives 1, else 0. */
+  var ISSUE_DEFAULT = [5, 25, 60];
+  var ISSUE_STEPS = ISSUE_DEFAULT.slice();
+
   function issueScore(pct) {
-    return pct == null ? null : pct <= 5 ? 3 : pct <= 25 ? 2 : pct <= 60 ? 1 : 0;
+    if (pct == null) return null;
+    return pct <= ISSUE_STEPS[0] ? 3 : pct <= ISSUE_STEPS[1] ? 2 : pct <= ISSUE_STEPS[2] ? 1 : 0;
   }
 
   function qCheck(id, title, axes, mult, advice) {
@@ -1496,7 +1500,9 @@
     auditFilters: document.getElementById("ai-filters"),
     auditCards: document.getElementById("ai-cards"),
     auditExpand: document.getElementById("ai-expand"),
-    auditCollapse: document.getElementById("ai-collapse")
+    auditCollapse: document.getElementById("ai-collapse"),
+    steps: ["ai-t3", "ai-t2", "ai-t1"].map(function (id) { return document.getElementById(id); }),
+    stepsReset: document.getElementById("ai-treset")
   };
 
   if (!el.body || !el.head) return;
@@ -2304,6 +2310,51 @@
   });
 
   el.auditProject.addEventListener("change", function () { selectProject(el.auditProject.value); });
+  /* Scoring steps for the issue percentage, kept in this browser. */
+  var STEPS_KEY = "ah-issue-steps";
+
+  function loadSteps() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STEPS_KEY));
+      if (Array.isArray(saved) && saved.length === 3 && saved.every(function (v) { return typeof v === "number" && isFinite(v); })) {
+        ISSUE_STEPS = saved;
+      }
+    } catch (e) { /* storage can be unavailable */ }
+  }
+
+  function saveSteps() {
+    try { localStorage.setItem(STEPS_KEY, JSON.stringify(ISSUE_STEPS)); } catch (e) { /* ignore */ }
+  }
+
+  function showSteps() {
+    el.steps.forEach(function (input, i) { input.value = ISSUE_STEPS[i]; });
+  }
+
+  function readSteps() {
+    var v = el.steps.map(function (input, i) {
+      var n = Number(input.value);
+      return isFinite(n) && input.value !== "" ? Math.min(100, Math.max(0, n)) : ISSUE_STEPS[i];
+    });
+    v[1] = Math.max(v[1], v[0]);
+    v[2] = Math.max(v[2], v[1]);
+    ISSUE_STEPS = v;
+    saveSteps();
+    renderAudit();
+  }
+
+  el.steps.forEach(function (input) {
+    input.addEventListener("input", readSteps);
+    input.addEventListener("change", showSteps);
+  });
+  el.stepsReset.addEventListener("click", function () {
+    ISSUE_STEPS = ISSUE_DEFAULT.slice();
+    saveSteps();
+    showSteps();
+    renderAudit();
+  });
+  loadSteps();
+  showSteps();
+
   el.auditExpand.addEventListener("click", function () { setAllOpen(true); });
   el.auditCollapse.addEventListener("click", function () { setAllOpen(false); });
   el.auditBody.addEventListener("toggle", function (e) {

@@ -82,6 +82,23 @@
                             <select id="ai-project"></select>
                         </label>
                     </div>
+                    <details class="ai-settings">
+                        <summary>Scoring thresholds</summary>
+                        <div class="ai-settings-body">
+                            <p class="ah-note">
+                                Checks on naming, structure and settings are scored by the share of checked items that
+                                have a problem. A lower share scores higher. Changes apply at once and are kept in this
+                                browser.
+                            </p>
+                            <div class="ai-steps">
+                                <label class="ah-field"><span>3 points up to (%)</span><input id="ai-t3" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
+                                <label class="ah-field"><span>2 points up to (%)</span><input id="ai-t2" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
+                                <label class="ah-field"><span>1 point up to (%)</span><input id="ai-t1" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
+                                <button type="button" class="ai-tool" id="ai-treset">Reset</button>
+                            </div>
+                            <p class="ah-note">Above the last value a check scores 0.</p>
+                        </div>
+                    </details>
                     <div class="ai-cards" id="ai-cards"></div>
                     <div class="ai-toolbar">
                         <div class="ai-filters" id="ai-filters" role="group" aria-label="Filter checks by status"></div>

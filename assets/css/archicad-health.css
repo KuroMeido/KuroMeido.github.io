@@ -326,6 +326,11 @@
 .ai-tool:focus-visible { outline: 2px solid var(--brand-2); outline-offset: 2px; }
 .ai-tool { color: var(--muted); }
 
+.ai-settings > summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); }
+.ai-settings-body { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+.ai-steps { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.ai-steps .ah-field input { width: 8rem; }
+
 .ai-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
