@@ -1460,7 +1460,6 @@
     body: document.getElementById("ah-body"),
     source: document.getElementById("ah-source"),
     defs: document.getElementById("ah-defs"),
-    format: document.getElementById("ah-format"),
     file: document.getElementById("ah-file"),
     sample: document.getElementById("ah-sample"),
     template: document.getElementById("ah-template"),
@@ -2239,14 +2238,6 @@
     el.defs.replaceChildren(frag);
   }
 
-  function renderFormat() {
-    if (!el.format) return;
-    var one = {};
-    one.project = "Riverside Tower A";
-    NUMBER_KEYS.concat(TEXT_KEYS).forEach(function (k) { one[k] = SAMPLE[0][k]; });
-    el.format.textContent = JSON.stringify([one], null, 2);
-  }
-
   function download(filename, text, type) {
     var blob = new Blob([text], { type: type });
     var url = URL.createObjectURL(blob);
@@ -2296,6 +2287,5 @@
 
   renderHead();
   renderDefs();
-  renderFormat();
   render();
 })();
