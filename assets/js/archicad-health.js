@@ -224,11 +224,67 @@
     return pct <= ISSUE_STEPS[0] ? 3 : pct <= ISSUE_STEPS[1] ? 2 : pct <= ISSUE_STEPS[2] ? 1 : 0;
   }
 
+  /* ---------- Naming conventions ----------
+     For these checks the page can score the names itself. Give a pattern (a regular
+     expression) in "Naming conventions"; every name in the matching list of the details
+     file is tested, and the share of names that break the pattern becomes the issue
+     percentage. Without a pattern the value from the summary file is used. */
+
+  var NAMING_IDS = ["3.2", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.16", "3.17",
+    "4.5", "4.10", "4.12", "4.13", "4.15", "4.18", "4.20", "4.29",
+    "6.1", "6.4", "6.15", "6.18", "6.28"];
+
+  /* Where the names come from when the check has no list of its own. */
+  var NAME_SOURCES = { "4.5": ["4.5", "4.6"], "4.10": ["4.10", "4.11"], "4.13": ["4.13", "4.14"], "4.15": ["4.15", "4.16"] };
+
+  var NAME_PRESETS = [
+    ["^\\d{2} .+$", "Two digits, a space, then the name (01 Site)"],
+    ["^[A-Z]{2,4}[-_].+$", "Capital prefix, dash or underscore, then the name (ARC-Plan)"],
+    ["^[^a-z]+$", "No lowercase letters"],
+    ["^\\S+( \\S+)*$", "No double or edge spaces"]
+  ];
+
+  function namesFor(row, id) {
+    var sources = NAME_SOURCES[id] || [id];
+    for (var i = 0; i < sources.length; i++) {
+      var list = detailsFor(row, sources[i]);
+      if (list) {
+        return list.map(function (item) {
+          return typeof item === "string" ? item : item && typeof item.name === "string" ? item.name : null;
+        }).filter(function (n) { return n != null; });
+      }
+    }
+    return [];
+  }
+
+  function compileRule(rule) {
+    if (!rule || !rule.pattern) return null;
+    try { return new RegExp(rule.pattern, rule.ignoreCase ? "i" : ""); } catch (e) { return false; }
+  }
+
+  /* { total, bad: [names], pct } when a rule is set and names are available. */
+  function namingResult(row, id) {
+    var rule = state.rules[id];
+    var re = compileRule(rule);
+    if (!re) return null;
+    var names = namesFor(row, id);
+    if (!names.length) return null;
+    var bad = names.filter(function (n) {
+      return !re.test(n) || (rule.spaces && /^\s|\s$|\s{2}/.test(n));
+    });
+    return { total: names.length, bad: bad, pct: Math.round((bad.length / names.length) * 100) };
+  }
+
+  function issueValue(row, id) {
+    var nr = namingResult(row, id);
+    return nr ? nr.pct : row[issueKey(id)];
+  }
+
   function qCheck(id, title, axes, mult, advice) {
     return {
       id: id, title: title, axes: axes, mult: mult,
-      measures: [{ label: "Share of checked items with issues", key: issueKey(id), unit: "%" }],
-      score: function (row) { return issueScore(row[issueKey(id)]); },
+      measures: [{ label: "Share of checked items with issues", get: function (row) { return issueValue(row, id); }, unit: "%" }],
+      score: function (row) { return issueScore(issueValue(row, id)); },
       advice: advice
     };
   }
@@ -1483,7 +1539,8 @@
     filter: "all",
     open: {},
     details: [],
-    dview: {}
+    dview: {},
+    rules: {}
   };
 
   var el = {
@@ -1504,6 +1561,7 @@
     auditExpand: document.getElementById("ai-expand"),
     auditCollapse: document.getElementById("ai-collapse"),
     detailStatus: document.getElementById("ai-dstatus"),
+    rules: document.getElementById("ai-rules"),
     steps: ["ai-t3", "ai-t2", "ai-t1"].map(function (id) { return document.getElementById(id); }),
     stepsReset: document.getElementById("ai-treset")
   };
@@ -2185,6 +2243,18 @@
       });
       body.appendChild(meas);
     }
+    var nr = namingResult(row, check.id);
+    if (nr) {
+      var nbox = make("div", "ai-naming");
+      nbox.appendChild(make("p", "ai-rscores", "Naming convention: " + nr.bad.length + " of " + fmt.format(nr.total) + " names do not match."));
+      if (nr.bad.length) {
+        var chips = make("div", "ai-badnames");
+        nr.bad.slice(0, 30).forEach(function (n) { chips.appendChild(make("span", "ai-badname", n === "" ? "(empty)" : n)); });
+        if (nr.bad.length > 30) chips.appendChild(make("span", "ai-badname ai-badmore", "+" + (nr.bad.length - 30) + " more"));
+        nbox.appendChild(chips);
+      }
+      body.appendChild(nbox);
+    }
     var advice;
     if (result.points == null) {
       advice = check.advice.na || "Not enough data to score this check.";
@@ -2480,6 +2550,8 @@
         : "To see the items behind a check, load the details file with Load JSON or CSV.";
     }
 
+    updateRuleInfo(row);
+
     var all = SECTIONS.map(function (s) {
       var scored = scoreSection(s, row);
       scored.section = s;
@@ -2607,6 +2679,98 @@
   });
   loadSteps();
   showSteps();
+
+  /* Naming convention inputs, kept in this browser. */
+  var RULES_KEY = "ah-name-rules";
+
+  function loadRules() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(RULES_KEY));
+      if (saved && typeof saved === "object") state.rules = saved;
+    } catch (e) { /* storage can be unavailable */ }
+  }
+
+  function saveRules() {
+    try { localStorage.setItem(RULES_KEY, JSON.stringify(state.rules)); } catch (e) { /* ignore */ }
+  }
+
+  function checkTitle(id) {
+    var found = "";
+    SECTIONS.forEach(function (sec) {
+      sec.checks.forEach(function (c) { if (c.id === id) found = c.title; });
+    });
+    return found;
+  }
+
+  var ruleInfo = {};
+
+  function buildRules() {
+    if (!el.rules) return;
+    var list = document.createElement("datalist");
+    list.id = "ai-rule-presets";
+    NAME_PRESETS.forEach(function (p) {
+      var o = document.createElement("option");
+      o.value = p[0];
+      o.label = p[1];
+      list.appendChild(o);
+    });
+    var frag = document.createDocumentFragment();
+    frag.appendChild(list);
+    NAMING_IDS.forEach(function (id) {
+      var rule = state.rules[id] || {};
+      var line = make("div", "ai-rule");
+      line.appendChild(make("span", "ai-rule-name", id + " " + checkTitle(id)));
+      var input = make("input", "ai-rule-input");
+      input.type = "text";
+      input.placeholder = "Pattern, for example ^\\d{2} .+$";
+      input.setAttribute("list", "ai-rule-presets");
+      input.setAttribute("aria-label", "Naming pattern for check " + id);
+      input.spellcheck = false;
+      input.value = rule.pattern || "";
+      var ic = make("label", "ai-rule-opt");
+      var icBox = make("input");
+      icBox.type = "checkbox";
+      icBox.checked = !!rule.ignoreCase;
+      ic.append(icBox, document.createTextNode("Ignore case"));
+      var sp = make("label", "ai-rule-opt");
+      var spBox = make("input");
+      spBox.type = "checkbox";
+      spBox.checked = !!rule.spaces;
+      sp.append(spBox, document.createTextNode("Flag extra spaces"));
+      var info = make("span", "ai-rule-info");
+      ruleInfo[id] = { input: input, info: info };
+      var change = function () {
+        var pattern = input.value.trim();
+        if (pattern || icBox.checked || spBox.checked) {
+          state.rules[id] = { pattern: pattern, ignoreCase: icBox.checked, spaces: spBox.checked };
+        } else {
+          delete state.rules[id];
+        }
+        saveRules();
+        renderAudit();
+      };
+      [input, icBox, spBox].forEach(function (n) { n.addEventListener(n === input ? "input" : "change", change); });
+      line.append(input, ic, sp, info);
+      frag.appendChild(line);
+    });
+    el.rules.replaceChildren(frag);
+  }
+
+  function updateRuleInfo(row) {
+    Object.keys(ruleInfo).forEach(function (id) {
+      var r = ruleInfo[id];
+      var rule = state.rules[id];
+      var re = compileRule(rule);
+      r.input.classList.toggle("is-bad", re === false);
+      if (re === false) { r.info.textContent = "Invalid pattern"; return; }
+      if (!re) { r.info.textContent = ""; return; }
+      var nr = namingResult(row, id);
+      r.info.textContent = nr ? nr.bad.length + " of " + nr.total + " names fail" : "No name list for this project";
+    });
+  }
+
+  loadRules();
+  buildRules();
 
   el.auditExpand.addEventListener("click", function () { setAllOpen(true); });
   el.auditCollapse.addEventListener("click", function () { setAllOpen(false); });

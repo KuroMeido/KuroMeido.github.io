@@ -84,6 +84,18 @@
                     </div>
                     <p class="ah-note" id="ai-dstatus" aria-live="polite"></p>
                     <details class="ai-settings">
+                        <summary>Naming conventions</summary>
+                        <div class="ai-settings-body">
+                            <p class="ah-note">
+                                Give a pattern (a regular expression) for the names you want checked. The page tests each
+                                name in the matching list of the details file and scores the check by the share of names
+                                that break the pattern. A blank pattern keeps the value from the summary file. Patterns
+                                are kept in this browser.
+                            </p>
+                            <div class="ai-rules" id="ai-rules"></div>
+                        </div>
+                    </details>
+                    <details class="ai-settings">
                         <summary>Scoring thresholds</summary>
                         <div class="ai-settings-body">
                             <p class="ah-note">
