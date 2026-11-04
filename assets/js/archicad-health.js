@@ -136,15 +136,15 @@
     { key: "xref_attached", label: "XREFs attached to the project" }
   ];
 
-  /* Checks scored by an auditor or a script are given as points (0 to 3) in
-     q_<section>_<number>, for example q_3_2. Leave empty when not scored. */
+  /* Naming, structure and setting checks take the percentage of items with a problem in
+     issue_<section>_<number>, for example issue_3_2. Leave empty when not checked. */
   var Q_IDS = ["3.2", "3.3", "3.4", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.16", "3.17",
     "4.1", "4.2", "4.3", "4.4", "4.5", "4.10", "4.12", "4.13", "4.15", "4.17", "4.18", "4.20", "4.22", "4.23", "4.24", "4.29", "4.30",
     "5.1", "5.2", "5.4", "5.5", "5.6", "5.7", "5.10",
     "6.1", "6.4", "6.5", "6.6", "6.7", "6.8", "6.9", "6.10", "6.11", "6.12", "6.13", "6.15", "6.18", "6.20", "6.21",
     "6.22", "6.23", "6.27", "6.28", "6.30", "6.31", "7.5"];
   Q_IDS.forEach(function (id) {
-    AUDIT_FIELDS.push({ key: "q_" + id.replace(".", "_"), label: "Score " + id });
+    AUDIT_FIELDS.push({ key: "issue_" + id.replace(".", "_"), label: "Items with issues in check " + id + " (%)" });
   });
 
   /* Text shown under "0. Audit Details". */
@@ -209,14 +209,22 @@
     return ratioPct(row.styles_sun, row.styles_total);
   }
 
-  function qKey(id) { return "q_" + id.replace(".", "_"); }
+  function issueKey(id) { return "issue_" + id.replace(".", "_"); }
 
-  /* Checks judged by an auditor or a script give their points (0 to 3) directly
-     in the field q_<section>_<number>, for example q_3_2. Empty means not scored. */
+  /* Checks about naming, structure or settings are scored from one input:
+     issue_<section>_<number> is the percentage (0 to 100) of the checked items that
+     have a problem, for example issue_3_2 = 15 when 15% of the layers break the naming
+     convention. For an on/off setting use 0 (fine) or 100 (wrong). Empty means not checked.
+     Share of items with issues: up to 5% gives 3, up to 25% gives 2, up to 60% gives 1, else 0. */
+  function issueScore(pct) {
+    return pct == null ? null : pct <= 5 ? 3 : pct <= 25 ? 2 : pct <= 60 ? 1 : 0;
+  }
+
   function qCheck(id, title, axes, mult, advice) {
     return {
-      id: id, title: title, axes: axes, mult: mult, measures: [],
-      score: function (row) { var v = row[qKey(id)]; return v == null ? null : v; },
+      id: id, title: title, axes: axes, mult: mult,
+      measures: [{ label: "Share of checked items with issues", key: issueKey(id), unit: "%" }],
+      score: function (row) { return issueScore(row[issueKey(id)]); },
       advice: advice
     };
   }
@@ -677,7 +685,13 @@
           measures: [
             { label: "Give preference to", key: "magic_wand_preference" },
             { label: "Tracing method", key: "magic_wand_tracing" }
-          ]
+          ],
+          score: function (row) {
+            if (row.magic_wand_preference == null || row.magic_wand_tracing == null) return null;
+            var best = /best match/i.test(row.magic_wand_preference);
+            var coarse = /\u226540|>=\s*40/.test(row.magic_wand_tracing);
+            return best && coarse ? 3 : best ? 2 : 1;
+          }
         }),
         qCheck("4.4", "On-screen View Options", ["p"], 1, {
           good: "The on-screen view options that slow 2D are off. Nothing to do.",
@@ -1339,7 +1353,6 @@
     r.magic_wand_preference = rnd() < 0.7 ? "Best Match" : "Straight Lines";
     r.magic_wand_tracing = rnd() < 0.7 ? "Deviation from Curves (\u226540 mm)" : "Deviation from Curves (\u22655 mm)";
     Q_IDS.forEach(function (id) { q(id, id === "4.22" || id === "4.30"); });
-    r.q_4_3 = r.magic_wand_preference === "Best Match" ? 3 : 2;
   });
 
   SAMPLE.forEach(function (r, i) {
@@ -1434,6 +1447,19 @@
     notes_6: "Drawing IDs mostly follow the source views, but some views have no ID so their drawings have none either. Few views use clone folders; more would speed up documentation. Some Dimension settings are custom and some Renovation Filters are missing. Shadow casting is used sensibly: only the elevations have it on, not the technical drawings.",
     notes_7: "The Structural IFC Model item in the Publisher Set has no translator assigned.",
     notes_4: "Many elements still have Undefined for Structural Function, Position and Classification, and some share the same ID. Fixing these is the quickest way to raise the Structure and BIM Essentials scores."
+  });
+
+  /* The sample was written with 0 to 3 points per check; turn them into the percentage of
+     items with issues that the page now scores itself. */
+  SAMPLE.forEach(function (r, i) {
+    var pctFor = i === 0
+      ? { 3: 0, 2: 15, 1: 40, 0: 80 }
+      : { 3: i % 5, 2: 10 + (i * 3) % 14, 1: 30 + (i * 5) % 25, 0: 65 + (i * 7) % 30 };
+    Object.keys(r).forEach(function (k) {
+      if (!/^q_\d+_\d+$/.test(k)) return;
+      r["issue_" + k.slice(2)] = r[k] == null ? null : pctFor[r[k]];
+      delete r[k];
+    });
   });
 
   /* ---------- State and elements ---------- */
