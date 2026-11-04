@@ -1,0 +1,296 @@
+/* Metric registry for the ArchiCAD Health page, JSON format version 2.
+   One place defines every input metric (public key, what it counts) and how the
+   scored checks turn a value into Good, Fair or Poor. The page, the template and the
+   format note for the C++ exporter all come from this list. */
+(function () {
+  "use strict";
+
+  /* [public key, internal field(s), type, check id, what to count] */
+  var M = [
+    ["integrity_issue_count", "issues", "count", "", "Tổng số lỗi toàn vẹn của model (phần tử không phân loại, không có zone, tường rời, trùng...). Cột Issues của heat-map."],
+    ["dwg_drawing_count", "dwg_drawings", "count", "", "Số drawing DWG/DXF đặt trong project."],
+    ["element_morph_count", "morphs", "count", "", "Số phần tử Morph."],
+    ["hotlink_count", "hotlinks", "count", "", "Tổng số hotlink module và file liên kết (PLN, MOD, IFC, DWG...)."],
+    ["unused_attributes_count", "unused_attrs", "count", "", "Số attribute (surface, fill, line type, composite...) không phần tử nào dùng."],
+    ["view_count", ["views", "views_total"], "count", "6.16", "Tổng số view trong View Map (không tính thư mục)."],
+    ["layout_count", ["layouts", "layouts_count"], "count", "6.19", "Số layout trong Layout Book."],
+
+    ["embedded_library_items_count", "embedded_items", "count", "1.1", "Số item trong Embedded Library."],
+    ["ifc_library_lcf_count", "ifc_lcf", "count", "1.2", "Số thư viện IFC lưu dạng file .lcf trong danh sách library đã nạp."],
+    ["ifc_library_folder_count", "ifc_folders", "count", "1.2", "Số thư viện IFC lưu dạng thư mục thường."],
+    ["library_images_over_1mb_count", "images_over_1mb", "count", "1.3", "Số file ảnh trong library lớn hơn 1 MB."],
+    ["libraries_count", "linked_libs", "count", "1.4", "Số thư viện đang liên kết, gồm cả BIMcloud library (không tính Embedded Library)."],
+    ["library_point_cloud_size_mb", "point_cloud_mb", "mb", "1.5", "Tổng dung lượng file point cloud trong library (MB)."],
+    ["library_missing_parts_count", "missing_parts", "count", "1.6", "Số library part bị thiếu (theo Library Report)."],
+    ["library_duplicate_parts_count", "duplicate_parts", "count", "1.7", "Số library part bị trùng giữa các thư viện."],
+
+    ["elements_seo_count", "seo_ops", "count", "2.1", "Số Solid Element Operation."],
+    ["elements_seo_target_count", "seo_targets", "count", "2.1", "Số phần tử đích (target) của SEO."],
+    ["elements_seo_operator_count", "seo_operators", "count", "2.1", "Số phần tử toán tử (operator) của SEO."],
+    ["open_tab_count", "open_tabs", "count", "2.2", "Số tab view đang mở cùng lúc."],
+    ["trace_reference_active_count", "trace_active", "count", "2.3", "Số Trace Reference bật cùng lúc."],
+    ["trace_reference_view_count", "trace_views", "count", "2.4", "Số Trace Reference dùng View hoặc Layout làm nguồn."],
+    ["element_count", "elements_total", "count", "2.5", "Tổng số phần tử (3D và 2D) trong 3D và mặt bằng."],
+    ["element_3d_count", "elements_3d", "count", "2.6", "Số phần tử 3D."],
+    ["element_2d_count", "elements_2d", "count", "2.6", "Số phần tử 2D trong mặt bằng."],
+    ["group_count", "groups", "count", "2.7", "Số group trong không gian 3D và mặt bằng."],
+    ["style_3d_sun_shadow_count", "styles_sun", "count", "2.8", "Số 3D Style bật Sun Shadows."],
+    ["style_3d_count", ["styles_total"], "count", "2.8", "Tổng số 3D Style."],
+    ["session_report_error_count", "session_errors", "count", "2.9", "Số lỗi trong Session Report khi mở cửa sổ 3D."],
+    ["polygon_count", "polygons", "count", "2.10", "Tổng số polygon của model 3D."],
+    ["element_duplicate_count", "duplicate_elements", "count", "2.11", "Số phần tử bị trùng (chồng khít) trong toàn project."],
+    ["model_origin_distance_m", "origin_distance_m", "meters", "2.12", "Khoảng cách từ model tới gốc tọa độ project (m)."],
+    ["wall_inaccurate_connection_count", "inaccurate_walls", "count", "2.13", "Số điểm nối tường vuông góc không chính xác."],
+    ["linework_duplicate_deleted_count", "lw_duplicates", "count", "2.14", "Linework: số đường trùng bị xóa khi hợp nhất."],
+    ["linework_connecting_merged_count", "lw_merged_connecting", "count", "2.14", "Linework: số đường nối tiếp được gộp."],
+    ["linework_overlapping_merged_count", "lw_merged_overlapping", "count", "2.14", "Linework: số đường chồng nhau được gộp."],
+    ["linework_identical_deleted_count", "lw_identical", "count", "2.14", "Linework: số đường bị xóa vì bị đường giống hệt chồng lên."],
+    ["linework_covered_deleted_count", "lw_covered", "count", "2.14", "Linework: số đường bị xóa vì bị đường đặc phủ lên."],
+    ["linework_different_type_deleted_count", "lw_different", "count", "2.14", "Linework: số đường bị xóa vì bị đường khác loại chồng lên."],
+    ["linework_adjusted_count", "lw_adjusted", "count", "2.14", "Linework: số đường được chỉnh."],
+    ["linework_split_count", "lw_split", "count", "2.14", "Linework: số đường bị tách."],
+    ["linework_affected_total_count", "lw_total", "count", "2.14", "Linework: tổng số đường bị ảnh hưởng."],
+    ["fill_before_consolidation_count", "fills_before", "count", "2.15", "Số fill 2D trước khi hợp nhất."],
+    ["fill_after_consolidation_count", "fills_after", "count", "2.15", "Số fill 2D sau khi hợp nhất."],
+
+    ["attributes_in_use_count", "attrs_in_use", "count", "3.1", "Số attribute đang được dùng."],
+    ["attributes_count", "attrs_total", "count", "3.1", "Tổng số attribute trong project."],
+    ["attributes_layers_count", "layers", "count", "3.5", "Số layer trong project."],
+    ["plan_elements_on_archicad_layer_count", "archicad_layer_elements", "count", "3.6", "Số phần tử nằm trên layer ARCHICAD trong mặt bằng."],
+
+    ["model_view_option_in_use_count", "mvo_used", "count", "4.6", "Số Model View Option combination đang gán cho view."],
+    ["model_view_option_count", "mvo_total", "count", "4.6", "Tổng số Model View Option combination."],
+    ["model_view_option_curtain_full_count", "mvo_curtain", "count", "4.7", "Số combination hiển thị Curtain Wall ở Full Detail."],
+    ["model_view_option_stairs_full_count", "mvo_stairs", "count", "4.8", "Số combination hiển thị Stairs và Railings ở Full Detail."],
+    ["model_view_option_objects_full_count", "mvo_objects", "count", "4.9", "Số combination hiển thị Object ở mức chi tiết cao (Object and Lamp Detail Level)."],
+    ["graphic_override_combination_in_use_count", "go_used", "count", "4.11", "Số Graphic Override combination đang gán cho view."],
+    ["graphic_override_combination_count", "go_total", "count", "4.11", "Tổng số Graphic Override combination."],
+    ["renovation_filter_in_use_count", "renov_used", "count", "4.14", "Số Renovation Filter đang gán cho view."],
+    ["renovation_filter_count", "renov_total", "count", "4.14", "Tổng số Renovation Filter."],
+    ["style_3d_in_use_count", "styles_used", "count", "4.16", "Số 3D Style đang gán cho view."],
+    ["favorite_greyed_count", "greyed_favorites", "count", "4.19", "Số Favorite bị mờ (greyed out)."],
+    ["project_info_item_filled_count", "project_info_items", "count", "4.21", "Số mục Project Info đã điền."],
+    ["magic_wand_preference", "magic_wand_preference", "text", "4.3", "Magic Wand: giá trị 'Give preference to' (ví dụ Best Match)."],
+    ["magic_wand_tracing", "magic_wand_tracing", "text", "4.3", "Magic Wand: 'Tracing method' (ví dụ Deviation from Curves (≥40 mm))."],
+    ["element_duplicate_id_count", "dup_ids", "count", "4.25", "Số phần tử có ID trùng với phần tử khác."],
+    ["element_undefined_structural_function_count", "undef_structural", "count", "4.26", "Số phần tử có Structural Function là Undefined."],
+    ["element_undefined_position_count", "undef_position", "count", "4.27", "Số phần tử có Position là Undefined."],
+    ["element_unclassified_count", "undef_classification", "count", "4.28", "Số phần tử chưa có Classification (Unclassified)."],
+
+    ["dimension_preference_in_use_count", "dimprefs_used", "count", "5.3", "Số Dimension Preference đang gán cho view."],
+    ["dimension_preference_count", "dimprefs_total", "count", "5.3", "Tổng số Dimension Preference."],
+    ["legacy_preference_enabled_count", "legacy_enabled", "count", "5.8", "Số Legacy Preference đang bật."],
+    ["stair_rule_hidden_count", "hidden_rules", "count", "5.9", "Số Stair Rule đang ẩn."],
+    ["stair_rule_count", "stair_rules_total", "count", "5.9", "Tổng số Stair Rule."],
+
+    ["viewpoint_story_count", "vp_stories", "count", "6.2", "Số story trong Project Map."],
+    ["viewpoint_section_count", "vp_sections", "count", "6.2", "Số Section."],
+    ["viewpoint_elevation_count", "vp_elevations", "count", "6.2", "Số Elevation."],
+    ["viewpoint_interior_elevation_count", "vp_interior", "count", "6.2", "Số Interior Elevation."],
+    ["viewpoint_worksheet_count", "vp_worksheets", "count", "6.2", "Số Worksheet."],
+    ["viewpoint_detail_count", "vp_details", "count", "6.2", "Số Detail."],
+    ["viewpoint_camera_count", "vp_cameras", "count", "6.2", "Số Camera."],
+    ["viewpoint_schedule_count", "vp_schedules", "count", "6.2", "Số Schedule."],
+    ["viewpoint_project_index_count", "vp_indexes", "count", "6.2", "Số Project Index."],
+    ["viewpoint_3d_document_count", "vp_3d", "count", "6.2", "Số 3D Document."],
+    ["viewpoint_list_count", "vp_lists", "count", "6.2", "Số List."],
+    ["viewpoint_independent_count", "vp_independent", "count", "6.3", "Số viewpoint độc lập hoặc linked (không rebuild từ model)."],
+    ["viewpoint_derived_count", "vp_derived", "count", "6.3", "Số viewpoint sinh từ model (Auto-rebuild hoặc Manual-rebuild)."],
+    ["viewpoint_shadow_count", "vp_shadow", "count", "6.14", "Số Section, Elevation, Interior Elevation và 3D Document bật Shadow Casting."],
+    ["viewpoint_shadow_candidate_count", "vp_shadow_total", "count", "6.14", "Tổng số Section, Elevation, Interior Elevation và 3D Document."],
+    ["view_in_clone_folder_count", "views_clone", "count", "6.16", "Số view nằm trong clone folder."],
+    ["view_custom_settings_count", "views_custom", "count", "6.17", "Số view có View Settings dạng CUSTOM hoặc MISSING."],
+    ["drawing_stored_count", "drawings_stored", "count", "6.24", "Số drawing bật 'Store Drawing in the Project File'."],
+    ["drawing_count", "drawings_total", "count", "6.24", "Tổng số drawing đặt trên layout."],
+    ["master_layout_unused_count", "master_unused", "count", "6.25", "Số Master Layout không layout nào dùng."],
+    ["master_layout_count", "master_total", "count", "6.25", "Tổng số Master Layout."],
+    ["master_layout_linked_drawing_count", "linked_drawings_master", "count", "6.26", "Số drawing dạng linked đặt trên Master Layout."],
+    ["publisher_item_shortcut_count", "shortcut_items", "count", "6.29", "Số item của Publisher Set nằm trong thư mục shortcut."],
+    ["publisher_item_count", "publisher_items", "count", "6.29", "Tổng số item của các Publisher Set."],
+
+    ["drawing_missing_internal_count", "missing_internal_drawings", "count", "7.1", "Số drawing nội bộ (nguồn là view trong project) mà view nguồn không còn."],
+    ["drawing_external_count", "external_drawings", "count", "7.2", "Số drawing có nguồn là file ngoài (DWG, PDF, ảnh...)."],
+    ["hotlink_pln_count", "hl_pln", "count", "7.3", "Số hotlink từ file PLN."],
+    ["hotlink_mod_count", "hl_mod", "count", "7.3", "Số hotlink từ file MOD."],
+    ["hotlink_teamwork_count", "hl_teamwork", "count", "7.3", "Số hotlink từ project Teamwork."],
+    ["hotlink_ifc_count", "hl_ifc", "count", "7.3", "Số hotlink từ file IFC."],
+    ["hotlink_3dm_count", "hl_3dm", "count", "7.3", "Số hotlink từ file 3DM."],
+    ["xref_bound_count", "xref_bound", "count", "7.4", "Số XREF đã bị bound (explode)."],
+    ["xref_attached_count", "xref_attached", "count", "7.4", "Số XREF đang attach."]
+  ];
+
+  /* Checks judged by the share of checked items that have a problem (0 to 100). */
+  var ISSUE = [
+    ["3.2", "layer_naming_issue_pct", "Layer: tên sai quy ước hoặc thiếu nhất quán (kể cả layer ngoài)."],
+    ["3.3", "layer_intersection_group_issue_pct", "Layer: chưa gán Intersection Group Number đúng."],
+    ["3.4", "layer_extension_issue_pct", "Layer: chưa có Layer Extension."],
+    ["3.7", "layer_combination_naming_issue_pct", "Layer Combination: tên hoặc thiết lập layer sai."],
+    ["3.8", "pen_set_issue_pct", "Pens và Pen Sets: thiếu mô tả hoặc pen set không dùng."],
+    ["3.9", "line_type_naming_issue_pct", "Line Type: tên sai quy ước, bị ghi đè mặc định hoặc trùng."],
+    ["3.10", "fill_type_naming_issue_pct", "Fill Type: tên sai quy ước, bị ghi đè mặc định hoặc trùng."],
+    ["3.11", "composite_naming_issue_pct", "Composite Structure: tên sai quy ước hoặc trùng."],
+    ["3.12", "complex_profile_naming_issue_pct", "Complex Profile: tên sai quy ước hoặc trùng."],
+    ["3.13", "surface_naming_issue_pct", "Surface: tên sai quy ước, bị ghi đè mặc định hoặc trùng."],
+    ["3.14", "building_material_naming_issue_pct", "Building Material: tên sai quy ước hoặc trùng."],
+    ["3.15", "zone_category_naming_issue_pct", "Zone Category: tên sai quy ước hoặc trùng."],
+    ["3.16", "city_naming_issue_pct", "City: tên sai quy ước hoặc trùng."],
+    ["3.17", "operation_profile_naming_issue_pct", "Operation Profile: tên sai quy ước hoặc trùng."],
+    ["4.1", "autogrouping_issue_pct", "Autogrouping: 100 nếu đang bật, 0 nếu tắt."],
+    ["4.2", "snap_point_issue_pct", "Snap Point: 100 nếu thiết lập nặng (không phải Half và Along Entire Element), 0 nếu nhẹ."],
+    ["4.4", "onscreen_view_option_issue_pct", "On-screen View Options làm chậm 2D (Vectorial Hatching, Show Trimming Bodies, Hidden Morph Geometry): tỷ lệ tùy chọn đang bật."],
+    ["4.5", "model_view_option_naming_issue_pct", "Model View Option combination: tên sai quy ước, ghi đè mặc định hoặc trùng."],
+    ["4.10", "graphic_override_combination_naming_issue_pct", "Graphic Override combination: tên sai quy ước, ghi đè mặc định hoặc trùng."],
+    ["4.12", "graphic_override_rule_issue_pct", "Graphic Override Rule: thiếu pen hoặc surface riêng, hoặc tên sai."],
+    ["4.13", "renovation_filter_naming_issue_pct", "Renovation Filter: tên sai quy ước, ghi đè mặc định hoặc trùng."],
+    ["4.15", "style_3d_naming_issue_pct", "3D Style: tên sai quy ước, ghi đè mặc định hoặc trùng."],
+    ["4.17", "renovation_status_issue_pct", "Phần tử có Renovation Status sai."],
+    ["4.18", "favorite_issue_pct", "Favorite: thiết lập sai, tên sai hoặc cấu trúc thư mục kém."],
+    ["4.20", "element_transfer_setting_issue_pct", "Element Transfer Setting: tên sai hoặc thiết lập sai."],
+    ["4.22", "project_notes_issue_pct", "Project Notes: để trống (null) nếu không có ghi chú nào."],
+    ["4.23", "project_preview_issue_pct", "Project Preview: 100 nếu chưa đặt ảnh phù hợp, 0 nếu đã đặt."],
+    ["4.24", "architect_credits_issue_pct", "Architect Credits trong BIMx: logo, URL (https://) hoặc text thiếu hay sai."],
+    ["4.29", "property_naming_issue_pct", "Archicad Property: tên hoặc thiết lập sai."],
+    ["4.30", "find_select_criteria_issue_pct", "Find & Select criteria set: để trống (null) nếu không lưu bộ nào."],
+    ["5.1", "working_units_issue_pct", "Working Units: 100 nếu lệch mặc định template hoặc chuẩn địa phương."],
+    ["5.2", "dimension_preference_issue_pct", "Dimension Preferences: lệch mặc định template hoặc chuẩn địa phương."],
+    ["5.4", "calculation_units_issue_pct", "Calculation Units & Rules: lệch mặc định không có lý do."],
+    ["5.5", "conditional_rules_issue_pct", "Conditional Rules: sai với schedule có conditional parameter."],
+    ["5.6", "zone_preference_issue_pct", "Zone Preferences: thiết lập sai."],
+    ["5.7", "reference_levels_issue_pct", "Reference Levels: chưa dùng Sea Level hoặc Reference Level."],
+    ["5.10", "project_location_issue_pct", "Project Location: không khớp Project Info hoặc thiếu Project North, Altitude."],
+    ["6.1", "project_map_issue_pct", "Project Map: sai tên, chính tả hoặc không xếp thư mục."],
+    ["6.4", "story_issue_pct", "Story: tên sai quy ước, cao độ bằng 0 hoặc vô lý."],
+    ["6.5", "section_setting_issue_pct", "Section: setting sai, thiếu hoặc custom."],
+    ["6.6", "elevation_setting_issue_pct", "Elevation: setting sai, thiếu hoặc custom."],
+    ["6.7", "interior_elevation_setting_issue_pct", "Interior Elevation: setting sai, thiếu hoặc custom."],
+    ["6.8", "worksheet_setting_issue_pct", "Worksheet: setting sai, thiếu hoặc custom."],
+    ["6.9", "detail_setting_issue_pct", "Detail: setting sai, thiếu hoặc custom."],
+    ["6.10", "document_3d_setting_issue_pct", "3D Document: setting sai, thiếu hoặc custom."],
+    ["6.11", "camera_path_issue_pct", "Camera và Path: setting lỗi hoặc thừa không dùng."],
+    ["6.12", "schedule_scheme_issue_pct", "Schedule Scheme: không có tiêu chí loại phần tử, tiêu chí hay sắp xếp sai, thiếu tổng, hoặc cột MISSING."],
+    ["6.13", "project_index_issue_pct", "Project Index: setting sai (null nếu project không có index)."],
+    ["6.15", "view_map_issue_pct", "View Map: cấu trúc không khớp Layout Book hoặc sai chính tả."],
+    ["6.18", "layout_book_issue_pct", "Layout Book: subset, đánh số hoặc chính tả sai."],
+    ["6.20", "layout_id_issue_pct", "Layout: ID không lấy từ subset/Layout Book."],
+    ["6.21", "drawing_name_issue_pct", "Drawing: tên không lấy theo tên view nguồn."],
+    ["6.22", "drawing_id_issue_pct", "Drawing: ID không lấy từ layout."],
+    ["6.23", "drawing_setting_issue_pct", "Drawing: setting không nhất quán hoặc lệch chuẩn."],
+    ["6.27", "autotext_issue_pct", "Master Layout: không dùng Autotext, chữ gõ tay."],
+    ["6.28", "publisher_set_issue_pct", "Publisher Set: sai tên, chính tả hoặc cấu trúc kém."],
+    ["6.30", "architect_credits_bimx_issue_pct", "BIMx Publisher Set: không tick 'Use Architect Credits in BIMx Hyper-models'."],
+    ["6.31", "info_set_issue_pct", "BIMx Publisher Set: Info Set để mặc định Classification and Properties thay vì schedule."],
+    ["7.5", "ifc_translator_issue_pct", "Publisher Set: item IFC dùng Generic Translator hoặc không có Translator."]
+  ];
+
+  /* How each scored check turns a value into Good, Fair or Poor.
+     good / fair / poor are anchor values, weight is the importance (BIM4BIM style).
+     If good is below poor, a lower value is better; otherwise a higher value is better.
+     At or inside Good the score is 100%, at Fair 50%, at or beyond Poor 0%, straight lines between.
+     value: a field, or a derived quantity worked out by the page. */
+  var S = {
+    "1.1": ["embedded_library_items_count", 0, 5, 10, 3, { field: "embedded_items" }],
+    "1.2": ["ifc_library_folder_share_pct", 0, 34, 90, 3, { fn: "ifcFolderPct" }],
+    "1.3": ["library_images_over_1mb_count", 5, 20, 50, 3, { field: "images_over_1mb" }],
+    "1.4": ["libraries_count", 3, 5, 6, 2, { field: "linked_libs" }],
+    "1.5": ["library_point_cloud_size_mb", 200, 500, 1000, 3, { field: "point_cloud_mb" }],
+    "1.6": ["library_missing_parts_count", 0, 10, 50, 3, { field: "missing_parts" }],
+    "1.7": ["library_duplicate_parts_count", 0, 5, 20, 1, { field: "duplicate_parts" }],
+    "2.1": ["elements_seo_count", 10, 30, 80, 7, { field: "seo_ops" }],
+    "2.2": ["open_tab_count", 7, 20, 40, 1, { field: "open_tabs" }],
+    "2.3": ["trace_reference_active_count", 8, 15, 30, 3, { field: "trace_active" }],
+    "2.4": ["trace_reference_view_count", 10, 30, 80, 3, { field: "trace_views" }],
+    "2.5": ["element_count", 100000, 300000, 1000000, 3, { field: "elements_total" }],
+    "2.6": ["element_3d_share_pct", 80, 50, 25, 1, { fn: "share3d" }],
+    "2.7": ["group_count", 100, 300, 1000, 3, { field: "groups" }],
+    "2.8": ["style_3d_sun_shadow_share_pct", 10, 50, 80, 3, { pct: ["styles_sun", "styles_total"] }],
+    "2.9": ["session_report_error_count", 0, 10, 30, 1, { field: "session_errors" }],
+    "2.10": ["polygon_count", 10000, 200000, 600000, 7, { field: "polygons" }],
+    "2.11": ["element_duplicate_count", 10, 50, 200, 3, { field: "duplicate_elements" }],
+    "2.12": ["model_origin_distance_m", 1000, 10000, 100000, 3, { field: "origin_distance_m" }],
+    "2.13": ["wall_inaccurate_connection_count", 0, 10, 50, 3, { field: "inaccurate_walls" }],
+    "2.14": ["linework_affected_total_count", 10, 100, 1000, 3, { field: "lw_total" }],
+    "2.15": ["fill_consolidated_count", 10, 50, 200, 3, { diff: ["fills_before", "fills_after"] }],
+    "3.1": ["attributes_in_use_share_pct", 50, 30, 15, 3, { pct: ["attrs_in_use", "attrs_total"] }],
+    "3.5": ["attributes_layers_count", 50, 70, 100, 7, { field: "layers" }],
+    "3.6": ["plan_elements_on_archicad_layer_count", 0, 0, 1, 4, { field: "archicad_layer_elements" }],
+    "4.3": ["magic_wand_issue_pct", 0, 50, 100, 3, { fn: "magicWand" }],
+    "4.6": ["model_view_option_in_use_share_pct", 80, 50, 15, 3, { pct: ["mvo_used", "mvo_total"] }],
+    "4.7": ["model_view_option_curtain_full_share_pct", 25, 75, 95, 1, { pct: ["mvo_curtain", "mvo_total"] }],
+    "4.8": ["model_view_option_stairs_full_share_pct", 25, 75, 95, 1, { pct: ["mvo_stairs", "mvo_total"] }],
+    "4.9": ["model_view_option_objects_full_share_pct", 25, 75, 95, 1, { pct: ["mvo_objects", "mvo_total"] }],
+    "4.11": ["graphic_override_combination_in_use_share_pct", 80, 50, 15, 3, { pct: ["go_used", "go_total"] }],
+    "4.14": ["renovation_filter_in_use_share_pct", 80, 50, 15, 3, { pct: ["renov_used", "renov_total"] }],
+    "4.16": ["style_3d_in_use_share_pct", 80, 50, 15, 3, { pct: ["styles_used", "styles_total"] }],
+    "4.19": ["favorite_greyed_count", 0, 5, 20, 1, { field: "greyed_favorites" }],
+    "4.21": ["project_info_item_filled_count", 10, 5, 1, 1, { field: "project_info_items" }],
+    "4.25": ["element_duplicate_id_count", 0, 100, 5000, 3, { field: "dup_ids" }],
+    "4.26": ["element_undefined_structural_function_count", 0, 100, 10000, 3, { field: "undef_structural" }],
+    "4.27": ["element_undefined_position_count", 0, 100, 10000, 3, { field: "undef_position" }],
+    "4.28": ["element_unclassified_count", 0, 50, 1000, 5, { field: "undef_classification" }],
+    "5.3": ["dimension_preference_in_use_share_pct", 80, 50, 15, 5, { pct: ["dimprefs_used", "dimprefs_total"] }],
+    "5.8": ["legacy_preference_enabled_count", 0, 2, 5, 3, { field: "legacy_enabled" }],
+    "5.9": ["stair_rule_hidden_share_pct", 50, 25, 0, 1, { pct: ["hidden_rules", "stair_rules_total"] }],
+    "6.2": ["viewpoint_total_count", 150, 400, 1000, 5, { fn: "vpTotal" }],
+    "6.3": ["viewpoint_independent_share_pct", 10, 30, 60, 5, { fn: "independentPct" }],
+    "6.14": ["viewpoint_shadow_share_pct", 25, 75, 95, 5, { pct: ["vp_shadow", "vp_shadow_total"] }],
+    "6.16": ["view_in_clone_folder_share_pct", 50, 20, 5, 3, { pct: ["views_clone", "views_total"] }],
+    "6.17": ["view_custom_settings_count", 0, 5, 20, 1, { field: "views_custom" }],
+    "6.19": ["layout_count", 150, 300, 600, 5, { field: "layouts_count" }],
+    "6.24": ["drawing_stored_share_pct", 25, 75, 95, 3, { pct: ["drawings_stored", "drawings_total"] }],
+    "6.25": ["master_layout_unused_share_pct", 25, 75, 95, 3, { pct: ["master_unused", "master_total"] }],
+    "6.26": ["master_layout_linked_drawing_count", 0, 5, 20, 5, { field: "linked_drawings_master" }],
+    "6.29": ["publisher_item_shortcut_share_pct", 90, 50, 20, 5, { pct: ["shortcut_items", "publisher_items"] }],
+    "7.1": ["drawing_missing_internal_count", 0, 5, 20, 5, { field: "missing_internal_drawings" }],
+    "7.2": ["drawing_external_count", 0, 5, 20, 5, { field: "external_drawings" }],
+    "7.3": ["hotlink_total_count", 10, 30, 60, 5, { fn: "hotlinkTotal" }],
+    "7.4": ["xref_bound_count", 0, 3, 10, 1, { field: "xref_bound" }]
+  };
+
+  /* Weight of each issue-percentage check. Thresholds for these come from the page settings. */
+  var ISSUE_WEIGHT = {
+    "3.2": 1, "3.3": 5, "3.4": 1, "3.7": 1, "3.8": 1, "3.9": 1, "3.10": 1, "3.11": 1, "3.12": 1, "3.13": 1, "3.14": 1,
+    "3.15": 1, "3.16": 1, "3.17": 1, "4.1": 1, "4.2": 1, "4.4": 1, "4.5": 1, "4.10": 1, "4.12": 1, "4.13": 1, "4.15": 1,
+    "4.17": 3, "4.18": 1, "4.20": 1, "4.22": 1, "4.23": 1, "4.24": 1, "4.29": 3, "4.30": 1,
+    "5.1": 3, "5.2": 5, "5.4": 1, "5.5": 1, "5.6": 1, "5.7": 1, "5.10": 3,
+    "6.1": 3, "6.4": 3, "6.5": 1, "6.6": 1, "6.7": 1, "6.8": 1, "6.9": 1, "6.10": 1, "6.11": 1, "6.12": 5, "6.13": 1,
+    "6.15": 5, "6.18": 5, "6.20": 3, "6.21": 1, "6.22": 3, "6.23": 3, "6.27": 5, "6.28": 5, "6.30": 3, "6.31": 1, "7.5": 5
+  };
+
+  var PROJECT = [
+    ["name", "project", "Tên project"],
+    ["file_name", "file_name", "Tên file .pln"],
+    ["archicad_version", "archicad_version", "Phiên bản Archicad của project"],
+    ["stage", "project_stage", "Giai đoạn dự án"],
+    ["size_mb", "size_mb", "Dung lượng file (MB)"],
+    ["addons", "addons", "Add-on bên thứ ba đang dùng"]
+  ];
+
+  var AUDIT = [
+    ["date", "audit_date", "Ngày audit"],
+    ["version", "audit_version", "Phiên bản công cụ audit"],
+    ["auditor", "auditor", "Người thực hiện"],
+    ["provided_by", "audited_by", "Đơn vị cung cấp audit"],
+    ["archicad_version", "audit_archicad", "Phiên bản Archicad dùng để audit"],
+    ["language", "report_language", "Ngôn ngữ báo cáo"]
+  ];
+
+  window.ARCHICAD_METRICS = {
+    format: "archicad-model-health",
+    version: 2,
+    metrics: M.map(function (m) {
+      return { key: m[0], fields: [].concat(m[1]), type: m[2], check: m[3], how: m[4] };
+    }),
+    issue: ISSUE.map(function (m) {
+      return { check: m[0], key: m[1], field: "issue_" + m[0].replace(".", "_"), how: m[2], weight: ISSUE_WEIGHT[m[0]] };
+    }),
+    scoring: Object.keys(S).reduce(function (acc, id) {
+      var s = S[id];
+      acc[id] = { metric: s[0], good: s[1], fair: s[2], poor: s[3], weight: s[4], value: s[5] };
+      return acc;
+    }, {}),
+    project: PROJECT,
+    audit: AUDIT,
+    /* Older spellings accepted on input. */
+    aliases: { embeded_library_items_count: "embedded_library_items_count" }
+  };
+})();

@@ -100,16 +100,18 @@
                         <div class="ai-settings-body">
                             <p class="ah-note">
                                 Checks on naming, structure and settings are scored by the share of checked items that
-                                have a problem. A lower share scores higher. Changes apply at once and are kept in this
-                                browser.
+                                have a problem (metrics ending in <code>_issue_pct</code>). Each metric has its own Good,
+                                Fair and Poor anchors and a weight, which a file can override in its
+                                <code>thresholds</code> object. The values below are the defaults for the issue
+                                percentages. Changes apply at once and are kept in this browser.
                             </p>
                             <div class="ai-steps">
-                                <label class="ah-field"><span>3 points up to (%)</span><input id="ai-t3" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
-                                <label class="ah-field"><span>2 points up to (%)</span><input id="ai-t2" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
-                                <label class="ah-field"><span>1 point up to (%)</span><input id="ai-t1" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
+                                <label class="ah-field"><span>Good up to (%)</span><input id="ai-t3" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
+                                <label class="ah-field"><span>Fair at (%)</span><input id="ai-t2" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
+                                <label class="ah-field"><span>Poor from (%)</span><input id="ai-t1" type="number" min="0" max="100" step="1" inputmode="numeric" /></label>
                                 <button type="button" class="ai-tool" id="ai-treset">Reset</button>
                             </div>
-                            <p class="ah-note">Above the last value a check scores 0.</p>
+                            <p class="ah-note">At or above the Poor value a check scores 0%, at Fair 50% and at Good 100%, with straight lines in between.</p>
                         </div>
                     </details>
                     <div class="ai-cards" id="ai-cards"></div>
@@ -122,17 +124,17 @@
                     </div>
                     <div class="ai-body" id="ai-body"></div>
                     <div class="ai-legend" aria-label="Status colours">
-                        <span><i class="ai-sw ai-sw-good"></i>Good (3/3)</span>
-                        <span><i class="ai-sw ai-sw-moderate"></i>Moderate (2/3)</span>
-                        <span><i class="ai-sw ai-sw-critical"></i>Critical (0 or 1/3)</span>
+                        <span><i class="ai-sw ai-sw-good"></i>Good</span>
+                        <span><i class="ai-sw ai-sw-moderate"></i>Fair</span>
+                        <span><i class="ai-sw ai-sw-critical"></i>Poor</span>
                         <span><i class="ai-sw ai-sw-na"></i>Not scored</span>
                     </div>
                     <p class="ah-note">
                         Pick a project here or select its name in the table above. Select a section card to jump to
-                        it, a status to show only those checks, or any row to see its figures and advice. Each check
-                        scores 0 to 3 points on up to three axes (P Performance, S Structure, B BIM Essentials), weighted
-                        by its Impact Multiplier. Score steps are starting values and can be changed in
-                        <code>assets/js/archicad-health.js</code>.
+                        it, a status to show only those checks, or any row to see its figures and advice. Each check has one metric with Good, Fair and Poor anchors and a weight. It scores 100% at
+                        Good, 50% at Fair and 0% at Poor, and a section scores the weighted mean of its checks.
+                        Thresholds are starting values and can be changed per file in the <code>thresholds</code>
+                        object of the JSON.
                     </p>
                 </div>
 
@@ -153,6 +155,7 @@
     <script src="assets/js/data.js"></script>
     <script src="assets/js/header.js"></script>
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/archicad-metrics.js"></script>
     <script src="assets/js/archicad-health.js"></script>
 </body>
 </html>

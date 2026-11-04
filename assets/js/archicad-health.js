@@ -1,6 +1,8 @@
 (function archicadModelHealth() {
   "use strict";
 
+  var MET = window.ARCHICAD_METRICS || { format: "archicad-model-health", version: 2, metrics: [], issue: [], scoring: {}, project: [], audit: [], aliases: {} };
+
   /* ---------- Heat-map columns ---------- */
 
   var COLUMNS = [
@@ -1585,6 +1587,9 @@
     ALIASES[a.key] = a.key;
     ALIASES[normalizeKey(a.label)] = a.key;
   });
+  MET.metrics.forEach(function (m) { ALIASES[m.key] = ALIASES[m.key] || (Array.isArray(m.fields) ? m.fields[0] : m.fields); });
+  MET.issue.forEach(function (m) { ALIASES[m.key] = m.field; });
+  Object.keys(MET.aliases).forEach(function (k) { ALIASES[k] = ALIASES[MET.aliases[k]] || MET.aliases[k]; });
   ALIASES.file_size = "size_mb";
   ALIASES.file_size_mb = "size_mb";
   ALIASES.dwg = "dwg_drawings";
@@ -1676,6 +1681,75 @@
     });
   }
 
+  /* ---------- Format version 2 ---------- */
+
+  var V2_FORMAT = "archicad-model-health";
+  var V2_FIELD = {};
+  MET.metrics.forEach(function (m) { V2_FIELD[m.key] = [].concat(m.fields); });
+  MET.issue.forEach(function (m) { V2_FIELD[m.key] = [m.field]; });
+  Object.keys(MET.aliases).forEach(function (k) { V2_FIELD[k] = V2_FIELD[MET.aliases[k]]; });
+
+  function isV2Item(o) {
+    return !!o && typeof o === "object" && !Array.isArray(o) &&
+      (o.format === V2_FORMAT || (o.metrics && typeof o.metrics === "object" && !Array.isArray(o.metrics)));
+  }
+
+  function isV2(raw) {
+    if (Array.isArray(raw)) return raw.length > 0 && raw.every(isV2Item);
+    return isV2Item(raw) && (raw.format === V2_FORMAT ? !Array.isArray(raw.projects) || true : true);
+  }
+
+  /* One v2 file holds one project, or a list of projects, or { format, projects: [...] }. */
+  function v2Projects(raw) {
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.projects)) return raw.projects;
+    return [raw];
+  }
+
+  function v2Flat(p, index) {
+    var flat = {};
+    var proj = p.project || {};
+    var audit = p.audit || {};
+    flat.project = toText(proj.name || proj.file_name || p.name) || "Project " + (index + 1);
+    MET.project.forEach(function (d) { if (d[0] !== "name" && proj[d[0]] != null) flat[d[1]] = proj[d[0]]; });
+    MET.audit.forEach(function (d) { if (audit[d[0]] != null) flat[d[1]] = audit[d[0]]; });
+    var m = p.metrics || {};
+    Object.keys(m).forEach(function (k) {
+      (V2_FIELD[k] || []).forEach(function (f) { if (m[k] != null) flat[f] = m[k]; });
+    });
+    return flat;
+  }
+
+  function v2Details(p, name) {
+    var lists = p.lists;
+    if (!lists || typeof lists !== "object") return null;
+    var out = { project: name };
+    var any = false;
+    Object.keys(lists).forEach(function (id) {
+      if (/^\d+\.\d+$/.test(id) && Array.isArray(lists[id])) { out[id + "_list"] = lists[id]; any = true; }
+    });
+    return any ? out : null;
+  }
+
+  function blankV2() {
+    var metrics = {};
+    MET.metrics.forEach(function (m) { metrics[m.key] = null; });
+    MET.issue.forEach(function (m) { metrics[m.key] = null; });
+    var thr = {};
+    Object.keys(MET.scoring).forEach(function (id) {
+      var d = MET.scoring[id];
+      thr[d.metric] = { good: d.good, fair: d.fair, poor: d.poor, weight: d.weight };
+    });
+    MET.issue.forEach(function (m) {
+      thr[m.key] = { good: ISSUE_DEFAULT[0], fair: ISSUE_DEFAULT[1], poor: ISSUE_DEFAULT[2], weight: m.weight };
+    });
+    var project = {};
+    MET.project.forEach(function (d) { project[d[0]] = null; });
+    var audit = {};
+    MET.audit.forEach(function (d) { audit[d[0]] = null; });
+    return { format: V2_FORMAT, version: 2, project: project, audit: audit, metrics: metrics, lists: {}, notes: {}, thresholds: thr };
+  }
+
   /* Takes one or more files: summary files (JSON or CSV) and details files, in any order. */
   function loadFiles(files) {
     var list = Array.prototype.slice.call(files);
@@ -1692,6 +1766,18 @@
       var good = items.filter(function (it) { return !it.error; });
       var details = good.filter(function (it) { return isDetailsFile(it.raw); });
       var summaries = good.filter(function (it) { return !isDetailsFile(it.raw); });
+      var v2Extra = [];
+      summaries.forEach(function (it) {
+        if (!isV2(it.raw)) return;
+        var projects = v2Projects(it.raw);
+        var flats = projects.map(v2Flat);
+        it.raw = flats;
+        it.v2 = projects;
+        projects.forEach(function (p, i) {
+          var d = v2Details(p, flats[i].project);
+          if (d) v2Extra.push({ file: it.file, raw: d });
+        });
+      });
       var names = [];
       var failed = problems.map(function (it) { return "Could not read " + it.file.name + ": " + it.error; });
 
@@ -1700,6 +1786,7 @@
           var raw = it.raw;
           if (raw && !Array.isArray(raw)) raw = raw.rows || raw.data || raw.projects || raw.results;
           state.rows = normalizeRows(raw);
+          if (it.v2) it.v2.forEach(function (p, i) { if (p.thresholds && state.rows[i]) state.rows[i]._thr = p.thresholds; });
           state.sourceLabel = "";
           names.push(it.file.name);
         } catch (err) {
@@ -1708,6 +1795,7 @@
       });
       if (summaries.length && names.length) state.selected = null;
 
+      v2Extra.forEach(function (it) { addDetails(it.raw, it.file.name); });
       details.forEach(function (it) {
         addDetails(it.raw, it.file.name, true);
         names.push(it.file.name);
@@ -1885,10 +1973,94 @@
     renderAudit();
   }
 
-  /* Points 3 = good, 2 = moderate, 0 or 1 = critical, null = not scored. */
-  function levelOf(points) {
-    if (points == null) return "na";
-    return points >= 3 ? "good" : points >= 2 ? "moderate" : "critical";
+  /* ---------- Scoring (format version 2) ----------
+     Every scored check has one metric with anchor values Good, Fair and Poor and a weight.
+     If Good is below Poor a lower value is better, otherwise a higher value is better.
+     At or inside Good the score is 100%, at Fair 50%, at or beyond Poor 0%, with straight
+     lines in between. A section scores the weighted mean of its checks. */
+
+  var ISSUE_BY_CHECK = {};
+  MET.issue.forEach(function (m) { ISSUE_BY_CHECK[m.check] = m; });
+
+  function defFor(check, row) {
+    var def = null;
+    var sc = MET.scoring[check.id];
+    if (sc) {
+      def = { metric: sc.metric, good: sc.good, fair: sc.fair, poor: sc.poor, weight: sc.weight, value: sc.value };
+    } else if (ISSUE_BY_CHECK[check.id]) {
+      var m = ISSUE_BY_CHECK[check.id];
+      def = { metric: m.key, good: ISSUE_STEPS[0], fair: ISSUE_STEPS[1], poor: ISSUE_STEPS[2], weight: m.weight, value: { issue: check.id } };
+    }
+    var o = def && row && row._thr && row._thr[def.metric];
+    if (o) {
+      ["good", "fair", "poor", "weight"].forEach(function (k) { if (typeof o[k] === "number" && isFinite(o[k])) def[k] = o[k]; });
+    }
+    return def;
+  }
+
+  function valueOfDef(def, row) {
+    var v = def.value;
+    if (v.field) return row[v.field] == null ? null : row[v.field];
+    if (v.pct) return ratioPct(row[v.pct[0]], row[v.pct[1]]);
+    if (v.diff) return row[v.diff[0]] == null || row[v.diff[1]] == null ? null : row[v.diff[0]] - row[v.diff[1]];
+    if (v.issue) return issueValue(row, v.issue);
+    switch (v.fn) {
+      case "ifcFolderPct":
+        if (row.ifc_lcf == null || row.ifc_folders == null) return null;
+        return row.ifc_lcf + row.ifc_folders ? Math.round((row.ifc_folders / (row.ifc_lcf + row.ifc_folders)) * 100) : 0;
+      case "share3d": return share3d(row);
+      case "vpTotal": return vpTotal(row);
+      case "independentPct": return independentPct(row);
+      case "hotlinkTotal":
+        var t = hotlinkTotal(row);
+        return t == null || t === 0 ? null : t;
+      case "magicWand":
+        if (row.magic_wand_preference == null || row.magic_wand_tracing == null) return null;
+        var best = /best match/i.test(row.magic_wand_preference);
+        var coarse = /≥40|>=\s*40/.test(row.magic_wand_tracing);
+        return best && coarse ? 0 : best ? 50 : 100;
+    }
+    return null;
+  }
+
+  function rateValue(v, d) {
+    if (v == null) return { score: null, level: "na" };
+    var lower = d.good <= d.poor;
+    var level;
+    var score;
+    if (lower) {
+      if (v <= d.good) { level = "good"; score = 1; }
+      else if (v >= d.poor) { level = "critical"; score = 0; }
+      else {
+        level = "moderate";
+        score = v <= d.fair ? 1 - 0.5 * (v - d.good) / (d.fair - d.good) : 0.5 * (d.poor - v) / (d.poor - d.fair);
+      }
+    } else {
+      if (v >= d.good) { level = "good"; score = 1; }
+      else if (v <= d.poor) { level = "critical"; score = 0; }
+      else {
+        level = "moderate";
+        score = v >= d.fair ? 1 - 0.5 * (d.good - v) / (d.good - d.fair) : 0.5 * (v - d.poor) / (d.fair - d.poor);
+      }
+    }
+    return { score: score, level: level };
+  }
+
+  function scoreCheck(check, row) {
+    var def = defFor(check, row);
+    if (!def) return { check: check, def: null, value: null, score: null, level: "na" };
+    var value = valueOfDef(def, row);
+    var rated = rateValue(value, def);
+    return { check: check, def: def, value: value, score: rated.score, level: rated.level };
+  }
+
+  function thresholdText(def) {
+    var u = /_pct$/.test(def.metric) ? "%" : "";
+    var lower = def.good <= def.poor;
+    var n = function (x) { return fmt.format(x) + u; };
+    return lower
+      ? "Good up to " + n(def.good) + " · Fair " + n(def.fair) + " · Poor from " + n(def.poor)
+      : "Good from " + n(def.good) + " · Fair " + n(def.fair) + " · Poor down to " + n(def.poor);
   }
 
   function make(tag, className, text) {
@@ -1899,27 +2071,21 @@
   }
 
   function scoreSection(section, row) {
-    var totals = { p: [0, 0], s: [0, 0], b: [0, 0] };
+    var earned = 0;
+    var possible = 0;
     var results = section.checks.map(function (check) {
-      var points = check.score(row);
-      if (points != null) {
-        check.axes.forEach(function (a) {
-          totals[a][0] += points * check.mult;
-          totals[a][1] += 3 * check.mult;
-        });
+      var r = scoreCheck(check, row);
+      if (r.score != null) {
+        earned += r.score * r.def.weight;
+        possible += r.def.weight;
       }
-      return { check: check, points: points };
+      return r;
     });
-    var earned = totals.p[0] + totals.s[0] + totals.b[0];
-    var possible = totals.p[1] + totals.s[1] + totals.b[1];
-    var pct = function (pair) { return pair[1] ? Math.round((pair[0] / pair[1]) * 100) : null; };
     return {
       results: results,
-      totals: totals,
-      overall: possible ? Math.round((earned / possible) * 100) : null,
-      p: pct(totals.p),
-      s: pct(totals.s),
-      b: pct(totals.b)
+      earned: earned,
+      possible: possible,
+      overall: possible ? Math.round((earned / possible) * 100) : null
     };
   }
 
@@ -1937,7 +2103,7 @@
     return box;
   }
 
-  var LEVEL_LABEL = { critical: "Critical", moderate: "Moderate", good: "Good", na: "Not scored" };
+  var LEVEL_LABEL = { critical: "Poor", moderate: "Fair", good: "Good", na: "Not scored" };
   var FILTERS = ["all", "critical", "moderate", "good", "na"];
 
   /* Percentage colour for a section score. */
@@ -2004,15 +2170,9 @@
     return d;
   }
 
-  function chipsFor(check, points) {
-    var wrap = make("span", "ai-chips");
-    AXES.forEach(function (axis) {
-      if (check.axes.indexOf(axis.key) === -1) return;
-      var chip = make("span", "ai-chip ai-chip-" + levelOf(points), axis.key.toUpperCase() + " " + (points == null ? "N/A" : points + "/3"));
-      chip.title = axis.label;
-      wrap.appendChild(chip);
-    });
-    return wrap;
+  function ratingChip(level) {
+    var chip = make("span", "ai-chip ai-chip-" + level, level === "na" ? "N/A" : LEVEL_LABEL[level]);
+    return make("span", "ai-chips").appendChild(chip).parentNode;
   }
 
   /* ---------- Detail lists (the "details" file next to the summary file) ---------- */
@@ -2214,7 +2374,7 @@
 
   function renderCheck(result, row) {
     var check = result.check;
-    var level = levelOf(result.points);
+    var level = result.level;
     var d = makeDetails("ai-row ai-row-" + level, "c" + check.id);
     var sum = make("summary", "ai-rsum");
     sum.appendChild(make("span", "ai-rid", check.id));
@@ -2227,8 +2387,8 @@
     }
     sum.appendChild(titleSpan);
     sum.appendChild(make("span", "ai-rvalue", headlineOf(check, row)));
-    sum.appendChild(chipsFor(check, result.points));
-    sum.appendChild(make("span", "ai-rmult", "×" + check.mult));
+    sum.appendChild(ratingChip(level));
+    sum.appendChild(make("span", "ai-rmult", result.def ? "w" + result.def.weight : ""));
     d.appendChild(sum);
 
     var body = make("div", "ai-rbody");
@@ -2256,18 +2416,19 @@
       body.appendChild(nbox);
     }
     var advice;
-    if (result.points == null) {
+    if (level === "na") {
       advice = check.advice.na || "Not enough data to score this check.";
     } else {
-      advice = result.points >= 3 ? check.advice.good : result.points === 2 ? check.advice.mid : check.advice.low;
+      advice = level === "good" ? check.advice.good : level === "moderate" ? check.advice.mid : check.advice.low;
     }
     body.appendChild(make("p", "ai-advice", advice));
-    var scoreLine = AXES.filter(function (a) { return check.axes.indexOf(a.key) !== -1; }).map(function (a) {
-      return a.label + " " + (result.points == null ? "N/A" : result.points + "/3");
-    }).join(" · ");
     var dblock = detailBlock(row, check.id);
     if (dblock) body.appendChild(dblock);
-    body.appendChild(make("p", "ai-rscores", scoreLine + " · Impact Multiplier " + check.mult + " · " + LEVEL_LABEL[level]));
+    if (result.def) {
+      var scoreText = result.score == null ? "N/A" : Math.round(result.score * 100) + "%";
+      body.appendChild(make("p", "ai-rscores", thresholdText(result.def) + " \u00b7 Weight " + result.def.weight + " \u00b7 Score " + scoreText));
+      body.appendChild(make("p", "ai-rscores ai-rkey", "Metric: " + result.def.metric));
+    }
     d.appendChild(body);
     return d;
   }
@@ -2293,7 +2454,7 @@
 
   function countLevels(results) {
     var c = { critical: 0, moderate: 0, good: 0, na: 0 };
-    results.forEach(function (r) { c[levelOf(r.points)]++; });
+    results.forEach(function (r) { c[r.level]++; });
     return c;
   }
 
@@ -2301,7 +2462,7 @@
 
   function renderSection(section, scored) {
     var shown = scored.results.filter(function (r) {
-      return state.filter === "all" || levelOf(r.points) === state.filter;
+      return state.filter === "all" || r.level === state.filter;
     });
     if (!shown.length) return null;
     var counts = countLevels(scored.results);
@@ -2311,8 +2472,7 @@
     var sum = make("summary", "ai-sum");
     sum.appendChild(make("span", "ai-sum-title", section.id + ". " + section.name));
     sum.appendChild(make("span", "ai-pill ai-pill-" + pctLevel(scored.overall), pctText(scored.overall)));
-    sum.appendChild(make("span", "ai-sum-meta ai-sum-axes",
-      "P " + pctText(scored.p) + " · S " + pctText(scored.s) + " · B " + pctText(scored.b)));
+    sum.appendChild(make("span", "ai-sum-meta ai-sum-axes", scored.results.length + " checks"));
     var dots = make("span", "ai-dots");
     ["critical", "moderate", "good"].forEach(function (lv) {
       if (!counts[lv]) return;
@@ -2325,10 +2485,7 @@
 
     var body = make("div", "ai-acc-body");
     var pot = make("div", "ai-pot");
-    pot.appendChild(potentialRow("Overall score", scored.overall));
-    pot.appendChild(potentialRow("Performance", scored.p));
-    pot.appendChild(potentialRow("Structure", scored.s));
-    pot.appendChild(potentialRow("BIM Essentials", scored.b));
+    pot.appendChild(potentialRow("Section score", scored.overall));
     body.appendChild(pot);
 
     var intro = makeDetails("ai-intro-box", "i" + section.id);
@@ -2337,7 +2494,7 @@
     body.appendChild(intro);
 
     var head = make("div", "ai-rhead");
-    ["Check", "Value", "Scores", "×"].forEach(function (t) { head.appendChild(make("span", null, t)); });
+    ["Check", "Value", "Rating", "Weight"].forEach(function (t) { head.appendChild(make("span", null, t)); });
     body.appendChild(head);
 
     var list = make("div", "ai-rows");
@@ -2383,17 +2540,10 @@
 
   /* Scores pooled over every section: points earned divided by points possible. */
   function overallScores(all) {
-    var t = { p: [0, 0], s: [0, 0], b: [0, 0] };
-    all.forEach(function (item) {
-      ["p", "s", "b"].forEach(function (a) {
-        t[a][0] += item.totals[a][0];
-        t[a][1] += item.totals[a][1];
-      });
-    });
-    var pct = function (pair) { return pair[1] ? Math.round((pair[0] / pair[1]) * 100) : null; };
-    var earned = t.p[0] + t.s[0] + t.b[0];
-    var possible = t.p[1] + t.s[1] + t.b[1];
-    return { overall: possible ? Math.round((earned / possible) * 100) : null, p: pct(t.p), s: pct(t.s), b: pct(t.b) };
+    var earned = 0;
+    var possible = 0;
+    all.forEach(function (item) { earned += item.earned; possible += item.possible; });
+    return { overall: possible ? Math.round((earned / possible) * 100) : null };
   }
 
   var SVG_NS = "http://www.w3.org/2000/svg";
@@ -2443,37 +2593,20 @@
     big.appendChild(make("span", "ai-summary-label", "Overall score"));
     top.appendChild(big);
     var pot = make("div", "ai-pot");
-    pot.appendChild(potentialRow("Performance", tot.p));
-    pot.appendChild(potentialRow("Structure", tot.s));
-    pot.appendChild(potentialRow("BIM Essentials", tot.b));
+    pot.appendChild(potentialRow("Overall score", tot.overall));
     top.appendChild(pot);
     box.appendChild(top);
 
     var labels = all.map(function (item) { return item.section.short || item.section.name; });
     var d = makeDetails("ai-radars", "rad");
-    d.appendChild(make("summary", null, "Scores by section (radar charts)"));
+    d.appendChild(make("summary", null, "Score by section (radar chart)"));
     var wrap = make("div", "ai-radar-wrap");
     var one = make("figure", "ai-radar-fig");
-    one.appendChild(radarChart("Overall score by section", labels, [
-      { name: "Overall", color: "#6f7fd6", values: all.map(function (item) { return item.overall; }) }
+    one.appendChild(radarChart("Score by section", labels, [
+      { name: "Score", color: "#6f7fd6", values: all.map(function (item) { return item.overall; }) }
     ]));
-    one.appendChild(make("figcaption", null, "Overall"));
-    var cat = make("figure", "ai-radar-fig");
-    cat.appendChild(radarChart("Performance, Structure and BIM Essentials by section", labels, [
-      { name: "Performance", color: "#6f7fd6", values: all.map(function (item) { return item.p; }) },
-      { name: "Structure", color: "#ff6a00", values: all.map(function (item) { return item.s; }) },
-      { name: "BIM Essentials", color: "#2ea043", values: all.map(function (item) { return item.b; }) }
-    ]));
-    var cap = make("figcaption", "ai-radar-key");
-    [["Performance", "#6f7fd6"], ["Structure", "#ff6a00"], ["BIM Essentials", "#2ea043"]].forEach(function (k) {
-      var span = make("span", null, k[0]);
-      var sw = make("i", "ai-sw");
-      sw.style.background = k[1];
-      span.prepend(sw);
-      cap.appendChild(span);
-    });
-    cat.appendChild(cap);
-    wrap.append(one, cat);
+    one.appendChild(make("figcaption", null, "Score by section"));
+    wrap.append(one);
     d.appendChild(wrap);
     box.appendChild(d);
     return box;
@@ -2490,19 +2623,15 @@
       card.appendChild(make("span", "ai-scard-name", s.id + ". " + s.name));
       card.appendChild(make("span", "ai-scard-pct ai-text-" + pctLevel(item.overall), pctText(item.overall)));
       var bars = make("span", "ai-mini");
-      [["P", item.p], ["S", item.s], ["B", item.b]].forEach(function (pair) {
-        var line = make("span", "ai-mini-row");
-        line.appendChild(make("span", "ai-mini-k", pair[0]));
-        var track = make("span", "ai-mini-track");
-        var fill = make("span", "ai-mini-fill ai-fill-" + pctLevel(pair[1]));
-        fill.style.width = (pair[1] == null ? 0 : pair[1]) + "%";
-        track.appendChild(fill);
-        line.appendChild(track);
-        line.appendChild(make("span", "ai-mini-v", pctText(pair[1])));
-        bars.appendChild(line);
-      });
+      var line = make("span", "ai-mini-row ai-mini-one");
+      var track = make("span", "ai-mini-track");
+      var fill = make("span", "ai-mini-fill ai-fill-" + pctLevel(item.overall));
+      fill.style.width = (item.overall == null ? 0 : item.overall) + "%";
+      track.appendChild(fill);
+      line.appendChild(track);
+      bars.appendChild(line);
       card.appendChild(bars);
-      card.appendChild(make("span", "ai-scard-meta", c.critical + " critical · " + c.moderate + " moderate"));
+      card.appendChild(make("span", "ai-scard-meta", c.critical + " poor · " + c.moderate + " fair"));
       card.addEventListener("click", function () {
         state.open["s" + s.id] = true;
         renderAudit();
@@ -2620,7 +2749,7 @@
   });
 
   el.template.addEventListener("click", function () {
-    download("archicad-model-health-template.json", JSON.stringify(SAMPLE, null, 2), "application/json");
+    download("archicad-model-health-template.json", JSON.stringify(blankV2(), null, 2), "application/json");
   });
 
   el.limit.addEventListener("input", function () {
