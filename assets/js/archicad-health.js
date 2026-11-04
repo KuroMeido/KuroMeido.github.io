@@ -1481,7 +1481,9 @@
     limit: 2000,
     selected: null,
     filter: "all",
-    open: {}
+    open: {},
+    details: [],
+    dview: {}
   };
 
   var el = {
@@ -1501,6 +1503,7 @@
     auditCards: document.getElementById("ai-cards"),
     auditExpand: document.getElementById("ai-expand"),
     auditCollapse: document.getElementById("ai-collapse"),
+    detailStatus: document.getElementById("ai-dstatus"),
     steps: ["ai-t3", "ai-t2", "ai-t1"].map(function (id) { return document.getElementById(id); }),
     stepsReset: document.getElementById("ai-treset")
   };
@@ -1613,6 +1616,10 @@
         var text = String(reader.result);
         var isJson = /\.json$/i.test(file.name) || /^\s*[\[{]/.test(text);
         var raw = isJson ? JSON.parse(text) : parseCsv(text);
+        if (isDetailsFile(raw)) {
+          addDetails(raw, file.name);
+          return;
+        }
         if (raw && !Array.isArray(raw)) raw = raw.rows || raw.data || raw.projects || raw.results;
         state.rows = normalizeRows(raw);
         state.sourceLabel = "Loaded from " + file.name + ".";
@@ -1917,13 +1924,221 @@
     return wrap;
   }
 
+  /* ---------- Detail lists (the "details" file next to the summary file) ---------- */
+
+  var DETAIL_KEY = /^(\d+\.\d+)_(.+)$/;
+  var DETAIL_CAP = 2000;
+  var DETAIL_PAGE = 100;
+
+  function looksLikeDetails(obj) {
+    return !!obj && typeof obj === "object" && !Array.isArray(obj) && Object.keys(obj).some(function (k) {
+      return DETAIL_KEY.test(k) && Array.isArray(obj[k]);
+    });
+  }
+
+  function isDetailsFile(raw) {
+    return Array.isArray(raw) ? raw.length > 0 && raw.every(looksLikeDetails) : looksLikeDetails(raw);
+  }
+
+  function projectMatch(a, b) {
+    var strip = function (t) { return normalizeKey(String(t).replace(/\.(pln|pla|bimproject)$/i, "")); };
+    var x = strip(a);
+    var y = strip(b);
+    return !!x && !!y && (x === y || x.indexOf(y) !== -1 || y.indexOf(x) !== -1);
+  }
+
+  function addDetails(raw, fileName) {
+    var items = Array.isArray(raw) ? raw : [raw];
+    var last = null;
+    items.forEach(function (obj, i) {
+      var name = toText(obj.project || obj.name) || fileName.replace(/\.json$/i, "") || "Project " + (i + 1);
+      var lists = {};
+      var count = 0;
+      Object.keys(obj).forEach(function (k) {
+        var m = DETAIL_KEY.exec(k);
+        if (m && Array.isArray(obj[k])) { lists[m[1]] = obj[k]; count++; }
+      });
+      state.details = state.details.filter(function (d) { return !projectMatch(d.name, name); });
+      state.details.push({ name: name, lists: lists, count: count });
+      last = name;
+    });
+    var onSample = state.rows === SAMPLE || state.sourceLabel.indexOf("Sample data") === 0;
+    var missing = items.filter(function (obj) {
+      var name = toText(obj.project || obj.name) || "";
+      return !state.rows.some(function (r) { return projectMatch(r.project, name); });
+    });
+    if (missing.length) {
+      var fresh = normalizeRows(missing.map(function (obj, i) {
+        return { project: toText(obj.project || obj.name) || fileName.replace(/\.json$/i, "") || "Project " + (i + 1) };
+      }));
+      state.rows = onSample ? fresh : state.rows.concat(fresh);
+      state.sourceLabel = "Details loaded from " + fileName + ". Load the summary file to fill in the scores.";
+    } else {
+      state.sourceLabel = (onSample ? "" : state.sourceLabel + " ") + "Details loaded from " + fileName + ".";
+    }
+    var target = state.rows.filter(function (r) { return projectMatch(r.project, last); })[0];
+    if (target) state.selected = target.project;
+    render();
+  }
+
+  function detailsFor(row, id) {
+    var rec = state.details.filter(function (d) { return projectMatch(d.name, row.project); })[0];
+    return rec && rec.lists[id] ? rec.lists[id] : null;
+  }
+
+  var DETAIL_LABELS = {
+    guid: "GUID", id: "ID", type: "Type", name: "Name", used: "Used", path: "Path", available: "Available",
+    curtain_full: "Curtain walls full detail", stairs_railings_full: "Stairs & railings full detail"
+  };
+
+  function detailLabel(key) {
+    if (DETAIL_LABELS[key]) return DETAIL_LABELS[key];
+    var t = key.replace(/_/g, " ");
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  function detailCell(v) {
+    if (v === true) return "Yes";
+    if (v === false) return "No";
+    if (v == null) return "";
+    return typeof v === "object" ? JSON.stringify(v) : String(v);
+  }
+
+  function csvEscape(v) {
+    var t = detailCell(v);
+    return /[",\n\r;]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+
+  function detailPanel(list, viewKey, checkId) {
+    var view = state.dview[viewKey] || (state.dview[viewKey] = { q: "", page: 0 });
+    var cols = [];
+    list.forEach(function (item) {
+      if (item && typeof item === "object") Object.keys(item).forEach(function (k) { if (cols.indexOf(k) === -1) cols.push(k); });
+    });
+    if (!cols.length) cols = ["value"];
+    var asRow = function (item) { return item && typeof item === "object" ? item : { value: item }; };
+
+    var panel = make("div", "ai-dpanel");
+    var tools = make("div", "ai-dtools");
+    var search = make("input", "ai-dsearch");
+    search.type = "search";
+    search.placeholder = "Search in this list";
+    search.value = view.q;
+    search.setAttribute("aria-label", "Search in details");
+    var info = make("span", "ai-dinfo");
+    var prev = make("button", "ai-tool", "Prev");
+    var next = make("button", "ai-tool", "Next");
+    var csv = make("button", "ai-tool", "Download CSV");
+    [prev, next, csv].forEach(function (b) { b.type = "button"; });
+    tools.append(search, info, prev, next, csv);
+    panel.appendChild(tools);
+    if (list.length >= DETAIL_CAP) {
+      panel.appendChild(make("p", "ah-note", "This list holds " + fmt.format(list.length) + " items. The export may stop at that number, so the real count can be higher."));
+    }
+    var wrap = make("div", "ai-dscroll");
+    var table = make("table", "ai-dtable");
+    var thead = make("thead");
+    var hr = make("tr");
+    hr.appendChild(make("th", null, "#"));
+    cols.forEach(function (c) { hr.appendChild(make("th", null, detailLabel(c))); });
+    thead.appendChild(hr);
+    var tbody = make("tbody");
+    table.append(thead, tbody);
+    wrap.appendChild(table);
+    panel.appendChild(wrap);
+
+    var filtered = list;
+
+    function filterList() {
+      var q = view.q.trim().toLowerCase();
+      filtered = !q ? list : list.filter(function (item) {
+        return cols.some(function (c) { return detailCell(asRow(item)[c]).toLowerCase().indexOf(q) !== -1; });
+      });
+    }
+
+    function draw() {
+      var pages = Math.max(1, Math.ceil(filtered.length / DETAIL_PAGE));
+      view.page = Math.min(Math.max(0, view.page), pages - 1);
+      var start = view.page * DETAIL_PAGE;
+      var slice = filtered.slice(start, start + DETAIL_PAGE);
+      var frag = document.createDocumentFragment();
+      slice.forEach(function (item, i) {
+        var tr = make("tr");
+        tr.appendChild(make("td", "ai-dn", String(start + i + 1)));
+        cols.forEach(function (c) {
+          var v = asRow(item)[c];
+          var td = make("td", null, detailCell(v));
+          if (v === true || v === false) td.className = v ? "ai-yes" : "ai-no";
+          tr.appendChild(td);
+        });
+        frag.appendChild(tr);
+      });
+      if (!slice.length) {
+        var empty = make("tr");
+        var td = make("td", "ai-dempty", "No items match.");
+        td.colSpan = cols.length + 1;
+        empty.appendChild(td);
+        frag.appendChild(empty);
+      }
+      tbody.replaceChildren(frag);
+      info.textContent = filtered.length
+        ? (start + 1) + "–" + (start + slice.length) + " of " + fmt.format(filtered.length)
+        : "0 items";
+      prev.disabled = view.page === 0;
+      next.disabled = view.page >= pages - 1;
+    }
+
+    search.addEventListener("input", function () { view.q = search.value; view.page = 0; filterList(); draw(); });
+    prev.addEventListener("click", function () { view.page--; draw(); });
+    next.addEventListener("click", function () { view.page++; draw(); });
+    csv.addEventListener("click", function () {
+      var lines = [cols.map(csvEscape).join(",")].concat(filtered.map(function (item) {
+        return cols.map(function (c) { return csvEscape(asRow(item)[c]); }).join(",");
+      }));
+      download("check-" + checkId + "-details.csv", "﻿" + lines.join("\r\n"), "text/csv");
+    });
+
+    filterList();
+    draw();
+    return panel;
+  }
+
+  function detailBlock(row, checkId) {
+    var list = detailsFor(row, checkId);
+    if (!list) return null;
+    var key = "d" + checkId;
+    var viewKey = row.project + "|" + checkId;
+    var box = make("div", "ai-dblock");
+    var btn = make("button", "ai-tool ai-dbtn");
+    btn.type = "button";
+    var panelHolder = make("div", "ai-dholder");
+    var sync = function () {
+      var open = !!state.open[key];
+      btn.textContent = (open ? "Hide details" : "Show details") + " (" + fmt.format(list.length) + ")";
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      panelHolder.replaceChildren();
+      if (open) panelHolder.appendChild(list.length ? detailPanel(list, viewKey, checkId) : make("p", "ah-note", "The list is empty: nothing was found for this check."));
+    };
+    btn.addEventListener("click", function () { state.open[key] = !state.open[key]; sync(); });
+    sync();
+    box.append(btn, panelHolder);
+    return box;
+  }
+
   function renderCheck(result, row) {
     var check = result.check;
     var level = levelOf(result.points);
     var d = makeDetails("ai-row ai-row-" + level, "c" + check.id);
     var sum = make("summary", "ai-rsum");
     sum.appendChild(make("span", "ai-rid", check.id));
-    sum.appendChild(make("span", "ai-rtitle", check.title));
+    var titleSpan = make("span", "ai-rtitle", check.title);
+    var rowList = detailsFor(row, check.id);
+    if (rowList) {
+      var badge = make("span", "ai-dbadge", "\u25A4 " + fmt.format(rowList.length));
+      badge.title = "Details available";
+      titleSpan.append(" ", badge);
+    }
+    sum.appendChild(titleSpan);
     sum.appendChild(make("span", "ai-rvalue", headlineOf(check, row)));
     sum.appendChild(chipsFor(check, result.points));
     sum.appendChild(make("span", "ai-rmult", "×" + check.mult));
@@ -1951,6 +2166,8 @@
     var scoreLine = AXES.filter(function (a) { return check.axes.indexOf(a.key) !== -1; }).map(function (a) {
       return a.label + " " + (result.points == null ? "N/A" : result.points + "/3");
     }).join(" · ");
+    var dblock = detailBlock(row, check.id);
+    if (dblock) body.appendChild(dblock);
     body.appendChild(make("p", "ai-rscores", scoreLine + " · Impact Multiplier " + check.mult + " · " + LEVEL_LABEL[level]));
     d.appendChild(body);
     return d;
@@ -2226,6 +2443,13 @@
       el.auditProject.replaceChildren.apply(el.auditProject, opts);
     }
     el.auditProject.value = row.project;
+
+    if (el.detailStatus) {
+      var mine = state.details.filter(function (d) { return projectMatch(d.name, row.project); })[0];
+      el.detailStatus.textContent = mine
+        ? "Details loaded for this project: " + mine.count + " lists. Open a check and select Show details."
+        : "To see the items behind a check, load the details file with Load JSON or CSV.";
+    }
 
     var all = SECTIONS.map(function (s) {
       var scored = scoreSection(s, row);
