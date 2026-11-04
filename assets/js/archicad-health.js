@@ -1609,31 +1609,64 @@
     });
   }
 
-  function loadFile(file) {
-    var reader = new FileReader();
-    reader.onload = function () {
-      try {
-        var text = String(reader.result);
+  function readFile(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result)); };
+      reader.onerror = function () { reject(new Error("The file could not be read.")); };
+      reader.readAsText(file);
+    });
+  }
+
+  /* Takes one or more files: summary files (JSON or CSV) and details files, in any order. */
+  function loadFiles(files) {
+    var list = Array.prototype.slice.call(files);
+    Promise.all(list.map(function (file) {
+      return readFile(file).then(function (text) {
         var isJson = /\.json$/i.test(file.name) || /^\s*[\[{]/.test(text);
         var raw = isJson ? JSON.parse(text) : parseCsv(text);
-        if (isDetailsFile(raw)) {
-          addDetails(raw, file.name);
-          return;
+        return { file: file, raw: raw };
+      }).catch(function (err) {
+        return { file: file, error: err.message };
+      });
+    })).then(function (items) {
+      var problems = items.filter(function (it) { return it.error; });
+      var good = items.filter(function (it) { return !it.error; });
+      var details = good.filter(function (it) { return isDetailsFile(it.raw); });
+      var summaries = good.filter(function (it) { return !isDetailsFile(it.raw); });
+      var names = [];
+      var failed = problems.map(function (it) { return "Could not read " + it.file.name + ": " + it.error; });
+
+      summaries.forEach(function (it) {
+        try {
+          var raw = it.raw;
+          if (raw && !Array.isArray(raw)) raw = raw.rows || raw.data || raw.projects || raw.results;
+          state.rows = normalizeRows(raw);
+          state.sourceLabel = "";
+          names.push(it.file.name);
+        } catch (err) {
+          failed.push("Could not read " + it.file.name + ": " + err.message);
         }
-        if (raw && !Array.isArray(raw)) raw = raw.rows || raw.data || raw.projects || raw.results;
-        state.rows = normalizeRows(raw);
-        state.sourceLabel = "Loaded from " + file.name + ".";
+      });
+      if (summaries.length && names.length) state.selected = null;
+
+      details.forEach(function (it) {
+        addDetails(it.raw, it.file.name, true);
+        names.push(it.file.name);
+      });
+
+      if (names.length) {
+        state.sourceLabel = "Loaded from " + names.join(" and ") + ".";
+        if (details.length && !summaries.length && state.rows.length === 1 && state.rows[0].size_mb == null) {
+          state.sourceLabel += " Load the summary file to fill in the scores.";
+        }
         render();
-      } catch (err) {
-        state.sourceLabel = "Could not read " + file.name + ": " + err.message;
+      }
+      if (failed.length) {
+        state.sourceLabel = (names.length ? state.sourceLabel + " " : "") + failed.join(" ");
         renderSource();
       }
-    };
-    reader.onerror = function () {
-      state.sourceLabel = "Could not read " + file.name + ".";
-      renderSource();
-    };
-    reader.readAsText(file);
+    });
   }
 
   /* ---------- Heat-map table ---------- */
@@ -1962,7 +1995,7 @@
       state.details.push({ name: name, lists: lists, count: count });
       last = name;
     });
-    var onSample = state.rows === SAMPLE || state.sourceLabel.indexOf("Sample data") === 0;
+    var onSample = state.rows.some(function (r) { return SAMPLE.indexOf(r) !== -1; });
     var missing = items.filter(function (obj) {
       var name = toText(obj.project || obj.name) || "";
       return !state.rows.some(function (r) { return projectMatch(r.project, name); });
@@ -1972,13 +2005,9 @@
         return { project: toText(obj.project || obj.name) || fileName.replace(/\.json$/i, "") || "Project " + (i + 1) };
       }));
       state.rows = onSample ? fresh : state.rows.concat(fresh);
-      state.sourceLabel = "Details loaded from " + fileName + ". Load the summary file to fill in the scores.";
-    } else {
-      state.sourceLabel = (onSample ? "" : state.sourceLabel + " ") + "Details loaded from " + fileName + ".";
     }
     var target = state.rows.filter(function (r) { return projectMatch(r.project, last); })[0];
     if (target) state.selected = target.project;
-    render();
   }
 
   function detailsFor(row, id) {
@@ -2507,8 +2536,8 @@
   }
 
   el.file.addEventListener("change", function () {
-    var file = el.file.files && el.file.files[0];
-    if (file) loadFile(file);
+    var files = el.file.files;
+    if (files && files.length) loadFiles(files);
     el.file.value = "";
   });
 
