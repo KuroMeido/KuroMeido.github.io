@@ -135,7 +135,15 @@
     { key: "hl_ifc", label: "Hotlinks from IFC files" },
     { key: "hl_3dm", label: "Hotlinks from 3DM files" },
     { key: "xref_bound", label: "XREFs bound to the project" },
-    { key: "xref_attached", label: "XREFs attached to the project" }
+    { key: "xref_attached", label: "XREFs attached to the project" },
+    { key: "embedded_size_mb", label: "Embedded Library size (MB)" },
+    { key: "views_non_placed", label: "Views not placed on any layout" },
+    { key: "profile_complexity", label: "Sum of Complex Profile vertices" },
+    { key: "elements_2d_layouts", label: "2D elements drawn directly on layouts" },
+    { key: "drawings_size_mb", label: "Total size of stored drawings (MB)" },
+    { key: "unapproved_paths", label: "Sources outside the approved folders" },
+    { key: "library_objects", label: "Objects in all loaded libraries" },
+    { key: "views_non_layer_comb", label: "Views with a custom Layer Combination" }
   ];
 
   /* Naming, structure and setting checks take the percentage of items with a problem in
@@ -1306,6 +1314,86 @@
           mid: "All the IFC items in the Publisher Sets use a Generic Translator. That makes sense if you only need a generic export and do not collaborate with other disciplines; otherwise export different IFC files with the appropriate translators.",
           low: "The IFC items in the Publisher Sets have no suitable translator. Assign the appropriate translators."
         })
+      ]
+    },
+    {
+      id: "8",
+      name: "Additional Metrics",
+      short: "Additional",
+      intro: "Metrics from the BIM4BIM audit that the Graphisoft report does not cover. Their thresholds are provisional until confirmed.",
+      checks: [
+        {
+          id: "8.1", title: "Embedded Library Size", axes: [], mult: 3,
+          measures: [["Embedded Library size (MB)", "embedded_size_mb", ""]],
+          advice: {
+            good: "The Embedded Library is small. Nothing to do.",
+            mid: "The Embedded Library is getting large. Move parts that other projects need into a shared library.",
+            low: "The Embedded Library is very large and bloats the project file. Move its parts to a shared library."
+          }
+        },
+        {
+          id: "8.2", title: "Non-placed Views", axes: [], mult: 3,
+          measures: [["Views not placed on any layout", "views_non_placed", ""]],
+          advice: {
+            good: "Every view is placed on a layout. Nothing to do.",
+            mid: "Some views are not placed on any layout. Delete the ones you do not need.",
+            low: "Many views are not placed on any layout. Delete the unused ones."
+          }
+        },
+        {
+          id: "8.3", title: "Profile Complexity", axes: [], mult: 3,
+          measures: [["Sum of Complex Profile vertices", "profile_complexity", ""]],
+          advice: {
+            good: "Complex Profiles are simple. Nothing to do.",
+            mid: "Some Complex Profiles are detailed. Simplify the ones that do not need that precision.",
+            low: "Complex Profiles are very detailed and slow the model down. Simplify them."
+          }
+        },
+        {
+          id: "8.4", title: "2D Elements on Layouts", axes: [], mult: 3,
+          measures: [["2D elements drawn directly on layouts", "elements_2d_layouts", ""]],
+          advice: {
+            good: "Layouts hold almost no loose 2D elements. Nothing to do.",
+            mid: "Some 2D elements are drawn directly on layouts. Move them into the model or a drawing where possible.",
+            low: "Many 2D elements are drawn directly on layouts. Move them into the model or a drawing."
+          }
+        },
+        {
+          id: "8.5", title: "Drawings Size", axes: [], mult: 3,
+          measures: [["Total size of stored drawings (MB)", "drawings_size_mb", ""]],
+          advice: {
+            good: "Stored drawings are small. Nothing to do.",
+            mid: "Stored drawings take a fair share of the file. Turn off Store Drawing in the Project File where you can.",
+            low: "Stored drawings make up a large part of the file. Turn off Store Drawing in the Project File."
+          }
+        },
+        {
+          id: "8.6", title: "Unapproved Source Paths", axes: [], mult: 3,
+          measures: [["Sources outside the approved folders", "unapproved_paths", ""]],
+          advice: {
+            good: "All sources are in approved folders. Nothing to do.",
+            mid: "Some sources are outside the approved folders. Move or relink them.",
+            low: "Many sources are outside the approved folders. Move or relink them."
+          }
+        },
+        {
+          id: "8.7", title: "All Libraries Objects", axes: [], mult: 2,
+          measures: [["Objects in all loaded libraries", "library_objects", ""]],
+          advice: {
+            good: "The loaded libraries are a manageable size. Nothing to do.",
+            mid: "The loaded libraries are large. Unload libraries the project does not use.",
+            low: "The loaded libraries are very large and slow down loading. Unload the ones you do not use."
+          }
+        },
+        {
+          id: "8.8", title: "Views without Layer Combination", axes: [], mult: 3,
+          measures: [["Views with a custom Layer Combination", "views_non_layer_comb", ""]],
+          advice: {
+            good: "Every view uses a saved Layer Combination. Nothing to do.",
+            mid: "Some views use a custom Layer Combination. Assign a saved one.",
+            low: "Many views use a custom Layer Combination. Assign saved ones."
+          }
+        }
       ]
     }
   ];

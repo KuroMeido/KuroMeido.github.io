@@ -116,7 +116,15 @@
     ["hotlink_ifc_count", "hl_ifc", "count", "7.3", "Số hotlink từ file IFC."],
     ["hotlink_3dm_count", "hl_3dm", "count", "7.3", "Số hotlink từ file 3DM."],
     ["xref_bound_count", "xref_bound", "count", "7.4", "Số XREF đã bị bound (explode)."],
-    ["xref_attached_count", "xref_attached", "count", "7.4", "Số XREF đang attach."]
+    ["xref_attached_count", "xref_attached", "count", "7.4", "Số XREF đang attach."],
+    ["embedded_library_size", "embedded_size_mb", "mb", "8.1", "Tổng dung lượng file (MB) của Embedded Library."],
+    ["view_non_placed_count", "views_non_placed", "count", "8.2", "Số view trong View Map không là nguồn của drawing nào đặt trên layout."],
+    ["profile_complexity_sum", "profile_complexity", "count", "8.3", "Tổng số đỉnh (gồm cả lỗ) của các Complex Profile."],
+    ["elements_2d_on_layouts_count", "elements_2d_layouts", "count", "8.4", "Số phần tử 2D (line, fill, text, dimension) vẽ trực tiếp trên layout, không tính drawing."],
+    ["drawings_size_sum", "drawings_size_mb", "mb", "8.5", "Tổng dung lượng (MB) của drawing lưu trong file (bật Store Drawing in the Project File)."],
+    ["unapproved_source_path_count", "unapproved_paths", "count", "8.6", "Số drawing, hotlink, XREF có đường dẫn nguồn ngoài danh sách thư mục được duyệt."],
+    ["all_libraries_objects_count", "library_objects", "count", "8.7", "Tổng số object (library part) của mọi thư viện đang nạp, gồm Embedded Library."],
+    ["view_non_layer_combination_count", "views_non_layer_comb", "count", "8.8", "Số view có Layer Combination là Custom hoặc không thuộc combination đã lưu."]
   ];
 
   /* Checks judged by the share of checked items that have a problem (0 to 100). */
@@ -243,7 +251,15 @@
     "7.1": ["drawing_missing_internal_count", 0, 5, 20, 5, { field: "missing_internal_drawings" }],
     "7.2": ["drawing_external_count", 0, 5, 20, 5, { field: "external_drawings" }],
     "7.3": ["hotlink_total_count", 10, 30, 60, 5, { fn: "hotlinkTotal" }],
-    "7.4": ["xref_bound_count", 0, 3, 10, 1, { field: "xref_bound" }]
+    "7.4": ["xref_bound_count", 0, 3, 10, 1, { field: "xref_bound" }],
+    "8.1": ["embedded_library_size", 0, 50, 200, 3, { field: "embedded_size_mb" }],
+    "8.2": ["view_non_placed_count", 0, 10, 50, 3, { field: "views_non_placed" }],
+    "8.3": ["profile_complexity_sum", 1000, 5000, 20000, 3, { field: "profile_complexity" }],
+    "8.4": ["elements_2d_on_layouts_count", 0, 50, 500, 3, { field: "elements_2d_layouts" }],
+    "8.5": ["drawings_size_sum", 50, 200, 500, 3, { field: "drawings_size_mb" }],
+    "8.6": ["unapproved_source_path_count", 0, 3, 10, 3, { field: "unapproved_paths" }],
+    "8.7": ["all_libraries_objects_count", 5000, 20000, 50000, 2, { field: "library_objects" }],
+    "8.8": ["view_non_layer_combination_count", 0, 10, 50, 3, { field: "views_non_layer_comb" }]
   };
 
   /* Weight of each issue-percentage check. Thresholds for these come from the page settings. */
