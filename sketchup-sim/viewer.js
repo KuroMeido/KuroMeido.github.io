@@ -365,6 +365,7 @@
   $('file').addEventListener('change', function (e) { readFile(e.target.files[0]); e.target.value = ''; });
   $('sample-ok').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_quyhoach.rb'], 'sample_quyhoach.rb'); });
   $('sample-bad').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_loi.rb'], 'sample_loi.rb'); });
+  $('sample-nga4').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_nga4.rb'], 'sample_nga4.rb'); });
 
   var dragDepth = 0;
   document.addEventListener('dragenter', function (e) { e.preventDefault(); dragDepth++; $('drop').hidden = false; });
@@ -382,7 +383,10 @@
   $('failed').addEventListener('change', function () { if (state.failedGroup) state.failedGroup.visible = $('failed').checked; });
   Array.prototype.forEach.call(document.querySelectorAll('.filters input'), function (c) { c.addEventListener('change', function () { if (state.res) renderIssues(state.res); }); });
 
-  // ?sample=ok|loi opens a sample directly (handy for sharing a link)
+  // ?sample=ok|loi|nga4 opens a sample directly (handy for sharing a link)
   var q = /[?&]sample=(\w+)/.exec(location.search);
-  if (q) loadText(window.PYKURO_SAMPLES[q[1] === 'loi' ? 'sample_loi.rb' : 'sample_quyhoach.rb'], q[1] === 'loi' ? 'sample_loi.rb' : 'sample_quyhoach.rb');
+  if (q) {
+    var file = q[1] === 'loi' ? 'sample_loi.rb' : q[1] === 'nga4' ? 'sample_nga4.rb' : 'sample_quyhoach.rb';
+    loadText(window.PYKURO_SAMPLES[file], file);
+  }
 })();
