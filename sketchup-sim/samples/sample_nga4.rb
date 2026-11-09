@@ -1,5 +1,5 @@
 # encoding: UTF-8
-# pyKuro CAD -> SketchUp | nga4_mau.dwg | 2026-11-09 09:55
+# pyKuro CAD -> SketchUp | nga4_mau.dwg | 2026-11-09 14:18
 # SketchUp: Extensions > Developer > Ruby Console, then type:  load 'path/to/this_file.rb'
 # Re-running the script adds a new copy of the model (Undo removes it in one step).
 

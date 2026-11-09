@@ -5,9 +5,10 @@ Builds the sample .rb files for the SketchUp preview page, in exactly the format
 
     python sketchup-sim/make_sample.py <path to pyKuro_CAD_Command>/pyKuro_CAD_Command/Utils/Civil/CadToSketchUp/SketchUpRubyWriter.cs
 
-Writes samples/sample_quyhoach.rb (a clean planning block), samples/sample_loi.rb (with deliberate faults the page
-must report) and samples/samples.js (also embedding samples/sample_nga4.rb, written by the C# tests) (the same texts, so the "Mở file mẫu" buttons work when index.html is opened
-straight from disk).
+Writes samples/sample_loi.rb (with deliberate faults the page must report) and samples/samples.js, which also embeds
+the samples written by the real exporter from the C# tests: sample_quyhoach.rb (planning blocks, filleted curbs,
+chamfered lots), sample_nga4.rb (4-way intersection) and sample_thuc.rb (samples/sample.dxf). The same texts, so the
+sample buttons work when index.html is opened straight from disk.
 """
 import json
 import os
@@ -86,77 +87,6 @@ def write(name, layers):
     return text + '\n'.join(out) + '\n'
 
 
-def planning_block():
-    """2 x 3 blocks of 70 x 45 m, 16 m roads (10 m carriageway + 3 m sidewalks), a lake with an island, trees."""
-    BW, BH, ROAD, WALK = 70000, 45000, 10000, 3000
-    cols, rows = 3, 2
-    pitch_x, pitch_y = BW + ROAD + 2 * WALK, BH + ROAD + 2 * WALK
-    W, H = cols * pitch_x + ROAD, rows * pitch_y + ROAD
-    blocks, walks, lots, houses, trees = [], [], [], [], []
-    uses = [['LOT_RES', 'LOT_GREEN', 'LOT_RES'], ['LOT_EDU', 'LOT_RES', 'LOT_COMMERCIAL']]
-    by_use = {}
-    for j in range(rows):
-        for i in range(cols):
-            x0 = ROAD + i * pitch_x
-            y0 = ROAD + j * pitch_y
-            outer = rect(x0, y0, x0 + BW + 2 * WALK, y0 + BH + 2 * WALK)
-            inner = rect(x0 + WALK, y0 + WALK, x0 + WALK + BW, y0 + WALK + BH)
-            blocks.append(outer)
-            walks.append({'outer': outer, 'holes': [inner]})
-            use = uses[j][i]
-            lx0, ly0 = x0 + WALK, y0 + WALK
-            if use == 'LOT_RES':
-                # row houses: 2 rows of 10 lots 7 x 20 m (+ 5 m inner lane), 3..5 floors
-                for row in range(2):
-                    for k in range(10):
-                        a = lx0 + k * 7000
-                        b = ly0 + row * 25000
-                        by_use.setdefault(use, []).append({'outer': rect(a, b, a + 7000, b + 20000)})
-                        fl = 3 + (k + row) % 3
-                        houses.append({'outer': rect(a + 500, b + 2000 if row == 0 else b + 4000,
-                                                     a + 6500, b + 16000 if row == 0 else b + 18000), 'floors': fl})
-            elif use == 'LOT_GREEN':
-                by_use.setdefault(use, []).append({'outer': rect(lx0, ly0, lx0 + BW, ly0 + BH)})
-            else:
-                by_use.setdefault(use, []).append({'outer': rect(lx0, ly0, lx0 + BW, ly0 + BH)})
-                houses.append({'outer': [(lx0 + 10000, ly0 + 10000), (lx0 + 45000, ly0 + 10000), (lx0 + 45000, ly0 + 20000),
-                                         (lx0 + 25000, ly0 + 20000), (lx0 + 25000, ly0 + 35000), (lx0 + 10000, ly0 + 35000)],
-                               'floors': 4 if use == 'LOT_EDU' else 9})
-            # street trees every 8 m along the sidewalk
-            for t in range(4, BW + 2 * WALK - 2000, 8000):
-                trees.append((x0 + t, y0 + 1500, 2000))
-                trees.append((x0 + t, y0 + BH + 2 * WALK - 1500, 2000 if t % 16000 else 3000))
-    # the park block gets a lake with an island and some trees
-    gx0, gy0 = ROAD + pitch_x + WALK, ROAD + WALK
-    lake = [(gx0 + 15000, gy0 + 10000), (gx0 + 40000, gy0 + 8000), (gx0 + 55000, gy0 + 18000),
-            (gx0 + 48000, gy0 + 34000), (gx0 + 25000, gy0 + 36000), (gx0 + 12000, gy0 + 24000)]
-    island = rect(gx0 + 28000, gy0 + 18000, gx0 + 36000, gy0 + 24000)
-    for k in range(6):
-        trees.append((gx0 + 5000 + k * 11000, gy0 + 41000, 4000))
-    road = {'outer': rect(0, 0, W, H), 'holes': blocks}
-
-    def L(code, display, tag, bands, rgb, src, **kw):
-        d = {'display': display, 'tag': tag, 'bands': bands, 'rgb': rgb, 'src': src}
-        d.update(kw)
-        return d
-
-    return [
-        L('ROAD', 'Đường (lòng đường)', 'QH_DUONG', [(0, 0)], (127, 127, 127), ['GT_LONG DUONG'], shapes=[road]),
-        L('SIDEWALK', 'Vỉa hè', 'QH_VIAHE', [(0, 150)], (217, 217, 217), ['GT_VIA HE'], shapes=walks),
-        L('LOT_RES', 'Đất ở', 'QH_DAT_O', [(0, 300)], (255, 217, 102), ['QH-DAT O LIEN KE'], shapes=by_use['LOT_RES']),
-        L('LOT_GREEN', 'Đất cây xanh', 'QH_DAT_CAYXANH', [(0, 300)], (146, 208, 80), ['QH-CXCC'],
-          shapes=[{'outer': by_use['LOT_GREEN'][0]['outer'], 'holes': [lake]}, {'outer': island}]),
-        L('LOT_EDU', 'Đất giáo dục', 'QH_DAT_GIAODUC', [(0, 300)], (255, 153, 204), ['QH-TRUONG MAM NON'], shapes=by_use['LOT_EDU']),
-        L('LOT_COMMERCIAL', 'Đất thương mại dịch vụ', 'QH_DAT_TMDV', [(0, 300)], (204, 102, 255), ['QH-TMDV'],
-          shapes=by_use['LOT_COMMERCIAL']),
-        L('WATER', 'Mặt nước', 'QH_MATNUOC', [(-500, -500)], (157, 195, 230), ['HO DIEU HOA'],
-          shapes=[{'outer': lake, 'holes': [island]}]),
-        L('BUILDING', 'Nhà điển hình (block)', 'QH_NHA', [(300, 11100)], (242, 242, 242), ['KHOI NHA', 'BLOCK LK'],
-          shapes=houses, floor_h=3600),
-        L('TREE', 'Cây xanh vỉa hè', 'QH_CAYXANH_VIAHE', [(300, 6000)], (84, 130, 53), ['CAY XANH'], trees=trees),
-    ]
-
-
 def faulty():
     """Small file with the faults the page must catch."""
     return [
@@ -178,17 +108,18 @@ def faulty():
 def main():
     os.makedirs(os.path.join(HERE, 'samples'), exist_ok=True)
     files = {
-        'sample_quyhoach.rb': write('mau_quy_hoach.dwg', planning_block()),
         'sample_loi.rb': write('mau_loi.dwg', faulty()),
     }
     for name, text in files.items():
         with open(os.path.join(HERE, 'samples', name), 'w', encoding='utf-8', newline='\n') as f:
             f.write(text)
-    # sample_nga4.rb (4-way intersection with fillets and chamfers) is written by the real exporter, from the C# tests:
+    # written by the real exporter, from the C# tests (curb fillets, sidewalk / lot chamfers, sample.dxf):
     #   dotnet run --project <pyKuro_CAD_Command>/pyKuro_CAD_Command.Tests -- --write-rb sketchup-sim/samples/sample_nga4.rb
-    nga4 = os.path.join(HERE, 'samples', 'sample_nga4.rb')
-    if os.path.exists(nga4):
-        files['sample_nga4.rb'] = open(nga4, encoding='utf-8').read()
+    #       --write-planning-rb sketchup-sim/samples/sample_quyhoach.rb --write-real-rb sketchup-sim/samples/sample_thuc.rb
+    for name in ('sample_quyhoach.rb', 'sample_nga4.rb', 'sample_thuc.rb'):
+        path = os.path.join(HERE, 'samples', name)
+        if os.path.exists(path):
+            files[name] = open(path, encoding='utf-8').read()
     with open(os.path.join(HERE, 'samples', 'samples.js'), 'w', encoding='utf-8', newline='\n') as f:
         f.write('// Generated by make_sample.py - the sample .rb files as strings, so they load from file:// too.\n')
         f.write('window.PYKURO_SAMPLES = ' + json.dumps(files, ensure_ascii=False, indent=0) + ';\n')
