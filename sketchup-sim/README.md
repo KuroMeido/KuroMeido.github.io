@@ -22,7 +22,7 @@ Trang tĩnh để kiểm tra file `.rb` do lệnh **CmdCadToSketchUp** (pyKuro C
 |---|---|
 | `index.html`, `style.css`, `viewer.js` | Giao diện và khung 3D |
 | `rb-sim.js` | Bộ đọc Ruby + giả lập (chạy được cả trong Node để test) |
-| `samples/` | `sample_quyhoach.rb` (khu quy hoạch mẫu, không lỗi), `sample_loi.rb` (các lỗi cố ý), `sample_nga4.rb` (ngã 4: mép đường bo góc, vỉa hè vát góc, do exporter thật sinh ra từ project test C#), `samples.js` |
+| `samples/` | `sample_quyhoach.rb` (khu quy hoạch mẫu: bó vỉa bo góc R8, lô đất vát góc 5 m), `sample_loi.rb` (các lỗi cố ý), `sample_nga4.rb` (ngã 4: mép đường bo góc, vỉa hè vát góc, ), `sample_thuc.rb` (bản vẽ `samples/sample.dxf`), ba file này do exporter thật sinh ra từ project test C#, `samples.js` |
 | `make_sample.py` | Sinh lại file mẫu, lấy thư viện Ruby trực tiếp từ `SketchUpRubyWriter.cs` |
 | `lib/` | three.js r147 (MIT) để trang chạy offline |
 
@@ -35,8 +35,9 @@ python sketchup-sim/make_sample.py <pyKuro_CAD_Command>/pyKuro_CAD_Command/Utils
 `sample_nga4.rb` được sinh bằng exporter C# thật (đọc line hở + cung bo góc, khép đầu đường, dựng mặt đường và vỉa hè):
 
 ```
-dotnet run --project <pyKuro_CAD_Command>/pyKuro_CAD_Command.Tests -- --write-rb sketchup-sim/samples/sample_nga4.rb
+dotnet run --project <pyKuro_CAD_Command>/pyKuro_CAD_Command.Tests -- --write-rb sketchup-sim/samples/sample_nga4.rb \
+    --write-planning-rb sketchup-sim/samples/sample_quyhoach.rb --write-real-rb sketchup-sim/samples/sample_thuc.rb
 python sketchup-sim/make_sample.py <...>/SketchUpRubyWriter.cs
 ```
 
-Mở mẫu trực tiếp: `?sample=ok`, `?sample=loi` hoặc `?sample=nga4`.
+Mở mẫu trực tiếp: `?sample=ok`, `?sample=loi`, `?sample=nga4` hoặc `?sample=thuc`.
