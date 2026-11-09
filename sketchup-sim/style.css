@@ -1,0 +1,111 @@
+/* SketchUp Sim - same palette as the site (assets/css/base.css), system fonts so the page works offline */
+:root {
+  --bg: #0b1020;
+  --bg-soft: #121a2f;
+  --panel: rgba(255, 255, 255, 0.05);
+  --line: rgba(255, 255, 255, 0.1);
+  --text: #e8ecf3;
+  --muted: #a9b3c7;
+  --brand: #7c9cff;
+  --brand-soft: rgba(124, 156, 255, 0.15);
+  --ok: #5eead4;
+  --warn: #fbbf24;
+  --err: #f87171;
+  --font: Inter, "Segoe UI", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); font: 14px/1.45 var(--font); overflow: hidden; }
+code { font-family: var(--mono); font-size: 0.92em; color: #c9d6ff; }
+small { color: var(--muted); font-weight: 400; }
+
+.topbar {
+  height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 16px;
+  border-bottom: 1px solid var(--line); background: var(--bg-soft);
+}
+.brand { color: var(--text); font-weight: 800; text-decoration: none; white-space: nowrap; }
+.title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.title small { margin-left: 6px; }
+.actions { margin-left: auto; display: flex; gap: 8px; }
+
+.btn {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--panel); color: var(--text); font: 600 13px var(--font); white-space: nowrap;
+}
+.btn:hover { border-color: var(--brand); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #0b1020; }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 12px; }
+
+.layout { display: grid; grid-template-columns: minmax(380px, 500px) 1fr; height: calc(100% - 56px); }
+.side { overflow-y: auto; padding: 14px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.note { color: var(--muted); font-size: 12.5px; border-left: 3px solid var(--brand); padding: 6px 10px; background: var(--brand-soft); border-radius: 6px; }
+
+.verdict { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-weight: 600; }
+.verdict.empty { color: var(--muted); font-weight: 400; }
+.verdict.ok { border-color: var(--ok); color: var(--ok); }
+.verdict.warn { border-color: var(--warn); color: var(--warn); }
+.verdict.err { border-color: var(--err); color: var(--err); }
+.verdict small { display: block; margin-top: 4px; }
+
+.panel { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 10px 12px; }
+.panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 8px; }
+pre#console { font: 12px/1.5 var(--mono); white-space: pre-wrap; color: #d1fae5; background: #050814; padding: 8px 10px; border-radius: 8px; }
+
+.table-wrap { overflow-x: auto; }
+table.tags { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tags th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tags td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tags td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tags tfoot td { font-weight: 700; border-bottom: 0; }
+.tags .tagname { font-family: var(--mono); font-size: 12px; }
+.tags .src { color: var(--muted); font-size: 11.5px; }
+.tags .bad { color: var(--err); font-weight: 700; }
+.tags .good { color: var(--ok); }
+.tags tr.hidden-tag td:not(:first-child) { opacity: 0.45; }
+.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.3); vertical-align: -2px; margin-right: 6px; }
+
+.filters { display: flex; gap: 14px; margin-bottom: 6px; color: var(--muted); font-size: 12.5px; }
+.issues { list-style: none; display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+.issues li { padding: 6px 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.2); border-left: 3px solid var(--muted); font-size: 12.5px; cursor: default; }
+.issues li.error { border-left-color: var(--err); }
+.issues li.warn { border-left-color: var(--warn); }
+.issues li.clickable { cursor: pointer; }
+.issues li.clickable:hover { background: rgba(124, 156, 255, 0.12); }
+.issues .ln { font-family: var(--mono); color: var(--muted); margin-right: 6px; }
+.issues .code { display: block; margin-top: 3px; font: 11px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.issues .none { color: var(--ok); border-left-color: var(--ok); }
+
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { font-variant-numeric: tabular-nums; word-break: break-word; }
+
+.view { position: relative; overflow: hidden; background: #dfe9f3; }
+.view canvas { display: block; }
+.toolbar {
+  position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2;
+}
+.toolbar .btn { background: rgba(11, 16, 32, 0.82); }
+.chk { display: inline-flex; gap: 5px; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; font-size: 12px; background: rgba(11, 16, 32, 0.82); border: 1px solid var(--line); cursor: pointer; }
+.selection {
+  position: absolute; left: 10px; bottom: 10px; max-width: min(420px, calc(100% - 20px)); z-index: 2; padding: 10px 12px; border-radius: 12px;
+  background: rgba(11, 16, 32, 0.9); border: 1px solid var(--line); font-size: 12.5px;
+}
+.selection b { color: #c9d6ff; }
+.drop {
+  position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; font-size: 22px; font-weight: 700; color: #0b1020;
+  background: rgba(124, 156, 255, 0.45); border: 3px dashed #0b1020;
+}
+.empty-view { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: #3b4766; font-size: 18px; pointer-events: none; }
+.empty-view small { color: #5b6786; font-size: 13px; }
+
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .topbar { height: auto; flex-wrap: wrap; padding: 10px 16px; }
+  .title small { display: none; }
+  .actions { margin-left: 0; flex-wrap: wrap; }
+  .layout { display: flex; flex-direction: column-reverse; height: auto; }
+  .view { height: 65vh; }
+  .side { border-right: 0; overflow: visible; }
+}
