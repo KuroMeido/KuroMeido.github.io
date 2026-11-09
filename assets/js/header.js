@@ -3,7 +3,7 @@
   if (!header) return;
 
   const page = (document.body?.dataset?.page || "").toLowerCase();
-  const active = { home: "", blog: "", resources: "", revit: "", archicad: "" };
+  const active = { home: "", blog: "", resources: "", revit: "", archicad: "", sketchup: "" };
 
   if (page === "post") {
     active.blog = "is-active";
@@ -22,6 +22,7 @@
         <a class="${active.resources}" href="/resources.html"${current("resources")}>Resources</a>
         <a class="${active.revit}" href="/revit.html"${current("revit")}>Revit Tool</a>
         <a class="${active.archicad}" href="/archicad-model-health.html"${current("archicad")}>ArchiCAD Health</a>
+        <a class="${active.sketchup}" href="/sketchup-sim/"${current("sketchup")}>SketchUp Sim</a>
       </nav>
     </div>
   `;

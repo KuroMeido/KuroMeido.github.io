@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SketchUp Sim | Kuro Hitsuji</title>
+  <meta name="description" content="Kiểm tra file .rb do pyKuro CAD → SketchUp xuất ra mà không cần cài SketchUp: dựng thử mô hình 3D, so sánh số đối tượng theo tag và báo các hình SketchUp không dựng được." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/index.html">Kuro Hitsuji</a>
+    <span class="title">SketchUp Sim <small>kiểm tra file .rb của pyKuro CAD → SketchUp</small></span>
+    <div class="actions">
+      <label class="btn primary" for="file">Mở file .rb</label>
+      <input id="file" type="file" accept=".rb,text/plain" hidden />
+      <button class="btn" id="sample-ok" type="button">Mẫu quy hoạch</button>
+      <button class="btn" id="sample-bad" type="button">Mẫu có lỗi</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="side" id="side">
+      <p class="note">
+        Trang này <b>đọc</b> script do <code>CmdCadToSketchUp</code> xuất ra và <b>giả lập</b> các lệnh SketchUp nó dùng
+        (add_face, khoét lỗ, pushpull, cây là component…). Đây là kết quả gần đúng để kiểm tra nhanh;
+        SketchUp thật vẫn là bước kiểm tra cuối cùng. File không được gửi đi đâu, mọi thứ chạy trong trình duyệt.
+      </p>
+
+      <section id="verdict" class="verdict empty">Chưa có file. Mở một file <code>.rb</code> hoặc kéo thả vào khung 3D.</section>
+
+      <section class="panel" id="console-panel" hidden>
+        <h2>Ruby Console (giả lập)</h2>
+        <pre id="console"></pre>
+      </section>
+
+      <section class="panel" id="tags-panel" hidden>
+        <h2>CAD xuất ra so với SketchUp dựng được</h2>
+        <div class="table-wrap">
+          <table class="tags">
+            <thead>
+              <tr><th></th><th>Tag / lớp CAD</th><th title="Số đối tượng script yêu cầu tạo (hình × dải cao độ, hoặc số cây)">CAD xuất</th><th title="Số đối tượng SketchUp sẽ tạo được">Dựng</th><th>Bỏ qua</th><th>Cao độ (m)</th><th>Diện tích (m²)</th></tr>
+            </thead>
+            <tbody id="tags"></tbody>
+            <tfoot id="tags-total"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="issues-panel" hidden>
+        <h2>Lỗi và cảnh báo <span id="issue-count"></span></h2>
+        <div class="filters">
+          <label><input type="checkbox" data-level="error" checked /> Lỗi</label>
+          <label><input type="checkbox" data-level="warn" checked /> Cảnh báo</label>
+          <label><input type="checkbox" data-level="info" /> Ghi chú</label>
+        </div>
+        <ol id="issues" class="issues"></ol>
+      </section>
+
+      <section class="panel" id="info-panel" hidden>
+        <h2>Model Info</h2>
+        <dl id="info" class="kv"></dl>
+      </section>
+    </aside>
+
+    <main class="view" id="view">
+      <div class="toolbar">
+        <button class="btn sm" data-view="iso" type="button">Iso</button>
+        <button class="btn sm" data-view="top" type="button">Trên</button>
+        <button class="btn sm" data-view="front" type="button">Trước</button>
+        <button class="btn sm" data-view="right" type="button">Phải</button>
+        <button class="btn sm" id="zoom" type="button">Zoom extents</button>
+        <label class="chk"><input type="checkbox" id="edges" checked /> Cạnh</label>
+        <label class="chk"><input type="checkbox" id="failed" checked /> Hình lỗi (đỏ)</label>
+        <label class="chk"><input type="checkbox" id="xray" /> X-ray</label>
+      </div>
+      <div id="selection" class="selection" hidden></div>
+      <div id="drop" class="drop" hidden>Thả file .rb vào đây</div>
+      <div id="empty" class="empty-view">Kéo thả file <b>.rb</b> vào đây<br /><small>chuột trái: xoay · chuột phải: di chuyển · cuộn: zoom · bấm vào đối tượng để xem thông tin</small></div>
+    </main>
+  </div>
+
+  <script src="lib/three.min.js"></script>
+  <script src="lib/OrbitControls.js"></script>
+  <script src="rb-sim.js"></script>
+  <script src="samples/samples.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>
