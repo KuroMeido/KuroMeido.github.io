@@ -7,7 +7,8 @@ Builds the sample .rb files for the SketchUp preview page, in exactly the format
 
 Writes samples/sample_loi.rb (with deliberate faults the page must report) and samples/samples.js, which also embeds
 the samples written by the real exporter from the C# tests: sample_quyhoach.rb (planning blocks, filleted curbs,
-chamfered lots), sample_nga4.rb (4-way intersection) and sample_thuc.rb (samples/sample.dxf). The same texts, so the
+chamfered lots, centre lines, crosswalks, park), sample_nga4.rb (4-way intersection), sample_thuc.rb (samples/sample.dxf)
+and sample_ranh.rb (a masterplan traced roughly from a site plan: irregular site on a river, diagonal roads). The same texts, so the
 sample buttons work when index.html is opened straight from disk.
 """
 import json
@@ -116,7 +117,8 @@ def main():
     # written by the real exporter, from the C# tests (curb fillets, sidewalk / lot chamfers, sample.dxf):
     #   dotnet run --project <pyKuro_CAD_Command>/pyKuro_CAD_Command.Tests -- --write-rb sketchup-sim/samples/sample_nga4.rb
     #       --write-planning-rb sketchup-sim/samples/sample_quyhoach.rb --write-real-rb sketchup-sim/samples/sample_thuc.rb
-    for name in ('sample_quyhoach.rb', 'sample_nga4.rb', 'sample_thuc.rb'):
+    #       --write-masterplan-rb sketchup-sim/samples/sample_ranh.rb
+    for name in ('sample_quyhoach.rb', 'sample_nga4.rb', 'sample_thuc.rb', 'sample_ranh.rb'):
         path = os.path.join(HERE, 'samples', name)
         if os.path.exists(path):
             files[name] = open(path, encoding='utf-8').read()

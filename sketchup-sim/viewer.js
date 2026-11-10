@@ -367,6 +367,7 @@
   $('sample-bad').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_loi.rb'], 'sample_loi.rb'); });
   $('sample-nga4').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_nga4.rb'], 'sample_nga4.rb'); });
   $('sample-thuc').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_thuc.rb'], 'sample_thuc.rb'); });
+  $('sample-ranh').addEventListener('click', function () { loadText(window.PYKURO_SAMPLES['sample_ranh.rb'], 'sample_ranh.rb'); });
 
   var dragDepth = 0;
   document.addEventListener('dragenter', function (e) { e.preventDefault(); dragDepth++; $('drop').hidden = false; });
@@ -384,10 +385,10 @@
   $('failed').addEventListener('change', function () { if (state.failedGroup) state.failedGroup.visible = $('failed').checked; });
   Array.prototype.forEach.call(document.querySelectorAll('.filters input'), function (c) { c.addEventListener('change', function () { if (state.res) renderIssues(state.res); }); });
 
-  // ?sample=ok|loi|nga4|thuc opens a sample directly (handy for sharing a link)
+  // ?sample=ok|loi|nga4|thuc|ranh opens a sample directly (handy for sharing a link)
   var q = /[?&]sample=(\w+)/.exec(location.search);
   if (q) {
-    var file = q[1] === 'loi' ? 'sample_loi.rb' : q[1] === 'nga4' ? 'sample_nga4.rb' : q[1] === 'thuc' ? 'sample_thuc.rb' : 'sample_quyhoach.rb';
+    var file = q[1] === 'loi' ? 'sample_loi.rb' : q[1] === 'nga4' ? 'sample_nga4.rb' : q[1] === 'thuc' ? 'sample_thuc.rb' : q[1] === 'ranh' ? 'sample_ranh.rb' : 'sample_quyhoach.rb';
     loadText(window.PYKURO_SAMPLES[file], file);
   }
 })();

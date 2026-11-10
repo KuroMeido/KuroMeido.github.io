@@ -1,5 +1,5 @@
 # encoding: UTF-8
-# pyKuro CAD -> SketchUp | nga4_mau.dwg | 2026-11-09 14:37
+# pyKuro CAD -> SketchUp | nga4_mau.dwg | 2026-11-10 01:57
 # SketchUp: Extensions > Developer > Ruby Console, then type:  load 'path/to/this_file.rb'
 # Re-running the script adds a new copy of the model (Undo removes it in one step).
 
@@ -139,6 +139,11 @@ begin
   PyKuroCad2Su.reset
   root = model.active_entities.add_group
   root.name = 'pyKuro - nga4_mau.dwg'
+
+  # Tim đường (vạch trắng) <- TIM DUONG
+  PyKuroCad2Su.layer(root, 'QH_TIMDUONG', [255, 255, 255], [[0, 20]], [
+    [[100075,0,100075,200000,99925,200000,99925,0], [], nil],
+  ])
 
   # Đường (lòng đường) <- MEP DUONG
   PyKuroCad2Su.layer(root, 'QH_DUONG', [127, 127, 127], [[0, 0]], [
