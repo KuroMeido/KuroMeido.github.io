@@ -1,5 +1,5 @@
 # encoding: UTF-8
-# pyKuro CAD -> SketchUp | sample.dxf | 2026-11-09 16:02
+# pyKuro CAD -> SketchUp | sample.dxf | 2026-11-10 01:57
 # SketchUp: Extensions > Developer > Ruby Console, then type:  load 'path/to/this_file.rb'
 # Re-running the script adds a new copy of the model (Undo removes it in one step).
 
@@ -205,7 +205,7 @@ begin
   ])
 
   # Đất công cộng <- 0
-  PyKuroCad2Su.layer(root, 'QH_DAT_CONGCONG', [255, 124, 128], [[0, 300]], [
+  PyKuroCad2Su.layer(root, 'QH_DAT_CONGCONG', [165, 82, 103], [[0, 300]], [
     [[541343.7,84753.1,541343.7,156863.4,389447.7,156863.4,389447.7,84753.1], [], nil],
   ])
 

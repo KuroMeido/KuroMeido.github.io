@@ -1,5 +1,5 @@
 # encoding: UTF-8
-# pyKuro CAD -> SketchUp | mau_quy_hoach.dwg | 2026-11-09 16:02
+# pyKuro CAD -> SketchUp | mau_quy_hoach.dwg | 2026-11-10 01:57
 # SketchUp: Extensions > Developer > Ruby Console, then type:  load 'path/to/this_file.rb'
 # Re-running the script adds a new copy of the model (Undo removes it in one step).
 
@@ -156,7 +156,7 @@ begin
   ])
 
   # Đất ở <- QH-DAT O LIEN KE
-  PyKuroCad2Su.layer(root, 'QH_DAT_O', [255, 217, 102], [[0, 300]], [
+  PyKuroCad2Su.layer(root, 'QH_DAT_O', [165, 82, 0], [[0, 300]], [
     [[13000,18000,18000,13000,19000,13000,19000,33000,13000,33000], [], nil],
     [[19000,13000,25000,13000,25000,33000,19000,33000], [], nil],
     [[25000,13000,31000,13000,31000,33000,25000,33000], [], nil],
@@ -220,23 +220,23 @@ begin
   ])
 
   # Đất cây xanh <- QH-CXCC
-  PyKuroCad2Su.layer(root, 'QH_DAT_CAYXANH', [146, 208, 80], [[0, 300]], [
+  PyKuroCad2Su.layer(root, 'QH_DAT_CAYXANH', [82, 165, 0], [[0, 300]], [
     [[94000,13000,144000,13000,149000,18000,149000,48000,144000,53000,94000,53000,89000,48000,89000,18000], [[121000,23000,134000,21000,141000,29000,138000,43000,126000,45000,119000,34000]], nil],
     [[127000,30000,133000,30000,133000,36000,127000,36000], [], nil],
   ])
 
   # Đất giáo dục <- QH-TRUONG MAM NON
-  PyKuroCad2Su.layer(root, 'QH_DAT_GIAODUC', [255, 153, 204], [[0, 300]], [
+  PyKuroCad2Su.layer(root, 'QH_DAT_GIAODUC', [127, 63, 63], [[0, 300]], [
     [[18000,69000,68000,69000,73000,74000,73000,104000,68000,109000,18000,109000,13000,104000,13000,74000], [], nil],
   ])
 
   # Đất thương mại dịch vụ <- QH-TMDV
-  PyKuroCad2Su.layer(root, 'QH_DAT_TMDV', [204, 102, 255], [[0, 300]], [
+  PyKuroCad2Su.layer(root, 'QH_DAT_TMDV', [165, 0, 0], [[0, 300]], [
     [[170000,69000,220000,69000,225000,74000,225000,104000,220000,109000,170000,109000,165000,104000,165000,74000], [], nil],
   ])
 
   # Mặt nước <- HO DIEU HOA
-  PyKuroCad2Su.layer(root, 'QH_MATNUOC', [157, 195, 230], [[-500, -500]], [
+  PyKuroCad2Su.layer(root, 'QH_MATNUOC', [0, 82, 165], [[-500, -500]], [
     [[121000,23000,134000,21000,141000,29000,138000,43000,126000,45000,119000,34000], [], nil],
   ])
 
