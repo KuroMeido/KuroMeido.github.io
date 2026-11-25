@@ -15,7 +15,7 @@ Trang của bé không có liên kết nào tới trang nghiệm thu, nên chỉ
 
 | File | Vai trò |
 | --- | --- |
-| `css/style.css` | Giao diện, màu sắc, chế độ sáng/tối, dùng chung cho hai trang |
+| `css/style.css` | Giao diện "cửa sổ hệ thống" (nền tối, viền xanh, tiền màu vàng), dùng chung cho hai trang |
 | `js/config.js` | Cấu hình: `apiUrl` của Apps Script. Đổi Sheet thì chỉ sửa file này |
 | `js/core.js` | Dùng chung: dữ liệu, kết nối Google Sheet, tính tiền theo ngày và tháng, ảnh |
 | `js/kid.js` | Chỉ trang của bé: vẽ danh sách việc, nộp ảnh |
@@ -39,13 +39,13 @@ Bé nộp ảnh bài kiểm tra được điểm 10 để đổi thưởng, qua 
 
 ## Sửa thường gặp
 
-- **Sau mỗi lần sửa CSS hoặc JS:** đổi số trong `?v=3` ở các thẻ `<link>` và `<script>` của `index.html` và `duyet/index.html` (ví dụ thành `?v=4`). Nếu không, trình duyệt có thể giữ bản cũ vài phút đến vài giờ và trang bị lỗi vì HTML mới chạy với JS cũ.
+- **Sau mỗi lần sửa CSS hoặc JS:** đổi số trong `?v=5` ở các thẻ `<link>` và `<script>` của `index.html` và `duyet/index.html` (ví dụ thành `?v=6`). Nếu không, trình duyệt có thể giữ bản cũ vài phút đến vài giờ và trang bị lỗi vì HTML mới chạy với JS cũ.
 
 - **Đổi giá mỗi việc:** sửa `RATE` trong `js/core.js` và `RATE` ở đầu `apps-script/Code.gs`, rồi triển khai lại script.
 - **Đổi giá một việc từ một ngày nào đó:** thêm mốc vào `RATE_CHANGES` ở cả `js/core.js` và `apps-script/Code.gs` (hai nơi phải giống nhau), ví dụ `cage: [{ from: "2026-10-18", money: 15000 }]`. Giá tính theo ngày của việc và được ghi vào cột Tiền lúc nộp, nên các dòng cũ không bị tính lại. Hiện tại: dọn chuồng 15.000đ từ 18/10/2026, trước đó 10.000đ.
 - **Thêm hoặc đổi việc:** sửa danh sách `TASKS` trong `js/core.js` và `TASKS` ở `apps-script/Code.gs` (hai nơi phải giống nhau).
 - **Đổi màu:** sửa các biến ở đầu `css/style.css`.
-- **Chữ:** trang chỉ dùng 2 font (Fredoka cho tiêu đề và số, Be Vietnam Pro cho nội dung) và 3 cỡ chữ: `--fs-s` 13px, `--fs-m` 16px, `--fs-l` 32px. Khi thêm phần tử mới, chỉ dùng 3 biến này, đừng ghi số px trực tiếp.
+- **Chữ:** trang chỉ dùng 2 font (Chakra Petch cho tiêu đề và số, Be Vietnam Pro cho nội dung) và 3 cỡ chữ: `--fs-s` 13px, `--fs-m` 16px, `--fs-l` 32px. Khi thêm phần tử mới, chỉ dùng 3 biến này, đừng ghi số px trực tiếp.
 
 ## Cập nhật máy chủ Apps Script
 

@@ -1,113 +1,166 @@
-/* Layout: one narrow column. Kid view on top (chores, photo, status), money summary, parent review gated by PIN, then history. */
+/* Giao diện "cửa sổ hệ thống": mỗi việc là một nhiệm vụ trong game, tiền là phần thưởng. Dùng chung cho trang của bé và trang nghiệm thu.
+ * Giữ quy tắc của trang gốc: 2 font (Chakra Petch cho tiêu đề và số, Be Vietnam Pro cho nội dung)
+ * và đúng 3 cỡ chữ --fs-s / --fs-m / --fs-l. Class do js/kid.js tạo ra được giữ nguyên. */
 :root{
-  --bg:#f2f5ef;
-  --surface:#ffffff;
-  --fg:#1d2a21;
-  --muted:#5d6e62;
-  --line:#dbe3d8;
-  --carrot:#d9631c;
-  --carrot-ink:#ffffff;
-  --leaf:#2f7a52;
-  --leaf-soft:#dcefe3;
-  --wait-soft:#fde9d6;
-  --wait-ink:#8a3d0c;
-  --bad:#b3363a;
-  --bad-soft:#fbe0e0;
-  --font-display:"Fredoka","Be Vietnam Pro",system-ui,sans-serif;
+  --bg:#0A0F1E;
+  --panel:#111A30;
+  --panel-2:#16223D;
+  --fg:#E8F1FF;
+  --muted:#8FA3C0;
+  --line:#22314F;
+  --sys:#4FD1FF;          /* viền cửa sổ hệ thống */
+  --sys-soft:#4FD1FF22;
+  --gold:#FFD166;          /* tiền */
+  --ok:#5BE49B;  --ok-soft:#5BE49B1F;
+  --wait:#FFB547; --wait-soft:#FFB5471F;
+  --bad:#FF6B7A; --bad-soft:#FF6B7A1F;
+  --tier1:#8FD3FF; --tier2:#B48CFF; --tier3:#FFD166;
+  --font-display:"Chakra Petch","Be Vietnam Pro",system-ui,sans-serif;
   --font-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
-  /* Chỉ 2 font (display, body) và 3 cỡ chữ. Mọi font-size trong file này phải dùng một trong 3 biến dưới đây. */
-  --fs-s:13px;  /* nhãn, ghi chú, chip, ngày */
-  --fs-m:16px;  /* nội dung, nút, tiêu đề mục, số trong thẻ */
-  --fs-l:32px;  /* tiêu đề trang, số tiền hôm nay */
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#121a15;--surface:#1b261f;--fg:#e6efe8;--muted:#9bb0a1;--line:#2c3b31;
-    --carrot:#f08a45;--carrot-ink:#1b1209;--leaf:#6fcf97;--leaf-soft:#223b2d;
-    --wait-soft:#3a2616;--wait-ink:#f3b17f;--bad:#f08a8e;--bad-soft:#3d1d1f;color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#121a15;--surface:#1b261f;--fg:#e6efe8;--muted:#9bb0a1;--line:#2c3b31;
-  --carrot:#f08a45;--carrot-ink:#1b1209;--leaf:#6fcf97;--leaf-soft:#223b2d;
-  --wait-soft:#3a2616;--wait-ink:#f3b17f;--bad:#f08a8e;--bad-soft:#3d1d1f;color-scheme:dark;
+  --fs-s:13px; --fs-m:16px; --fs-l:32px;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
-input,button,select,textarea{font:inherit}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-m);line-height:1.5;padding-inline:16px;padding-block:20px 40px}
-.wrap{max-width:520px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
-h1,h2,.num{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:balance}
-.date{color:var(--muted);font-size:var(--fs-s);letter-spacing:.04em;text-transform:uppercase}
-.hero{display:flex;flex-direction:column;gap:6px}
-.hero h1{font-size:var(--fs-l);line-height:1.15}
+input,button{font:inherit}
+body{
+  margin:0;min-height:100vh;color:var(--fg);font-family:var(--font-body);font-size:var(--fs-m);line-height:1.5;
+  padding:16px 16px 48px;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #1C3B7A55, transparent 70%),
+    radial-gradient(1px 1px at 12% 18%, #ffffff66 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 9%, #ffffff55 50%, transparent 51%),
+    radial-gradient(1px 1px at 64% 32%, #ffffff44 50%, transparent 51%),
+    radial-gradient(1px 1px at 30% 46%, #ffffff33 50%, transparent 51%),
+    linear-gradient(var(--sys-soft) 1px, transparent 1px) 0 0 / 100% 32px,
+    var(--bg);
+  background-attachment:fixed;
+}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1,h2,.num{font-family:var(--font-display);font-weight:600;margin:0}
+a{color:var(--sys)}
+
+/* ───── cửa sổ hệ thống: viền xanh, góc ngoặc, nhãn tab ───── */
+.window{position:relative;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--sys);
+  box-shadow:0 0 0 1px var(--sys-soft) inset,0 0 28px #4FD1FF26;padding:28px 18px 18px}
+.window::before,.window::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--sys)}
+.window::before{top:-5px;left:-5px;border-right:0;border-bottom:0}
+.window::after{bottom:-5px;right:-5px;border-left:0;border-top:0}
+.win-tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:2px 14px;background:var(--bg);border:1px solid var(--sys);
+  font-family:var(--font-display);font-size:var(--fs-s);letter-spacing:.3em;color:var(--sys);white-space:nowrap;text-shadow:0 0 8px var(--sys)}
+
+/* ───── đầu trang ───── */
+.hero{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.date{color:var(--muted);font-size:var(--fs-s);letter-spacing:.08em;text-transform:uppercase}
+.hero h1{font-size:var(--fs-l);line-height:1.1;margin-top:4px}
+.bunny{flex:none;width:56px;height:56px;fill:none;stroke:var(--sys);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px #4FD1FF88)}
+.bunny .eye{fill:var(--sys);stroke:none}
 .today-money{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.today-money .num{font-size:var(--fs-l);line-height:1;color:var(--carrot);font-variant-numeric:tabular-nums}
-.today-money span{color:var(--muted)}
-.bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
-.bar i{height:8px;border-radius:4px;background:var(--line);transition:background .2s}
-.bar i.ok{background:var(--leaf)}
-.bar i.wait{background:var(--carrot)}
+.today-money .num{font-size:var(--fs-l);line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;text-shadow:0 0 14px #FFD16655;display:inline-flex;align-items:center;gap:10px}
+.today-money .num::before{content:"";width:.62em;height:.62em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFF1BF,var(--gold) 55%,#B8860B);box-shadow:0 0 10px #FFD16699}
+.today-money span{color:var(--muted);font-size:var(--fs-s)}
+.xp{display:flex;flex-direction:column;gap:6px}
+.xp-label{font-family:var(--font-display);font-size:var(--fs-s);letter-spacing:.2em;color:var(--muted)}
+.bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.bar i{height:12px;background:var(--line);transform:skewX(-24deg);transition:background .3s,box-shadow .3s}
+.bar i.ok{background:var(--ok);box-shadow:0 0 10px #5BE49B88}
+.bar i.wait{background:var(--wait);box-shadow:0 0 10px #FFB54788;animation:blink 1.6s ease-in-out infinite}
+
+/* ───── tiêu đề mục ───── */
+h2{font-size:var(--fs-m);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:10px;color:var(--sys)}
+h2::before{content:"▸";color:var(--sys)}
+h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--sys),transparent)}
+.col{display:flex;flex-direction:column;gap:12px}
+.hint{margin:0;color:var(--muted);font-size:var(--fs-s)}
+
+/* ───── thẻ nhiệm vụ (do kid.js tạo: label.chore.<trạng thái>) ───── */
 .chores{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
-.chore{position:relative;display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);cursor:pointer;transition:border-color .15s,background .15s}
-.chore:hover{border-color:var(--leaf)}
-.chore:focus-within{outline:3px solid var(--carrot);outline-offset:2px}
+.chore{position:relative;display:flex;align-items:center;gap:14px;padding:14px;background:var(--panel);border:1px dashed #4FD1FF66;
+  cursor:pointer;overflow:hidden;transition:border-color .15s,background .15s,transform .15s}
+.chore:hover{border-color:var(--sys);background:var(--panel-2)}
+.chore:active{transform:scale(.99)}
+.chore:focus-within{outline:2px solid var(--sys);outline-offset:3px}
 .chore input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
-.chore .box{flex:none;width:34px;height:34px;border-radius:10px;border:2px dashed var(--muted);display:grid;place-items:center;color:var(--muted)}
+.chore .box{flex:none;width:40px;height:40px;display:grid;place-items:center;color:var(--sys);border:1px solid #4FD1FF66;background:var(--sys-soft);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
 .chore .box svg{width:20px;height:20px}
-.chore .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.chore .label{font-weight:500;font-size:var(--fs-m)}
+.chore .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.chore .label{font-weight:600}
 .chore .sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.chore .pay{font-family:var(--font-display);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:var(--fs-s)}
-.chore .thumb{flex:none;width:52px;height:52px;border-radius:10px;object-fit:cover;background:var(--line)}
-.chip{font-size:var(--fs-s);font-weight:600;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--muted);white-space:nowrap}
-.chip.pending{background:var(--wait-soft);color:var(--wait-ink)}
-.chip.approved{background:var(--leaf-soft);color:var(--leaf)}
-.chip.rejected{background:var(--bad-soft);color:var(--bad)}
-.chore.pending{border-color:var(--carrot)}
-.chore.pending .box{border-style:solid;border-color:var(--carrot);background:var(--wait-soft);color:var(--wait-ink)}
-.chore.approved{background:var(--leaf-soft);border-color:var(--leaf);cursor:default}
-.chore.approved .box{border-style:solid;border-color:var(--leaf);background:var(--leaf);color:var(--surface)}
-.chore.approved .pay{color:var(--leaf)}
-.chore.rejected{border-color:var(--bad);background:var(--bad-soft)}
-.chore.rejected .box{border-style:solid;border-color:var(--bad);color:var(--bad)}
-.chore.off{opacity:.55;cursor:not-allowed}
+.chore .pay{margin-left:auto;font-family:var(--font-display);font-size:var(--fs-m);color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chore .thumb{flex:none;width:52px;height:52px;object-fit:cover;border:1px solid var(--line)}
+.chip{font-size:var(--fs-s);font-weight:600;padding:1px 8px;border:1px solid currentColor;color:var(--sys);white-space:nowrap}
+.chip.pending{color:var(--wait);background:var(--wait-soft)}
+.chip.approved{color:var(--ok);background:var(--ok-soft)}
+.chip.rejected{color:var(--bad);background:var(--bad-soft)}
+
+.chore.pending{border:1px solid var(--wait);box-shadow:0 0 16px #FFB54733 inset}
+.chore.pending .box{color:var(--wait);border-color:var(--wait);background:var(--wait-soft)}
+.chore.approved{border:1px solid var(--ok);background:linear-gradient(90deg,var(--ok-soft),var(--panel) 70%);cursor:default}
+.chore.approved .box{color:#06210F;background:var(--ok);border-color:var(--ok)}
+.chore.approved .label{color:var(--ok)}
+.chore.approved::after{content:"HOÀN THÀNH";position:absolute;right:110px;top:50%;transform:translateY(-50%) rotate(-10deg);
+  font-family:var(--font-display);font-size:var(--fs-s);letter-spacing:.2em;color:var(--ok);border:2px solid var(--ok);padding:2px 8px;opacity:.28;pointer-events:none}
+.chore.rejected{border:1px solid var(--bad);background:linear-gradient(90deg,var(--bad-soft),var(--panel) 70%)}
+.chore.rejected .box{color:var(--bad);border-color:var(--bad);background:var(--bad-soft)}
+.chore.off{opacity:.5;cursor:not-allowed}
+
+/* ───── side quest: ba cấp như độ hiếm vật phẩm ───── */
+.quest-win{margin-top:12px}
+#quest-q15{--tier:var(--tier1)} #quest-q45{--tier:var(--tier2)} #quest-q15,#quest-q45,#quest-qhk{border:1px solid var(--tier);border-left-width:4px}
+#quest-qhk{--tier:var(--tier3);box-shadow:0 0 18px #FFD16622 inset}
+#quest-q15 .box,#quest-q45 .box,#quest-qhk .box{color:var(--tier);border-color:var(--tier);background:transparent}
+#quest-q15 .chip,#quest-q45 .chip,#quest-qhk .chip{color:var(--tier)}
+
+/* ───── ghi chú ───── */
+.note{padding:12px 14px;border:1px dashed var(--line);color:var(--muted);font-size:var(--fs-s);background:var(--panel)}
+.note.err{border:1px solid var(--bad);color:var(--bad)}
+.note.alert{border:1px solid var(--wait);background:var(--wait-soft);color:var(--wait)}
+.note.alert b{color:var(--fg)}
+
+/* ───── túi tiền ───── */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
-.stat small{display:block;color:var(--muted);font-size:var(--fs-s)}
-.stat .num{font-size:var(--fs-m);font-variant-numeric:tabular-nums;white-space:nowrap}
-.owed{background:var(--carrot);border-color:var(--carrot)}
-.owed small,.owed .num{color:var(--carrot-ink)}
-button.act{font:inherit;font-weight:600;border-radius:10px;padding:11px 16px;border:1.5px solid var(--leaf);background:var(--leaf);color:var(--surface);cursor:pointer}
+.stat{padding:12px;border:1px solid var(--line);background:var(--panel);min-width:0}
+.stat small{display:block;color:var(--muted);font-size:var(--fs-s);letter-spacing:.06em}
+.stat .num{font-size:var(--fs-m);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--fg)}
+.stat.owed{border-color:var(--gold);background:linear-gradient(180deg,#FFD1661A,var(--panel));box-shadow:0 0 16px #FFD16622}
+.stat.owed .num{color:var(--gold)}
+
+/* ───── nhật ký ───── */
+.list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;border-left:1px solid var(--line)}
+.list li{position:relative;display:flex;justify-content:space-between;gap:12px;padding:10px 0 10px 16px;border-bottom:1px solid #22314F88}
+.list li::before{content:"";position:absolute;left:-4px;top:17px;width:7px;height:7px;background:var(--bg);border:1px solid var(--sys)}
+.list li:last-child{border-bottom:0}
+.list .l{min-width:0}
+.list .l small{display:block;color:var(--muted);font-size:var(--fs-s)}
+.list .r{font-family:var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.list .r.paid{color:var(--ok)}
+
+@keyframes blink{50%{opacity:.45}}
+@media (prefers-reduced-motion: reduce){.bar i.wait{animation:none}}
+
+/* ───── trang nghiệm thu (js/duyet.js): khung PIN, hàng đợi duyệt, trả tiền ───── */
+.card{position:relative;background:var(--panel);border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:14px}
+.card h2{flex-wrap:nowrap}
+.badge{font-family:var(--font-display);font-size:var(--fs-s);letter-spacing:0;color:var(--bg);background:var(--wait);padding:1px 9px;box-shadow:0 0 10px #FFB54766}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.act{font-weight:600;font-family:var(--font-display);letter-spacing:.06em;padding:10px 16px;border:1px solid var(--sys);background:var(--sys);color:var(--bg);cursor:pointer;
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:filter .15s}
+button.act:hover{filter:brightness(1.12)}
 button.act.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
 button.act.warn{background:transparent;color:var(--bad);border-color:var(--bad)}
 button.act:disabled{opacity:.45;cursor:not-allowed}
-button.act:focus-visible,.pin:focus-visible{outline:3px solid var(--carrot);outline-offset:2px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.hint{color:var(--muted);font-size:var(--fs-s)}
-h2{font-size:var(--fs-m)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.card h2{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.badge{font-family:var(--font-body);font-size:var(--fs-s);font-weight:600;background:var(--carrot);color:var(--carrot-ink);border-radius:999px;padding:2px 9px}
-.pin{font:inherit;width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);letter-spacing:.35em}
-.field{display:flex;flex-direction:column;gap:4px}
-.field label{font-size:var(--fs-s);color:var(--muted)}
+button.act:focus-visible,.pin:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:var(--fs-s);color:var(--muted);letter-spacing:.06em}
+.pin{width:100%;padding:11px 12px;border:1px solid var(--sys);background:var(--bg);color:var(--fg);letter-spacing:.5em;font-family:var(--font-display);box-shadow:0 0 12px #4FD1FF22 inset}
 .msg{color:var(--bad);font-size:var(--fs-s)}
-.queue{display:flex;flex-direction:column;gap:14px;margin:0;padding:0;list-style:none}
-.rev{display:flex;flex-direction:column;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.rev:last-child{border-bottom:0;padding-bottom:0}
+.queue{display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.rev{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--wait);background:linear-gradient(180deg,var(--wait-soft),var(--panel) 60%)}
 .rev-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
-.rev-h small{color:var(--muted)}
-.rev img{width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:var(--line)}
-.rev .none{padding:24px;text-align:center;border-radius:12px;background:var(--line);color:var(--muted)}
-.list{display:flex;flex-direction:column;margin:8px 0 0;padding:0;list-style:none}
-.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.list li:last-child{border-bottom:0}
-.list .l{min-width:0}
-.list .l small{display:block;color:var(--muted)}
-.list .r{font-family:var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap}
-.list .r.paid{color:var(--leaf)}
-.note{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted)}
-.note.err{border-color:var(--bad);color:var(--bad)}
-.list .l small,.rev-h small{font-size:var(--fs-s)}
-.col{display:flex;flex-direction:column;gap:12px}
-.note.alert{border-style:solid;border-color:var(--carrot);background:var(--wait-soft);color:var(--wait-ink)}
+.rev-h small{color:var(--muted);font-size:var(--fs-s)}
+.rev img{width:100%;max-height:60vh;object-fit:contain;background:var(--bg);border:1px solid var(--line)}
+.rev .none{padding:24px;text-align:center;background:var(--bg);border:1px dashed var(--line);color:var(--muted)}
+.card .list{border-left:0}
+.card .list li{padding-left:0}
+.card .list li::before{display:none}

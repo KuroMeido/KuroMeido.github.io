@@ -3,39 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex">
 <title>Easy money</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Chakra+Petch:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 <main class="wrap">
-  <header class="hero">
-    <div class="date" id="date"></div>
-    <h1>Nhiệm vụ hệ thống</h1>
+  <header class="hero window">
+    <div class="win-tag">HỆ THỐNG</div>
+    <div class="hero-top">
+      <div>
+        <div class="date" id="date"></div>
+        <h1>Nhiệm vụ hệ thống</h1>
+      </div>
+      <svg class="bunny" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 30 C16 18 16 6 21 4 C26 2 28 16 28 27" />
+        <path d="M42 30 C48 18 48 6 43 4 C38 2 36 16 36 27" />
+        <ellipse cx="32" cy="40" rx="16" ry="14" />
+        <circle cx="26" cy="38" r="2" class="eye" /><circle cx="38" cy="38" r="2" class="eye" />
+        <path d="M30 45 L32 47 L34 45" />
+      </svg>
+    </div>
     <div class="today-money"><span class="num" id="todayMoney">0đ</span><span id="todayCount"></span></div>
-    <div class="bar" id="bar"><i></i><i></i><i></i><i></i></div>
+    <div class="xp">
+      <span class="xp-label">TIẾN ĐỘ HÔM NAY</span>
+      <div class="bar" id="bar"><i></i><i></i><i></i><i></i></div>
+    </div>
   </header>
 
   <div class="note err" id="err" role="alert" hidden></div>
   <div class="note" id="setup" hidden>Chưa kết nối Google Sheet. Dán URL ứng dụng web Apps Script vào apiUrl trong file js/config.js.</div>
   <div class="note" id="loading" hidden>Đang tải dữ liệu từ Google Sheet…</div>
 
-  <ul class="chores" id="chores"></ul>
-  <p class="hint" style="margin:-8px 0 0">Làm xong thì chạm vào việc đó và chụp ảnh. Tiền chỉ được tính sau khi mụ phù thủy nghiệm thu.</p>
-
-  <section class="col" id="quests">
-    <h2>Side quest: điểm 10 đổi thưởng</h2>
-    <p class="hint" style="margin:0">Được điểm 10 thì chụp bài nộp để đổi thưởng. Mỗi lần được điểm 10 là một lần nộp.</p>
-    <div class="note alert" role="note"><b>Lưu ý:</b> ảnh chụp phải thể hiện rõ ngày tháng để mụ phù thủy kiểm tra. Ảnh không rõ ngày tháng sẽ bị yêu cầu chụp lại.</div>
-    <ul class="chores" id="questList"></ul>
-    <ul class="list" id="questHistory" style="margin:0"></ul>
+  <section class="col">
+    <h2><span>Nhiệm vụ hằng ngày</span></h2>
+    <ul class="chores" id="chores"></ul>
+    <p class="hint">Làm xong thì chạm vào nhiệm vụ và chụp ảnh. Tiền chỉ được cộng sau khi mụ phù thủy nghiệm thu.</p>
   </section>
 
-  <section>
+  <section class="col window quest-win" id="quests">
+    <div class="win-tag">SIDE QUEST</div>
+    <h2><span>Điểm 10 đổi thưởng</span></h2>
+    <p class="hint">Được điểm 10 thì chụp bài nộp để đổi thưởng. Mỗi lần được điểm 10 là một lần nộp.</p>
+    <div class="note alert" role="note"><b>Lưu ý:</b> ảnh chụp phải thể hiện rõ ngày tháng để mụ phù thủy kiểm tra. Ảnh không rõ ngày tháng sẽ bị yêu cầu chụp lại.</div>
+    <ul class="chores" id="questList"></ul>
+    <ul class="list" id="questHistory"></ul>
+  </section>
+
+  <section class="col">
+    <h2><span>Túi tiền</span></h2>
     <div class="stats">
       <div class="stat"><small>Tuần này</small><div class="num" id="week">0đ</div></div>
       <div class="stat"><small>Tháng này</small><div class="num" id="month">0đ</div></div>
@@ -43,19 +63,19 @@
     </div>
   </section>
 
-  <section>
-    <h2>14 ngày gần đây</h2>
+  <section class="col">
+    <h2><span>Nhật ký 14 ngày</span></h2>
     <ul class="list" id="history"></ul>
   </section>
 
-  <section>
-    <h2>Tiền theo tháng</h2>
+  <section class="col">
+    <h2><span>Tiền theo tháng</span></h2>
     <ul class="list" id="payouts"></ul>
   </section>
 </main>
 
-<script src="js/config.js?v=4"></script>
-<script src="js/core.js?v=4"></script>
-<script src="js/kid.js?v=4"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/core.js?v=5"></script>
+<script src="js/kid.js?v=5"></script>
 </body>
 </html>
