@@ -21,9 +21,7 @@
         <a class="${active.blog}" href="/blog.html"${current("blog")}>Blog</a>
         <a class="${active.resources}" href="/resources.html"${current("resources")}>Resources</a>
         <a class="${active.revit}" href="/revit.html"${current("revit")}>Revit Tool</a>
-        <a class="${active.archicad}" href="/archicad-model-health.html"${current("archicad")}>ArchiCAD Health</a>
-        <a class="${active.sketchup}" href="/sketchup-sim/"${current("sketchup")}>SketchUp Sim</a>
-      </nav>
+        <a class="${active.archicad}" href="/archicad-model-health.html"${current("archicad")}>ArchiCAD Health</a>      </nav>
     </div>
   `;
 })();

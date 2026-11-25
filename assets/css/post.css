@@ -1,0 +1,184 @@
+/* ==========================================================================
+   Post theme — matches the "Master Plan" home page (assets/css/home.css).
+   Loaded last on every page in /posts/, so it only re-skins the existing
+   article markup (title-block, article-content / sheet-body, sheet-footer).
+
+   Layout follows the home grid: three equal columns, the left third holds the
+   sheet info (and stays mostly empty), the right two thirds hold the article.
+   A gold trace bundle runs down the gutter between them.
+   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap");
+
+body[data-page="post"] {
+  /* home tokens */
+  --paper: #0D2B20; --paper-2: #113427; --chip: #08150F;
+  --ink: #E9E6D8; --ink-2: #9DB5A6;
+  --gold: #D2A64A; --gold-dark: #6E5018; --gold-text: #C9A24A; --glow: #FFC65A;
+  --z-res: #E9C46A; --z-com: #D1495B; --z-civ: #3D6FB6; --z-grn: #6A994E;
+  --orange: #FF5A1F;
+  --fs-xs: 10px; --fs-sm: 12px; --fs-md: 14px; --fs-base: 16px; --fs-lg: 20px; --fs-xl: 28px;
+  --fs-3xl: clamp(40px, 5vw, 64px);
+  --gut: 40px; --edge: 40px;
+
+  /* re-point the old site tokens so base/components/article/stylesheet.css follow */
+  --bg: var(--paper); --bg-soft: var(--paper-2);
+  --panel: var(--paper-2); --panel-strong: var(--chip);
+  --text: var(--ink); --muted: var(--ink-2); --line: #E9E6D822;
+  --brand: var(--gold); --brand-2: var(--z-res); --brand-3: var(--orange);
+  --brand-ink: #F4E9C8; --brand-soft: #D2A64A1F; --brand-soft-strong: #D2A64A26; --brand-line: #D2A64A59;
+  --shadow: none; --shadow-hover: none;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --radius-lg: 0; --radius-md: 0; --radius-sm: 0;
+
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--fs-base);
+  line-height: 1.6;
+}
+
+/* ───────── header (rendered by header.js) ───────── */
+body[data-page="post"] .site-header { background: var(--paper); backdrop-filter: none; border-bottom: 1px solid var(--ink); z-index: 50 }
+body[data-page="post"] .site-header .container { width: auto; max-width: 1320px; padding: 0 var(--edge) }
+body[data-page="post"] .nav { min-height: 64px }
+body[data-page="post"] .brand { display: flex; align-items: center; gap: 12px; font-size: var(--fs-base); font-weight: 700; letter-spacing: 0 }
+body[data-page="post"] .brand::before {
+  content: "KH"; width: 36px; height: 36px; display: grid; place-items: center; border: 1.5px solid var(--ink);
+  font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 600;
+  box-shadow: 5px 5px 0 -1px var(--orange);
+}
+body[data-page="post"] .menu { gap: 28px }
+body[data-page="post"] .menu a { position: relative; padding: 4px 0; font-size: var(--fs-md); font-weight: 500; color: var(--ink-2) }
+body[data-page="post"] .menu a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--z-res); transform: scaleX(0); transform-origin: left; transition: transform .25s }
+body[data-page="post"] .menu a:hover, body[data-page="post"] .menu a.is-active { color: var(--ink) }
+body[data-page="post"] .menu a:hover::after, body[data-page="post"] .menu a.is-active::after { transform: scaleX(1) }
+
+/* ───────── page + sheet grid ───────── */
+body[data-page="post"] .article-page { background: none; min-height: 0 }
+body[data-page="post"] .drawing-sheet {
+  width: auto; max-width: 1320px; margin: 0 auto; padding: 0 var(--edge) 96px;
+  background: none; border: 0; box-shadow: none;
+  display: grid; grid-template-columns: repeat(3, 1fr); column-gap: var(--gut);
+}
+body[data-page="post"] .frame-corner { display: none }
+
+/* title: full width row, text capped at two thirds */
+body[data-page="post"] .title-block { grid-column: 1 / -1; padding: 72px 0 48px; margin-bottom: 72px; border-bottom: 1px solid var(--ink) }
+body[data-page="post"] .doc-meta { gap: 10px; margin-bottom: 24px; font-size: var(--fs-xs); letter-spacing: .14em; color: var(--ink-2); text-transform: uppercase }
+body[data-page="post"] .doc-meta span { border: 1px solid var(--ink-2); padding: 3px 8px }
+body[data-page="post"] .doc-meta span:first-child { background: var(--chip); border-color: var(--chip); color: var(--ink) }
+body[data-page="post"] .title-block h1 { max-width: 66%; margin: 0 0 20px; font-size: var(--fs-3xl); line-height: 1.02; letter-spacing: -.03em }
+body[data-page="post"] .subhead { max-width: 66%; font-size: var(--fs-lg); line-height: 1.45; color: var(--ink-2) }
+
+/* left third: sheet info as a black component block, sticky */
+body[data-page="post"] .sheet-footer {
+  grid-column: 1; grid-row: 2; align-self: start; position: sticky; top: 112px; z-index: 1;
+  display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0;
+  border: 1px solid #E9E6D822; background: var(--chip);
+  font-size: var(--fs-xs); letter-spacing: .12em; color: var(--ink); text-transform: uppercase;
+}
+body[data-page="post"] .sheet-footer span { padding: 14px 18px; border-bottom: 1px solid #E9E6D822 }
+body[data-page="post"] .sheet-footer span:last-child { border-bottom: 0; color: var(--gold-text) }
+body[data-page="post"] .sheet-footer::before { content: "SHEET INFO"; padding: 10px 18px; color: var(--ink-2); border-bottom: 1px solid var(--ink) }
+
+/* gold trace bundle in the gutter between the info column and the article */
+body[data-page="post"] .drawing-sheet::before,
+body[data-page="post"] .drawing-sheet::after {
+  /* 5 traces (28px) centred in the 40px gutter, leaving clear space on both sides */
+  content: ""; grid-column: 1; grid-row: 2; justify-self: end; width: 28px;
+  transform: translateX(calc(var(--gut) / 2 + 14px)); pointer-events: none;
+}
+body[data-page="post"] .drawing-sheet::before {
+  background: repeating-linear-gradient(90deg, var(--gold) 0 2px, transparent 2px 6px);
+  opacity: .55;
+  -webkit-mask: linear-gradient(transparent, #000 120px, #000 calc(100% - 120px), transparent);
+          mask: linear-gradient(transparent, #000 120px, #000 calc(100% - 120px), transparent);
+}
+/* light packets running along the bundle */
+body[data-page="post"] .drawing-sheet::after {
+  /* a bright band slides down; masked to the trace stripes so only the copper lights up */
+  background: linear-gradient(transparent 0, var(--glow) 28px, transparent 56px) 0 0 / 100% 420px repeat-y;
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 6px);
+          mask: repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 6px);
+  filter: drop-shadow(0 0 4px var(--glow));
+  animation: post-packets 6s linear infinite;
+}
+@keyframes post-packets { to { background-position: 0 420px } }
+
+/* right two thirds: the article */
+body[data-page="post"] .article-content,
+body[data-page="post"] .sheet-body { grid-column: 2 / span 2; grid-row: 2; padding: 0; min-width: 0 }
+
+body[data-page="post"] .article-content h2 {
+  margin: 64px 0 20px; padding: 0 0 12px; font-size: var(--fs-xl); letter-spacing: -.02em; line-height: 1.15;
+  border-bottom: 1px solid #E9E6D822; position: relative;
+}
+body[data-page="post"] .article-content h2::before { content: ""; position: absolute; left: 0; bottom: -1px; width: 48px; height: 2px; background: var(--gold) }
+body[data-page="post"] .article-content h2:first-child { margin-top: 0 }
+body[data-page="post"] .article-content h3 { margin: 36px 0 14px; font-size: var(--fs-lg) }
+body[data-page="post"] .article-content p,
+body[data-page="post"] .article-content li { font-size: var(--fs-base); line-height: 1.75; color: var(--ink-2) }
+body[data-page="post"] .article-content strong { color: var(--ink) }
+body[data-page="post"] .article-content ul li::marker { color: var(--gold) }
+body[data-page="post"] .article-content ol li::marker { color: var(--z-res); font-family: var(--font-mono) }
+body[data-page="post"] .subhead a,
+body[data-page="post"] .article-content a:not(.btn) { color: var(--z-res); text-decoration-color: #E9C46A66 }
+
+/* code: IC-black blocks with a gold pin edge */
+body[data-page="post"] .article-content pre {
+  margin: 24px 0; padding: 20px 22px; background: var(--chip);
+  border: 1px solid #E9E6D822; border-left: 2px solid var(--gold); font-size: var(--fs-md);
+}
+body[data-page="post"] .article-content pre code { color: #F4E9C8; font-size: var(--fs-md); background: none; padding: 0 }
+body[data-page="post"] p code, body[data-page="post"] li code,
+body[data-page="post"] .detail code, body[data-page="post"] .step code, body[data-page="post"] .subhead code {
+  background: #D2A64A1F; color: #F4E9C8; padding: 1px 6px; border-radius: 0; font-size: .88em;
+}
+
+/* figures */
+body[data-page="post"] .article-content figure { margin: 32px 0 }
+body[data-page="post"] .article-content figure img { border: 1px solid #E9E6D822; background: var(--chip) }
+body[data-page="post"] .article-content figcaption { font-size: var(--fs-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--gold-text) }
+
+/* callouts */
+body[data-page="post"] .note { margin: 0 0 56px; background: var(--chip); border-left: 2px solid var(--gold); color: var(--ink-2); font-size: var(--fs-base) }
+
+/* roadmap timeline (stylesheet.css) */
+body[data-page="post"] .spine { background: repeating-linear-gradient(to bottom, var(--gold) 0 8px, transparent 8px 15px); opacity: .6 }
+body[data-page="post"] .node { background: var(--chip); border: 1px solid var(--gold); color: var(--gold-text); font-size: var(--fs-md); border-radius: 50% }
+body[data-page="post"] .step-tag { font-size: var(--fs-xs); letter-spacing: .14em; color: var(--z-res) }
+body[data-page="post"] .step h3 { font-size: var(--fs-lg) }
+body[data-page="post"] .step p { font-size: var(--fs-base); color: var(--ink-2) }
+body[data-page="post"] .step .detail { background: var(--chip); border-left: 2px solid #E9E6D833; font-size: var(--fs-md) }
+body[data-page="post"] .shortcut { background: var(--chip); border: 1px solid var(--gold); color: var(--ink) }
+body[data-page="post"] .shortcut::before { border-color: var(--gold) }
+body[data-page="post"] .shortcut .step-tag { color: var(--gold-text); opacity: 1 }
+body[data-page="post"] .shortcut h3 { color: var(--ink); font-size: var(--fs-lg) }
+body[data-page="post"] .shortcut p { color: var(--ink-2) }
+
+/* buttons */
+body[data-page="post"] .article-cta { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--ink) }
+body[data-page="post"] .btn {
+  font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 400; padding: 12px 18px;
+  border: 1px solid var(--ink); background: var(--paper); color: var(--ink); transform: none; transition: background .15s, color .15s;
+}
+body[data-page="post"] .btn:hover { background: var(--ink); color: var(--chip); transform: none }
+body[data-page="post"] .btn-primary { background: var(--z-res); border-color: var(--z-res); color: var(--chip) }
+body[data-page="post"] .btn-primary:hover { background: var(--orange); border-color: var(--orange) }
+
+/* footer */
+body[data-page="post"] .site-footer { border-top: 1px solid var(--ink); padding: 18px 0 28px; font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: .08em; color: var(--ink-2) }
+
+/* ───────── narrow screens: one column, info block above the article ───────── */
+@media (max-width: 960px) {
+  body[data-page="post"] { --gut: 24px; --edge: 24px }
+  body[data-page="post"] .drawing-sheet { grid-template-columns: 1fr }
+  body[data-page="post"] .drawing-sheet::before, body[data-page="post"] .drawing-sheet::after { display: none }
+  body[data-page="post"] .title-block { padding: 48px 0 32px; margin-bottom: 40px }
+  body[data-page="post"] .title-block h1, body[data-page="post"] .subhead { max-width: none }
+  body[data-page="post"] .sheet-footer { position: static; grid-row: 3; margin-top: 56px }
+  body[data-page="post"] .article-content, body[data-page="post"] .sheet-body { grid-column: 1 }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="post"] .drawing-sheet::after { animation: none }
+}
