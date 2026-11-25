@@ -4,3 +4,6 @@
 
 /.vs/09.Blogs.slnx/FileContentIndex
 /.vs/09.Blogs/CopilotIndices/18.7.1244.59975/CodeChunks.db
+
+# Visual Studio's local cache: machine-specific, locked while VS is open
+/.vs/

@@ -1,57 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KuroHitsuji | Code, Architecture & Revit Tools</title>
-  <meta
-    name="description"
-    content="Code, architecture, automation."
-  />
-  <link rel="stylesheet" href="assets/css/base.css" />
-  <link rel="stylesheet" href="assets/css/layout.css" />
-  <link rel="stylesheet" href="assets/css/components.css" />
-  <link rel="stylesheet" href="assets/css/pages.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KuroHitsuji | Code, Architecture &amp; Urban Planning</title>
+  <meta name="description" content="Personal blog of Kuro Hitsuji — code, architecture, urban planning, BIM workflow and Revit tools.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="assets/css/home.css">
+  <script type="module" src="assets/js/home/main.js"></script>
 </head>
-<body data-page="home">
-    <header id="site-header" class="site-header">
+<body>
+<canvas id="pcb" aria-hidden="true"></canvas>
 
-    </header>
+<header>
+  <div class="wrap hdr">
+    <a class="brand" href="#top">
+      <div class="mark">KH</div>
+      <div><b>Kuro Hitsuji</b><small>MASTER PLAN · REV.2026</small></div>
+    </a>
+    <nav>
+      <div class="links">
+        <a href="#blog" style="--c:var(--z-com)"><span>01</span>Blog</a>
+        <a href="#tools" style="--c:var(--z-civ)"><span>02</span>Tools</a>
+        <a href="#resources" style="--c:var(--z-res)"><span>03</span>Resources</a>
+      </div>
+      <div class="coords" aria-hidden="true"><i class="dot-live"></i><div>X <b id="cx">000.00</b></div><div>Y <b id="cy">000.00</b></div><div>LYR <b id="cl">—</b></div></div>
+    </nav>
+  </div>
+</header>
 
-  <main>
-    <section class="hero">
-      <div class="container hero-layout">
-        <div class="hero-content">
-          <p class="eyebrow">PERSONAL BLOG • CODE </p>
-          <h1>Code, Architecture<br />& Urban Planning</h1>
-          <p class="hero-text typewriter" data-type-speed="55" data-type-delay="300">
-              Coding saves me from being an urban planning architecture, 
-              now I am just a Programmer :D 
-          </p>
-          <div class="hero-actions">
-            <a href="blog.html" class="btn btn-primary">Blog</a>
-            <a href="resources.html" class="btn btn-secondary">Resource</a>
-          </div>
+<main class="wrap" id="top">
+
+  <!-- COVER -->
+  <div class="spread cover">
+    <div class="cover-title">
+      <div class="label">Personal blog · Code · Sheet A-001</div>
+      <h1>Code<span class="amp">,</span> <em>Architecture</em><br><span class="amp">&amp;</span> Urban Planning</h1>
+    </div>
+    <div class="cover-meta label">Selected notes<br>2024 — 2026<br>Rev. 2026.11</div>
+
+    <div class="cover-text">
+      <div class="quote">“Coding saves me from being an urban planning architecture, now I am just a Programmer :D”
+        <small>— KURO HITSUJI · NOTE 00</small></div>
+      <p>Notes from someone who traded master plans for command lines — on programming, BIM workflows, Revit tools and how cities actually work.</p>
+      <div class="cta">
+        <a class="btn primary" href="#blog">Explore articles →</a>
+        <a class="btn" href="#tools">Tools</a>
+      </div>
+    </div>
+
+    <div class="map-pane" id="mapPane">
+      <div class="map-clip">
+        <canvas id="city" aria-label="Animated zoning map"></canvas>
+        <div class="map-ui sheet-id">PLAN · ZONING / LIVE</div>
+        <div class="map-ui north">
+          <svg width="30" height="38" viewBox="0 0 34 42" aria-hidden="true"><circle cx="17" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M17 4 L24 30 L17 25 L10 30Z" fill="currentColor"/><path d="M17 4 L17 25 L10 30Z" fill="var(--map-bg)" stroke="currentColor"/></svg>N
         </div>
-        <div class="hero-media card">
-          <img
-            src="assets/images/Raccon.jpg"
-            alt="Illustration of a modern interface for a blog and Revit tools"
-          />
+        <div class="map-ui legend" id="legend"><h6>ZONING · CLICK TO TOGGLE</h6></div>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="databox">
+        <div><small>POSTS</small><b id="n1">00</b></div>
+        <div><small>TOOLS</small><b id="n2">00</b></div>
+        <div><small>LIBRARY</small><b id="n3">00</b></div>
+      </div>
+      <div class="map-ui scale">0 · 50 · 100 · 200m<span class="bar"><i></i><i></i><i></i><i></i></span></div>
+    </div>
+  </div>
+
+  <!-- 01 BLOG -->
+  <section id="blog">
+    <div class="folio label"><span>01 / 03</span><span>Writing district</span><span>Layer A-BLOG</span></div>
+    <div class="spread">
+      <aside class="aside"><div class="aside-in rv">
+        <div class="sec-no">01</div>
+        <div class="rule" style="--c:var(--z-com)"></div>
+        <h2>Featured Articles</h2>
+        <p>Every article is a parcel of land. A space for topics about code, construction architecture, urban planning, and BIM workflow.</p>
+        <div class="filters">
+          <button class="chip on" data-f="all" style="--c:var(--ink)"><i></i>All<em></em></button>
+          <button class="chip" data-f="code" style="--c:var(--z-com)"><i></i>Code<em></em></button>
+          <button class="chip" data-f="bim" style="--c:var(--z-civ)"><i></i>BIM / Revit<em></em></button>
+          <button class="chip" data-f="arch" style="--c:var(--z-res)"><i></i>Architecture<em></em></button>
+          <button class="chip" data-f="urban" style="--c:var(--z-grn)"><i></i>Urban<em></em></button>
+        </div>
+        <label class="search"><span>SEARCH</span><input id="q" placeholder="search posts…"></label>
+      </div></aside>
+      <div class="body"><div class="parcels rv" id="parcels"></div></div>
+    </div>
+  </section>
+
+  <!-- 02 TOOLS -->
+  <section id="tools">
+    <div class="folio label"><span>02 / 03</span><span>Infrastructure</span><span>Layer I-INFRA</span></div>
+    <div class="spread flip">
+      <aside class="aside"><div class="aside-in rv">
+        <div class="sec-no">02</div>
+        <div class="rule" style="--c:var(--z-civ)"></div>
+        <h2>Tools &amp; Add-ins</h2>
+        <p>Revit add-ins and web tools, connected like a metro line. Hover a station for details, click it again to open the tool.</p>
+        <div class="label">Line K · Revit / ArchiCAD</div>
+      </div></aside>
+      <div class="body">
+        <div class="transit rv">
+          <div class="transit-head"><span>LINE K — KURO EXPRESS</span><span class="hide-sm" id="stationCount"></span><span>● IN SERVICE</span></div>
+          <svg id="metro" viewBox="0 0 1200 230" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="tool-card" id="toolCard"></div>
         </div>
       </div>
-    </section>
-
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-content">
-      <p>© <span data-current-year>2026</span> Kuro Hitsuji. Built with GitHub Pages.</p>
     </div>
-  </footer>
+  </section>
 
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/header.js"></script>
-  <script src="assets/js/main.js"></script>
+  <!-- 03 RESOURCES -->
+  <section id="resources">
+    <div class="folio label"><span>03 / 03</span><span>Public facilities</span><span>Schedule R-LIB</span></div>
+    <div class="spread">
+      <aside class="aside"><div class="aside-in rv">
+        <div class="sec-no">03</div>
+        <div class="rule" style="--c:var(--z-res)"></div>
+        <h2>Resources &amp; References</h2>
+        <p>A curated collection of book recommendations that I never have time to read all of it, coding projects, and development resources.</p>
+      </div></aside>
+      <div class="body">
+        <div class="schedule rv">
+          <div class="schedule-title"><span>&lt;RESOURCE SCHEDULE&gt;</span><span id="schedCount"></span></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>MARK</th><th>TYPE</th><th>TITLE</th><th class="hide-sm">DESCRIPTION</th><th>FILE</th></tr></thead>
+            <tbody id="sched"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="tblock">
+      <div class="big"><small>PROJECT</small><b>KuroHitsuji — Personal Master Plan</b></div>
+      <div><small>DRAWN BY</small><b>Kuro Hitsuji</b></div>
+      <div><small>SCALE</small><b>1 : ∞</b></div>
+      <div><small>DATE</small><b id="today"></b></div>
+      <div><small>SHEET</small><b>A-001 / 001</b></div>
+    </div>
+    <div class="foot-note"><span>© 2026 Kuro Hitsuji. Built with GitHub Pages.</span><span class="hide-sm"><a href="about.html">About</a> · <a href="revit.html">Revit</a> · <a href="archicad-model-health.html">ArchiCAD Health</a></span></div>
+  </div>
+</footer>
 </body>
 </html>

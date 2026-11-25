@@ -1,9 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\assets",
-    "\\assets\\css",
-    "\\assets\\js",
+    "\\tho",
+    "\\tho\\apps-script",
+    "\\tho\\css",
+    "\\tho\\js",
     "\\tools"
   ],
   "PreviewInSolutionExplorer": false
