@@ -3,7 +3,7 @@
   if (!header) return;
 
   const page = (document.body?.dataset?.page || "").toLowerCase();
-  const active = { home: "", blog: "", resources: "", revit: "", archicad: "", sketchup: "" };
+  const active = { home: "", blog: "", resources: "", revit: "", archicad: "" };
 
   if (page === "post") {
     active.blog = "is-active";
@@ -18,7 +18,7 @@
       <a class="brand" href="/index.html">Kuro Hitsuji</a>
       <nav class="menu" aria-label="Main navigation">
         <a class="${active.home}" href="/index.html"${current("home")}>Home</a>
-        <a class="${active.blog}" href="/blog.html"${current("blog")}>Blog</a>
+        <a class="${active.blog}" href="/index.html#blog"${current("blog")}>Blog</a>
         <a class="${active.resources}" href="/resources.html"${current("resources")}>Resources</a>
         <a class="${active.revit}" href="/revit.html"${current("revit")}>Revit Tool</a>
         <a class="${active.archicad}" href="/archicad-model-health.html"${current("archicad")}>ArchiCAD Health</a>      </nav>

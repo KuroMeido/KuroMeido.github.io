@@ -1,5 +1,5 @@
 // Content for the home page (index.html). Paths are relative to the site root.
-// Mirrors the content in assets/js/data.js, resources-data.js and revit-data.js (used by blog.html, resources.html, revit.html).
+// Mirrors the content in assets/js/data.js, resources-data.js and revit-data.js (used by resources.html, revit.html).
 
 const ROOT = '';
 
