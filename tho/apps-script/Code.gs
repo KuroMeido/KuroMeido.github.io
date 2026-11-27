@@ -18,6 +18,9 @@ function rateFor(t, day) {
   (RATE_CHANGES[t] || []).forEach(function (c) { if (String(day) >= c.from) m = c.money; });
   return m;
 }
+/* Ngày đóng (yyyy-MM-dd): từ ngày này không nhận ảnh nộp mới, kể cả side quest. Duyệt và trả tiền vẫn hoạt động.
+ * Phải giống CLOSE_DATE trong js/core.js. Để "" nếu không muốn đóng. */
+var CLOSE_DATE = "2026-12-01";
 var TASKS = { cage: "Dọn chuồng thỏ", feed: "Cho thỏ ăn", water: "Lấy nước cho thỏ", laundry: "Phơi đồ" };
 /* Side quest: bài kiểm tra điểm 10 đổi thưởng. Mỗi lần nộp là một dòng riêng, mã dạng q15, q15-2, q15-3... */
 var QUESTS = {
@@ -198,6 +201,8 @@ function submit(r) {
   var d = String(r.day || ""), t = String(r.task || "");
   var info = taskInfo(t, d);
   if (!DAY_RE.test(d) || !info) return { error: "bad_input" };
+  var nowDay = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  if (CLOSE_DATE && (nowDay >= CLOSE_DATE || d >= CLOSE_DATE)) return stateOut({ error: "closed" });
   var img = String(r.img || "");
   var prefix = "data:image/jpeg;base64,";
   if (img.indexOf(prefix) !== 0 || img.length > 600000) return { error: "bad_image" };

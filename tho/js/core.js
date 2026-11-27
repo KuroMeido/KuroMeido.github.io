@@ -7,6 +7,9 @@
   /* Đổi giá việc hằng ngày theo ngày áp dụng (yyyy-MM-dd). Phải giống RATE_CHANGES trong apps-script/Code.gs.
    * Chỉ ảnh hưởng ngày hiển thị và dòng mới nộp, tiền đã ghi trong Sheet không đổi. */
   var RATE_CHANGES = { cage: [{ from: "2026-10-18", money: 15000 }] };
+  /* Ngày đóng: từ ngày này (yyyy-MM-dd) không nhận ảnh nộp mới, kể cả side quest. Duyệt và trả tiền vẫn làm được.
+   * Phải giống CLOSE_DATE trong apps-script/Code.gs. Để "" nếu không muốn đóng. */
+  var CLOSE_DATE = "2026-12-01";
   var TASKS = [
     {id:"cage",  label:"Dọn chuồng thỏ"},
     {id:"feed",  label:"Cho thỏ ăn"},
@@ -34,7 +37,8 @@
     bad_new_pin:"Mã PIN mới gồm đúng 4 chữ số.",
     already_approved:"Việc này đã được duyệt rồi.",
     nothing_owed:"Chưa có khoản nào cần trả.",
-    bad_image:"Ảnh quá lớn hoặc không đọc được. Hãy chụp lại."
+    bad_image:"Ảnh quá lớn hoặc không đọc được. Hãy chụp lại.",
+    closed:"Nhiệm vụ đã đóng từ ngày 1/12/2026, không nhận ảnh nộp mới."
   };
   var NET_ERR = "Không kết nối được Google Sheet. Kiểm tra mạng rồi thử lại.";
 
@@ -120,7 +124,9 @@
     });
   };
 
-  T.canWrite = function(){ return !!API_URL && state.loaded; };
+  /* Đã qua ngày đóng chưa. Trang của bé dùng canWrite nên tự khóa ô nộp ảnh; trang nghiệm thu không bị ảnh hưởng. */
+  T.closed = function(){ return !!CLOSE_DATE && state.today >= CLOSE_DATE; };
+  T.canWrite = function(){ return !!API_URL && state.loaded && !T.closed(); };
 
   /* ---------- Dữ liệu theo ngày và tháng ---------- */
   function itemsOf(key){ var d = state.days[key]; return d ? d.items : {}; }

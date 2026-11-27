@@ -164,3 +164,8 @@ button.act:focus-visible,.pin:focus-visible{outline:2px solid var(--gold);outlin
 .card .list{border-left:0}
 .card .list li{padding-left:0}
 .card .list li::before{display:none}
+/* hạn đóng side quest */
+.note.deadline{border:1px solid var(--bad);background:var(--bad-soft);color:var(--fg)}
+.note.deadline::before{content:"⏳";margin-right:8px}
+.note.deadline b{color:var(--bad)}
+.note.deadline b.settle{display:inline-block;margin-top:8px;color:var(--gold)}

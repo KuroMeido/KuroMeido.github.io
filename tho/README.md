@@ -37,9 +37,16 @@ Bé nộp ảnh bài kiểm tra được điểm 10 để đổi thưởng, qua 
 - Side quest không tính vào "x/4 việc" của ngày, nhưng tiền được cộng vào tháng như việc thường.
 - Đổi tiền thưởng hoặc tên cấp: sửa `QUESTS` trong `js/core.js` và `QUESTS` trong `apps-script/Code.gs` (hai nơi phải giống nhau), rồi triển khai lại script.
 
+## Ngày đóng
+
+Từ ngày **1/12/2026** trang không nhận ảnh nộp mới, cả việc hằng ngày lẫn side quest. Việc đã nộp trước đó vẫn được nghiệm thu và trả tiền ở `/tho/duyet/`. Toàn bộ tiền được tất toán vào cuối tháng 12/2026 (ghi chú ở đầu `index.html`).
+
+- Ngày đóng nằm ở `CLOSE_DATE` trong `js/core.js` (khóa ô nộp ảnh trên trang của bé) và `CLOSE_DATE` trong `apps-script/Code.gs` (máy chủ từ chối ảnh nộp sau ngày này). Hai nơi phải giống nhau; sửa Code.gs thì phải triển khai lại script.
+- Muốn mở lại: đặt `CLOSE_DATE = ""` ở cả hai nơi, hoặc đổi sang ngày mới. Nhớ sửa luôn ghi chú ngày đóng ở đầu `index.html`.
+
 ## Sửa thường gặp
 
-- **Sau mỗi lần sửa CSS hoặc JS:** đổi số trong `?v=5` ở các thẻ `<link>` và `<script>` của `index.html` và `duyet/index.html` (ví dụ thành `?v=6`). Nếu không, trình duyệt có thể giữ bản cũ vài phút đến vài giờ và trang bị lỗi vì HTML mới chạy với JS cũ.
+- **Sau mỗi lần sửa CSS hoặc JS:** đổi số trong `?v=6` ở các thẻ `<link>` và `<script>` của `index.html` và `duyet/index.html` (ví dụ thành `?v=7`). Nếu không, trình duyệt có thể giữ bản cũ vài phút đến vài giờ và trang bị lỗi vì HTML mới chạy với JS cũ.
 
 - **Đổi giá mỗi việc:** sửa `RATE` trong `js/core.js` và `RATE` ở đầu `apps-script/Code.gs`, rồi triển khai lại script.
 - **Đổi giá một việc từ một ngày nào đó:** thêm mốc vào `RATE_CHANGES` ở cả `js/core.js` và `apps-script/Code.gs` (hai nơi phải giống nhau), ví dụ `cage: [{ from: "2026-10-18", money: 15000 }]`. Giá tính theo ngày của việc và được ghi vào cột Tiền lúc nộp, nên các dòng cũ không bị tính lại. Hiện tại: dọn chuồng 15.000đ từ 18/10/2026, trước đó 10.000đ.
